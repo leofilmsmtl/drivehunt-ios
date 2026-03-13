@@ -14,10 +14,11 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
 
     override init() {
         super.init()
-        print("✅ NativeCallProxyDelegate: Initialized (delegate will register after Unity is ready)")
+        // NOTE: registerNativeDelegate causes app freeze — do NOT enable.
+        // Hex capture callbacks will use UnityBridge message-based approach instead.
+        print("✅ NativeCallProxyDelegate: Initialized (delegate NOT registered — freeze fix)")
 
-        // Poll for Unity's view to be ready — adds overlays + location + delegate
-        // Deferred registration avoids freeze during tile loading
+        // Poll for Unity's view to be ready — adds overlays + location
         Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { timer in
             DispatchQueue.main.async {
                 let bundlePath = Bundle.main.bundlePath + "/Frameworks/UnityFramework.framework"
@@ -34,11 +35,8 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
                     LocationService.shared.requestPermission()
                     LocationService.shared.startTracking()
 
-                    // Register delegate NOW — Unity view is ready, tiles loaded
-                    registerNativeDelegate(self)
-                    print("✅ Timer: Overlays added + location started + delegate registered")
-
                     timer.invalidate()
+                    print("✅ Timer: Overlays added + location started")
                 }
             }
         }
