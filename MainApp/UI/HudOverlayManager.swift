@@ -469,9 +469,25 @@ struct GameMenuOverlay: View {
                 Button {
                     AuthManager.shared.logout()
                     onDismiss()
-                    // Force restart to login
+                    // Present login screen as modal on top of Unity
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        AppState.shared.isLoggedIn = false
+                        // Remove HUD overlays while logged out
+                        if let rootView = UnityHolder.shared.unityFramework?.appController()?.rootView {
+                            HudOverlayManager.shared.removeOverlays()
+                        }
+                        // Present login as fullscreen modal
+                        let loginView = LoginScreen(onLoginSuccess: { token, refresh, role in
+                            AuthManager.shared.saveTokens(access: token, refresh: refresh, role: role)
+                            AppState.shared.isLoggedIn = true
+                            HudOverlayManager.shared.dismissModal()
+                            // Re-add overlays after login
+                            if let rootView = UnityHolder.shared.unityFramework?.appController()?.rootView {
+                                HudOverlayManager.shared.addOverlays(to: rootView)
+                            }
+                            // Re-send auth to Unity
+                            UnityBridge.shared.send("ReceiveToken", value: token)
+                        }).environmentObject(AppState.shared)
+                        HudOverlayManager.shared.presentModal(loginView)
                     }
                 } label: {
                     Text("Déconnexion")

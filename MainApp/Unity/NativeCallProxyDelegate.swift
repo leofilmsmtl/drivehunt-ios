@@ -14,13 +14,10 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
 
     override init() {
         super.init()
-        // NOTE: registerNativeDelegate disabled — causes freeze during tile loading.
-        // Timer below handles overlays independently.
-        // registerNativeDelegate(self)
-        print("✅ NativeCallProxyDelegate: Initialized (delegate NOT registered to avoid freeze)")
+        print("✅ NativeCallProxyDelegate: Initialized (delegate will register after Unity is ready)")
 
-        // Poll for Unity's view to be ready — adds overlays + location
-        // This is independent of callbacks to avoid timing issues
+        // Poll for Unity's view to be ready — adds overlays + location + delegate
+        // Deferred registration avoids freeze during tile loading
         Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { timer in
             DispatchQueue.main.async {
                 let bundlePath = Bundle.main.bundlePath + "/Frameworks/UnityFramework.framework"
@@ -36,8 +33,12 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
                     HudOverlayManager.shared.addOverlays(to: rootView)
                     LocationService.shared.requestPermission()
                     LocationService.shared.startTracking()
+
+                    // Register delegate NOW — Unity view is ready, tiles loaded
+                    registerNativeDelegate(self)
+                    print("✅ Timer: Overlays added + location started + delegate registered")
+
                     timer.invalidate()
-                    print("✅ Timer: Overlays added + location started")
                 }
             }
         }
