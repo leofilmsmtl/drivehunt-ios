@@ -467,25 +467,38 @@ struct GameMenuOverlay: View {
 
                 // Logout
                 Button {
+                    // 1. Clear tokens
                     AuthManager.shared.logout()
+
+                    // 2. Reset ALL Swift singletons (matches Kotlin SessionManager.endSession)
+                    CaptureState.shared.reset()
+                    GemInventoryState.shared.reset()
+                    LocationService.shared.stopRouteSimulation()
+
+                    // 3. Tell Unity to clear game state + reload scene
+                    UnityBridge.shared.send("OnLogout", value: "")
+
                     onDismiss()
-                    // Present login screen as modal on top of Unity
+
+                    // 4. Remove HUD overlays + present login
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        // Remove HUD overlays while logged out
-                        if let rootView = UnityHolder.shared.unityFramework?.appController()?.rootView {
-                            HudOverlayManager.shared.removeOverlays()
-                        }
-                        // Present login as fullscreen modal
+                        HudOverlayManager.shared.removeOverlays()
+
                         let loginView = LoginScreen(onLoginSuccess: { token, refresh, role in
+                            // Save new tokens
                             AuthManager.shared.saveTokens(access: token, refresh: refresh, role: role)
                             AppState.shared.isLoggedIn = true
                             HudOverlayManager.shared.dismissModal()
-                            // Re-add overlays after login
+
+                            // Re-add game overlays
                             if let rootView = UnityHolder.shared.unityFramework?.appController()?.rootView {
                                 HudOverlayManager.shared.addOverlays(to: rootView)
                             }
-                            // Re-send auth to Unity
+
+                            // Send new token to Unity — triggers full reload for new player
                             UnityBridge.shared.send("ReceiveToken", value: token)
+                            // Tell Unity to reload scene for fresh player data
+                            UnityBridge.shared.send("ReloadScene", value: "")
                         }).environmentObject(AppState.shared)
                         HudOverlayManager.shared.presentModal(loginView)
                     }

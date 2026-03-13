@@ -95,6 +95,17 @@ class GemInventoryState: ObservableObject {
             }
         }.resume()
     }
+
+    /// Reset all inventory — called on logout
+    func reset() {
+        pierre = 0; metal = 0; energie = 0; cristal = 0; artefact = 0
+        pierreCommon = 0; pierreRare = 0; pierreEpic = 0
+        metalCommon = 0; metalRare = 0; metalEpic = 0
+        energieCommon = 0; energieRare = 0; energieEpic = 0
+        cristalCommon = 0; cristalRare = 0; cristalEpic = 0
+        artefactCommon = 0; artefactRare = 0; artefactEpic = 0
+        print("💎 GemInventoryState: Reset")
+    }
 }
 
 // MARK: - Gem Color Definitions (matching Unity GemColorMap)
