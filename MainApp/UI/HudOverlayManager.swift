@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import Combine
 
 /// UIView subclass that passes through touches on transparent areas.
 /// This lets taps reach Unity's view beneath our HUD overlays.
@@ -12,6 +13,56 @@ class PassthroughView: UIView {
     }
 }
 
+// MARK: - Boot Loading Screen (inlined to avoid target membership issues)
+
+/// Boot loading screen — shown while Unity loads.
+/// Dismisses when GPS starts working or after timeout.
+struct BootLoadingScreen: View {
+    @State private var pulse = false
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color(hex: "#0A0A1A"), Color(hex: "#1A1A3E")],
+                startPoint: .top, endPoint: .bottom
+            ).ignoresSafeArea()
+
+            VStack(spacing: 32) {
+                Spacer()
+
+                Image(systemName: "hexagon.fill")
+                    .font(.system(size: 80))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color(hex: "#00FFAA"), Color(hex: "#00AAFF")],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        )
+                    )
+                    .shadow(color: Color(hex: "#00FFAA").opacity(0.4), radius: 20)
+                    .scaleEffect(pulse ? 1.05 : 0.95)
+                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: pulse)
+
+                Text("P. HEXAGON")
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+
+                ProgressView()
+                    .scaleEffect(1.3)
+                    .tint(Color(hex: "#00AAFF"))
+                    .padding(.top, 8)
+
+                Spacer()
+
+                Text("Chargement du monde...")
+                    .font(.system(size: 14))
+                    .foregroundColor(.gray.opacity(0.6))
+                    .padding(.bottom, 40)
+            }
+        }
+        .onAppear { pulse = true }
+    }
+}
+
 /// Manages the HUD overlays on top of Unity's window.
 /// Retains UIHostingControllers so they don't get deallocated.
 final class HudOverlayManager {
@@ -21,6 +72,8 @@ final class HudOverlayManager {
     private var topHostingController: UIHostingController<AnyView>?
     private var menuHostingController: UIHostingController<AnyView>?
     private var simHostingController: UIHostingController<AnyView>?
+    private var loadingHostingController: UIHostingController<AnyView>?
+    private var bootCancellable: AnyCancellable?
 
     /// Wraps a hosting controller's view in a PassthroughView
     private func makePassthroughContainer(for hostingController: UIHostingController<AnyView>, tag: Int) -> PassthroughView {
@@ -46,7 +99,7 @@ final class HudOverlayManager {
 
     func addOverlays(to unityView: UIView) {
         // Remove old overlays
-        unityView.subviews.filter { [999, 998, 996].contains($0.tag) }.forEach { $0.removeFromSuperview() }
+        unityView.subviews.filter { [999, 998, 997, 996].contains($0.tag) }.forEach { $0.removeFromSuperview() }
 
         // --- SIMULATION HUD (added FIRST so it's behind other overlays) ---
         let simHud = AnyView(SimulationHud())
@@ -57,8 +110,8 @@ final class HudOverlayManager {
         NSLayoutConstraint.activate([
             simContainer.leadingAnchor.constraint(equalTo: unityView.leadingAnchor),
             simContainer.trailingAnchor.constraint(equalTo: unityView.trailingAnchor),
-            simContainer.topAnchor.constraint(equalTo: unityView.topAnchor),
-            simContainer.bottomAnchor.constraint(equalTo: unityView.bottomAnchor)
+            simContainer.bottomAnchor.constraint(equalTo: unityView.bottomAnchor),
+            simContainer.heightAnchor.constraint(equalToConstant: 120)
         ])
         self.simHostingController = simHost
 
@@ -94,6 +147,47 @@ final class HudOverlayManager {
         self.topHostingController = topHost
 
         print("✅ HudOverlayManager: Overlays added with touch passthrough")
+    }
+
+    /// Show boot loading screen and auto-dismiss when isBootComplete fires
+    func showLoadingScreen(on unityView: UIView) {
+        // Remove old loading if any
+        unityView.subviews.first(where: { $0.tag == 997 })?.removeFromSuperview()
+        bootCancellable?.cancel()
+
+        let loadingView = AnyView(BootLoadingScreen())
+        let loadingHost = UIHostingController(rootView: loadingView)
+        loadingHost.view.backgroundColor = .clear
+        loadingHost.view.isOpaque = false
+        loadingHost.view.tag = 997
+        loadingHost.view.translatesAutoresizingMaskIntoConstraints = false
+        unityView.addSubview(loadingHost.view)
+
+        NSLayoutConstraint.activate([
+            loadingHost.view.leadingAnchor.constraint(equalTo: unityView.leadingAnchor),
+            loadingHost.view.trailingAnchor.constraint(equalTo: unityView.trailingAnchor),
+            loadingHost.view.topAnchor.constraint(equalTo: unityView.topAnchor),
+            loadingHost.view.bottomAnchor.constraint(equalTo: unityView.bottomAnchor)
+        ])
+        self.loadingHostingController = loadingHost
+
+        // Auto-dismiss when Unity signals boot complete (BootPipeline step 6/6).
+        // Full chain: C# SignalKotlin("onBootComplete") → [DllImport] _NativeOnBootComplete()
+        //   → NativeCallProxy.mm → dispatch_async(main) → @_cdecl nativeOnBootComplete()
+        //   → UnityBridge.shared.onBootComplete() → isBootComplete = true → Combine fires here.
+        bootCancellable = UnityBridge.shared.$isBootComplete
+            .filter { $0 }
+            .first()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                UIView.animate(withDuration: 0.5, animations: {
+                    loadingHost.view.alpha = 0
+                }) { _ in
+                    loadingHost.view.removeFromSuperview()
+                    self?.loadingHostingController = nil
+                    print("✅ Boot complete — loading screen dismissed")
+                }
+            }
     }
 
     private var modalHostingController: UIHostingController<AnyView>?
@@ -470,13 +564,16 @@ struct GameMenuOverlay: View {
                     // 1. Clear tokens
                     AuthManager.shared.logout()
 
-                    // 2. Reset ALL Swift singletons (matches Kotlin SessionManager.endSession)
+                    // 2. Tell Unity to clear ALL game state + reload scene FIRST
+                    //    (must happen BEFORE UnityBridge.reset() which kills the connection)
+                    UnityBridge.shared.send("OnLogout", value: "")
+
+                    // 3. Reset ALL Swift singletons (matches Kotlin SessionManager.endSession)
                     CaptureState.shared.reset()
                     GemInventoryState.shared.reset()
                     LocationService.shared.stopRouteSimulation()
-
-                    // 3. Tell Unity to clear game state + reload scene
-                    UnityBridge.shared.send("OnLogout", value: "")
+                    LocationService.shared.resetForNewSession()
+                    UnityBridge.shared.reset()  // Clear boot state flags AFTER sending OnLogout
 
                     onDismiss()
 
@@ -492,13 +589,33 @@ struct GameMenuOverlay: View {
 
                             // Re-add game overlays
                             if let rootView = UnityHolder.shared.unityFramework?.appController()?.rootView {
+                                // Show loading screen IMMEDIATELY after login
+                                HudOverlayManager.shared.showLoadingScreen(on: rootView)
                                 HudOverlayManager.shared.addOverlays(to: rootView)
                             }
 
-                            // Send new token to Unity — triggers full reload for new player
-                            UnityBridge.shared.send("ReceiveToken", value: token)
-                            // Tell Unity to reload scene for fresh player data
-                            UnityBridge.shared.send("ReloadScene", value: "")
+                            // Wait for Unity to be ready after OnLogout scene reload,
+                            // then send auth (matches Kotlin boot callback ordering)
+                            var pollCount = 0
+                            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
+                                pollCount += 1
+                                // Fire when Unity is ready OR after 3s timeout (6 polls)
+                                guard UnityBridge.shared.isUnityReady || pollCount >= 6 else { return }
+                                timer.invalidate()
+
+                                DispatchQueue.main.async {
+                                    let baseUrl = AppState.shared.backendBaseUrl
+                                    UnityBridge.shared.send("SetBackendUrl", value: baseUrl)
+                                    UnityBridge.shared.send("SetAuthToken", value: token)
+                                    if let playerId = AuthManager.shared.getPlayerIdFromToken(token) {
+                                        UnityBridge.shared.send("SetPlayerId", value: playerId)
+                                    }
+                                    UnityBridge.shared.send("SetRefreshToken", value: refresh)
+                                    LocationService.shared.resetForNewSession()
+                                    GemInventoryState.shared.fetchFromBackend()
+                                    print("✅ Re-login: Auth sent (unityReady=\(UnityBridge.shared.isUnityReady), polls=\(pollCount))")
+                                }
+                            }
                         }).environmentObject(AppState.shared)
                         HudOverlayManager.shared.presentModal(loginView)
                     }

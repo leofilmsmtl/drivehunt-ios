@@ -14,7 +14,17 @@ final class AuthManager {
     private let refreshTokenKey = "refresh_token"
     private let userRoleKey = "user_role"
 
-    private init() {}
+    private init() {
+        // CRITICAL: iOS Keychain survives app reinstalls!
+        // UserDefaults is cleared on reinstall, so we use it to detect first launch.
+        let hasLaunchedKey = "hasLaunchedBefore"
+        if !UserDefaults.standard.bool(forKey: hasLaunchedKey) {
+            // First launch (or reinstall) — clear any stale tokens
+            logout()
+            UserDefaults.standard.set(true, forKey: hasLaunchedKey)
+            print("🔒 AuthManager: First launch — cleared stale Keychain tokens")
+        }
+    }
 
     // MARK: - Token Storage
 

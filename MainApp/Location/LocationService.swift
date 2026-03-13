@@ -18,6 +18,7 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
 
     @Published var currentLocation: CLLocation?
     @Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
+    @Published var firstExploreCompleted: Bool = false
 
     /// Last sent coordinates (avoid spamming Unity with identical positions)
     private var lastSentLat: Double = 0
@@ -178,6 +179,28 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
         }
     }
 
+    /// Reset GPS tracking state for a new player session.
+    /// Forces next GPS update to re-send to Unity and re-trigger explore.
+    func resetForNewSession() {
+        lastSentLat = 0
+        lastSentLon = 0
+        lastExploreTime = .distantPast
+        firstExploreCompleted = false
+        print("📍 LocationService: Reset for new session — GPS will re-send on next update")
+
+        // Force immediate re-send of current position
+        if let loc = currentLocation {
+            let lat = loc.coordinate.latitude
+            let lon = loc.coordinate.longitude
+            let bearing = loc.course >= 0 ? loc.course : 0
+            let message = "\(lat),\(lon),\(bearing)"
+            UnityBridge.shared.send("UpdatePlayerPositionFromString", value: message)
+            lastSentLat = lat
+            lastSentLon = lon
+            exploreAtLocation(lat: lat, lon: lon)
+        }
+    }
+
     func setSimulationSpeed(_ speedKmh: Double) {
         simSpeedKmh = speedKmh
     }
@@ -321,6 +344,13 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
             guard let data = data,
                   let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else { return }
+
+            DispatchQueue.main.async {
+                if !self.firstExploreCompleted {
+                    self.firstExploreCompleted = true
+                    print("✅ LocationService: First explore completed — hex data ready")
+                }
+            }
 
             if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let newHexes = json["newHexes"] as? [[String: Any]] {

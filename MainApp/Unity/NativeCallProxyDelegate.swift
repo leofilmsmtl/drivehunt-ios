@@ -14,12 +14,12 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
 
     override init() {
         super.init()
-        // NOTE: registerNativeDelegate causes app freeze — do NOT enable.
-        // Hex capture callbacks will use UnityBridge message-based approach instead.
-        print("✅ NativeCallProxyDelegate: Initialized (delegate NOT registered — freeze fix)")
+        // Do NOT call registerNativeDelegate — causes app freeze.
+        // Boot callbacks are handled via @_cdecl functions below instead.
+        print("✅ NativeCallProxyDelegate: Initialized")
 
         // Poll for Unity's view to be ready — adds overlays + location
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { timer in
+        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] timer in
             DispatchQueue.main.async {
                 let bundlePath = Bundle.main.bundlePath + "/Frameworks/UnityFramework.framework"
                 if let bundle = Bundle(path: bundlePath),
@@ -38,20 +38,42 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
                         HudOverlayManager.shared.addOverlays(to: rootView)
                         LocationService.shared.requestPermission()
                         LocationService.shared.startTracking()
-                        // Send token to Unity
-                        UnityBridge.shared.send("ReceiveToken", value: token)
-                        print("✅ Timer: Logged in — overlays added + location started")
+                        // Send backend URL + auth to Unity (matches Kotlin UnityEmbedView + onLoginSuccess)
+                        let baseUrl = AppState.shared.backendBaseUrl
+                        UnityBridge.shared.send("SetBackendUrl", value: baseUrl)
+                        UnityBridge.shared.send("SetAuthToken", value: token)
+                        if let playerId = AuthManager.shared.getPlayerIdFromToken(token) {
+                            UnityBridge.shared.send("SetPlayerId", value: playerId)
+                        }
+                        if let refresh = AuthManager.shared.getRefreshToken() {
+                            UnityBridge.shared.send("SetRefreshToken", value: refresh)
+                        }
+                        print("✅ Timer: Logged in — overlays added + auth sent + location started")
+                        // Show loading screen AFTER auth sent (boot callbacks can now fire)
+                        HudOverlayManager.shared.showLoadingScreen(on: rootView)
                     } else {
                         // Not logged in — present login screen
                         let loginView = LoginScreen(onLoginSuccess: { token, refresh, role in
                             AuthManager.shared.saveTokens(access: token, refresh: refresh, role: role)
                             AppState.shared.isLoggedIn = true
                             HudOverlayManager.shared.dismissModal()
-                            // Now add game overlays
+                            // Show loading screen IMMEDIATELY after login
+                            HudOverlayManager.shared.showLoadingScreen(on: rootView)
+                            // Now add game overlays (behind loading screen)
                             HudOverlayManager.shared.addOverlays(to: rootView)
                             LocationService.shared.requestPermission()
                             LocationService.shared.startTracking()
-                            UnityBridge.shared.send("ReceiveToken", value: token)
+                            // Send backend URL + auth to Unity (matches Kotlin)
+                            let baseUrl = AppState.shared.backendBaseUrl
+                            UnityBridge.shared.send("SetBackendUrl", value: baseUrl)
+                            UnityBridge.shared.send("SetAuthToken", value: token)
+                            if let playerId = AuthManager.shared.getPlayerIdFromToken(token) {
+                                UnityBridge.shared.send("SetPlayerId", value: playerId)
+                            }
+                            UnityBridge.shared.send("SetRefreshToken", value: refresh)
+                            // Force GPS re-send + explore for new player
+                            LocationService.shared.resetForNewSession()
+                            GemInventoryState.shared.fetchFromBackend()
                         }).environmentObject(AppState.shared)
                         HudOverlayManager.shared.presentModal(loginView)
                         print("✅ Timer: Not logged in — showing login screen")
@@ -82,4 +104,42 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
     func onClaimResult(_ success: Bool, wasSteal: Bool, message: String) {
         CaptureState.shared.onClaimResult(success: success, wasSteal: wasSteal, message: message)
     }
+}
+
+// MARK: - @_cdecl Boot callbacks (called from NativeCallProxy.mm C entry points)
+// Unity C# → [DllImport] → C entry point → dispatch_async(main) → @_cdecl Swift function
+
+@_cdecl("nativeOnUnityReady")
+func nativeOnUnityReady() { UnityBridge.shared.onUnityReady() }
+
+@_cdecl("nativeOnAuthBridged")
+func nativeOnAuthBridged() { UnityBridge.shared.onAuthBridged() }
+
+@_cdecl("nativeOnGPSLocked")
+func nativeOnGPSLocked() { UnityBridge.shared.onGPSLocked() }
+
+@_cdecl("nativeOnHexHistoryLoaded")
+func nativeOnHexHistoryLoaded(_ count: UnsafePointer<CChar>) {
+    UnityBridge.shared.onHexHistoryLoaded(count: String(cString: count))
+}
+
+@_cdecl("nativeOnTilesLoaded")
+func nativeOnTilesLoaded() { UnityBridge.shared.onTilesLoaded() }
+
+@_cdecl("nativeOnZonesLoaded")
+func nativeOnZonesLoaded(_ count: UnsafePointer<CChar>) {
+    UnityBridge.shared.onZonesLoaded(count: String(cString: count))
+}
+
+@_cdecl("nativeOnBootComplete")
+func nativeOnBootComplete() { UnityBridge.shared.onBootComplete() }
+
+@_cdecl("nativeSetPlayerId")
+func nativeSetPlayerId(_ playerId: UnsafePointer<CChar>) {
+    UnityBridge.shared.setPlayerId(String(cString: playerId))
+}
+
+@_cdecl("nativeOnInventoryUpdate")
+func nativeOnInventoryUpdate(_ jsonString: UnsafePointer<CChar>) {
+    UnityBridge.shared.onInventoryUpdate(String(cString: jsonString))
 }
