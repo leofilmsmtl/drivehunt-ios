@@ -6,8 +6,8 @@ import SwiftUI
 struct LoginScreen: View {
     var onLoginSuccess: (String, String, String) -> Void
 
-    @State private var username = ""
-    @State private var password = ""
+    @State private var username = "julien@leofilms.ca"
+    @State private var password = "monopoly3"
     @State private var displayName = ""
     @State private var postalCode = ""
     @State private var isLoading = false

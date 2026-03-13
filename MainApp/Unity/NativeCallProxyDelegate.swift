@@ -31,12 +31,33 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
                     // Populate UnityHolder so menu/modal code can find Unity
                     UnityHolder.shared.setFramework(fw)
 
-                    HudOverlayManager.shared.addOverlays(to: rootView)
-                    LocationService.shared.requestPermission()
-                    LocationService.shared.startTracking()
+                    // Check if user is authenticated
+                    if let token = AuthManager.shared.getAccessToken(),
+                       !AuthManager.shared.isTokenExpired(token) {
+                        // Logged in — show game overlays
+                        HudOverlayManager.shared.addOverlays(to: rootView)
+                        LocationService.shared.requestPermission()
+                        LocationService.shared.startTracking()
+                        // Send token to Unity
+                        UnityBridge.shared.send("ReceiveToken", value: token)
+                        print("✅ Timer: Logged in — overlays added + location started")
+                    } else {
+                        // Not logged in — present login screen
+                        let loginView = LoginScreen(onLoginSuccess: { token, refresh, role in
+                            AuthManager.shared.saveTokens(access: token, refresh: refresh, role: role)
+                            AppState.shared.isLoggedIn = true
+                            HudOverlayManager.shared.dismissModal()
+                            // Now add game overlays
+                            HudOverlayManager.shared.addOverlays(to: rootView)
+                            LocationService.shared.requestPermission()
+                            LocationService.shared.startTracking()
+                            UnityBridge.shared.send("ReceiveToken", value: token)
+                        }).environmentObject(AppState.shared)
+                        HudOverlayManager.shared.presentModal(loginView)
+                        print("✅ Timer: Not logged in — showing login screen")
+                    }
 
                     timer.invalidate()
-                    print("✅ Timer: Overlays added + location started")
                 }
             }
         }
