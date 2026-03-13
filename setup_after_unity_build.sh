@@ -50,6 +50,10 @@ echo "   ✅ BUILD_LIBRARY_FOR_DISTRIBUTION = NO"
 sed -i '' 's/ENABLE_USER_SCRIPT_SANDBOXING = YES/ENABLE_USER_SCRIPT_SANDBOXING = NO/g' "$PBXPROJ"
 echo "   ✅ ENABLE_USER_SCRIPT_SANDBOXING = NO"
 
+# Fix deployment target (Unity defaults to 15.0, NavigationStack requires 16.0+)
+sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 15.0/IPHONEOS_DEPLOYMENT_TARGET = 16.0/g' "$PBXPROJ"
+echo "   ✅ IPHONEOS_DEPLOYMENT_TARGET = 16.0"
+
 # 4. Clean DerivedData
 echo "🧹 Cleaning DerivedData..."
 DERIVED=$(find ~/Library/Developer/Xcode/DerivedData -maxdepth 1 -name "Unity-iPhone*" -type d 2>/dev/null | head -1)

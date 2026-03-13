@@ -20,6 +20,7 @@ final class HudOverlayManager {
     private var bottomHostingController: UIHostingController<AnyView>?
     private var topHostingController: UIHostingController<AnyView>?
     private var menuHostingController: UIHostingController<AnyView>?
+    private var simHostingController: UIHostingController<AnyView>?
 
     /// Wraps a hosting controller's view in a PassthroughView
     private func makePassthroughContainer(for hostingController: UIHostingController<AnyView>, tag: Int) -> PassthroughView {
@@ -45,9 +46,23 @@ final class HudOverlayManager {
 
     func addOverlays(to unityView: UIView) {
         // Remove old overlays
-        unityView.subviews.filter { [999, 998].contains($0.tag) }.forEach { $0.removeFromSuperview() }
+        unityView.subviews.filter { [999, 998, 996].contains($0.tag) }.forEach { $0.removeFromSuperview() }
 
-        // --- BOTTOM HUD (MENU pill) ---
+        // --- SIMULATION HUD (added FIRST so it's behind other overlays) ---
+        let simHud = AnyView(SimulationHud())
+        let simHost = UIHostingController(rootView: simHud)
+        let simContainer = makePassthroughContainer(for: simHost, tag: 996)
+        unityView.addSubview(simContainer)
+
+        NSLayoutConstraint.activate([
+            simContainer.leadingAnchor.constraint(equalTo: unityView.leadingAnchor),
+            simContainer.trailingAnchor.constraint(equalTo: unityView.trailingAnchor),
+            simContainer.topAnchor.constraint(equalTo: unityView.topAnchor),
+            simContainer.bottomAnchor.constraint(equalTo: unityView.bottomAnchor)
+        ])
+        self.simHostingController = simHost
+
+        // --- BOTTOM HUD (MENU pill) — on top of sim overlay ---
         let bottomHud = AnyView(GameHudPill())
         let bottomHost = UIHostingController(rootView: bottomHud)
         let bottomContainer = makePassthroughContainer(for: bottomHost, tag: 999)
@@ -61,7 +76,7 @@ final class HudOverlayManager {
         ])
         self.bottomHostingController = bottomHost
 
-        // --- TOP RIGHT: Resource dock ---
+        // --- TOP RIGHT: Resource dock — on top ---
         let topView = AnyView(
             ResourceDockView()
                 .onAppear { GemInventoryState.shared.fetchFromBackend() }
@@ -177,9 +192,11 @@ final class HudOverlayManager {
         bottomHostingController?.view.removeFromSuperview()
         topHostingController?.view.removeFromSuperview()
         menuHostingController?.view.removeFromSuperview()
+        simHostingController?.view.removeFromSuperview()
         bottomHostingController = nil
         topHostingController = nil
         menuHostingController = nil
+        simHostingController = nil
     }
 }
 // ResourceDockView is now in its own file: ResourceDockView.swift

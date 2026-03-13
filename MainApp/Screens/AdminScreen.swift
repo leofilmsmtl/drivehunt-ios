@@ -295,7 +295,7 @@ struct AdminSimulatorTab: View {
             return
         }
 
-        // Step 1: Get route from backend
+        // Fetch route from backend (OSRM routing)
         let routeUrlStr = "\(baseUrl)/v1/admin/route?start=\(start.latitude),\(start.longitude)&end=\(end.latitude),\(end.longitude)"
         guard let routeUrl = URL(string: routeUrlStr) else { return }
 
@@ -322,54 +322,23 @@ struct AdminSimulatorTab: View {
                 return
             }
 
-            // Step 2: Send route to simulation/start
-            let route = coordinates.map { [$0[1], $0[0]] } // [lon,lat] → [lat,lon]
-            let simBody: [String: Any] = [
-                "route": route,
-                "speedKmh": Int(speedKmh),
-                "startPoint": ["lat": start.latitude, "lon": start.longitude],
-                "endPoint": ["lat": end.latitude, "lon": end.longitude]
-            ]
+            // Convert [lon,lat] to [(lat,lon)] tuples for LocationService
+            let path = coordinates.map { (lat: $0[1], lon: $0[0]) }
 
-            guard let simUrl = URL(string: "\(baseUrl)/v1/dev/simulation/start") else { return }
-            var simReq = URLRequest(url: simUrl)
-            simReq.httpMethod = "POST"
-            simReq.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            simReq.setValue("true", forHTTPHeaderField: "ngrok-skip-browser-warning")
-            simReq.httpBody = try? JSONSerialization.data(withJSONObject: simBody)
+            DispatchQueue.main.async {
+                isLoading = false
+                isRunning = true
+                statusMessage = "✅ Simulation démarrée (\(path.count) points, \(Int(speedKmh)) km/h)"
 
-            URLSession.shared.dataTask(with: simReq) { _, simResp, simErr in
-                DispatchQueue.main.async {
-                    isLoading = false
-                    if let httpResp = simResp as? HTTPURLResponse, httpResp.statusCode == 200 {
-                        isRunning = true
-                        statusMessage = "✅ Simulation démarrée (\(coordinates.count) points, \(Int(speedKmh)) km/h)"
-                    } else {
-                        statusMessage = "❌ Erreur simulation: \(simErr?.localizedDescription ?? "HTTP \((simResp as? HTTPURLResponse)?.statusCode ?? 0)")"
-                    }
-                }
-            }.resume()
+                // Start LOCAL client-side simulation (matches Kotlin DefaultLocationTracker)
+                LocationService.shared.startRouteSimulation(path: path, speedKmh: speedKmh)
+            }
         }.resume()
     }
 
     private func stopSimulation() {
-        let baseUrl = "https://drivehunt.ngrok.app"
-
-        // Stop simulation
-        if let url = URL(string: "\(baseUrl)/v1/dev/simulation/stop") {
-            var req = URLRequest(url: url)
-            req.httpMethod = "POST"
-            req.setValue("true", forHTTPHeaderField: "ngrok-skip-browser-warning")
-            URLSession.shared.dataTask(with: req) { _, _, _ in }.resume()
-        }
-
-        // Also clear mock-location (legacy)
-        if let url = URL(string: "\(baseUrl)/v1/dev/mock-location") {
-            var req = URLRequest(url: url)
-            req.httpMethod = "DELETE"
-            req.setValue("true", forHTTPHeaderField: "ngrok-skip-browser-warning")
-            URLSession.shared.dataTask(with: req) { _, _, _ in }.resume()
-        }
+        // Stop local client-side simulation
+        LocationService.shared.stopRouteSimulation()
 
         isRunning = false
         statusMessage = "⏹️ Simulation arrêtée"

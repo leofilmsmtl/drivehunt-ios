@@ -137,6 +137,7 @@
 		DD00EE00FF00AA00BB000108 /* SkinPickerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000008 /* SkinPickerScreen.swift */; };
 		DD00EE00FF00AA00BB000109 /* CaptureState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000009 /* CaptureState.swift */; };
 		DD00EE00FF00AA00BB000110 /* GameHud.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000010 /* GameHud.swift */; };
+		DD00EE00FF00AA00BB000118 /* SimulationHud.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000018 /* SimulationHud.swift */; };
 		DD00EE00FF00AA00BB000111 /* HudOverlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */; };
 		DD00EE00FF00AA00BB000112 /* ResourceDockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */; };
 		DD00EE00FF00AA00BB000113 /* NativeCallProxyDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */; };
@@ -813,6 +814,7 @@
 		DD00EE00FF00AA00BB000008 /* SkinPickerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SkinPickerScreen.swift; path = MainApp/Screens/SkinPickerScreen.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000009 /* CaptureState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CaptureState.swift; path = MainApp/State/CaptureState.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000010 /* GameHud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GameHud.swift; path = MainApp/UI/GameHud.swift; sourceTree = SOURCE_ROOT; };
+		DD00EE00FF00AA00BB000018 /* SimulationHud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SimulationHud.swift; path = MainApp/UI/SimulationHud.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HudOverlayManager.swift; path = MainApp/UI/HudOverlayManager.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ResourceDockView.swift; path = MainApp/UI/ResourceDockView.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeCallProxyDelegate.swift; path = MainApp/Unity/NativeCallProxyDelegate.swift; sourceTree = SOURCE_ROOT; };
@@ -1771,6 +1773,7 @@
 				DD00EE00FF00AA00BB000019 /* DriveHunt-iOS-Bridging-Header.h */,
 				DD00EE00FF00AA00BB000000 /* DriveHuntApp.swift */,
 				DD00EE00FF00AA00BB000010 /* GameHud.swift */,
+				DD00EE00FF00AA00BB000018 /* SimulationHud.swift */,
 				DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */,
 				DD00EE00FF00AA00BB000002 /* LocationService.swift */,
 				DD00EE00FF00AA00BB000005 /* LoginScreen.swift */,
@@ -2068,7 +2071,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				DD00EE00FF00AA00BB000100 /* DriveHuntApp.swift in Sources */,
-				B37DE0B08E88F1C42C102846 /* main.mm in Sources */,
 				DD00EE00FF00AA00BB000101 /* AuthManager.swift in Sources */,
 				DD00EE00FF00AA00BB000102 /* LocationService.swift in Sources */,
 				DD00EE00FF00AA00BB000103 /* AppNavigation.swift in Sources */,
@@ -2079,6 +2081,7 @@
 				DD00EE00FF00AA00BB000108 /* SkinPickerScreen.swift in Sources */,
 				DD00EE00FF00AA00BB000109 /* CaptureState.swift in Sources */,
 				DD00EE00FF00AA00BB000110 /* GameHud.swift in Sources */,
+				DD00EE00FF00AA00BB000118 /* SimulationHud.swift in Sources */,
 				DD00EE00FF00AA00BB000111 /* HudOverlayManager.swift in Sources */,
 				DD00EE00FF00AA00BB000112 /* ResourceDockView.swift in Sources */,
 				DD00EE00FF00AA00BB000113 /* NativeCallProxyDelegate.swift in Sources */,
@@ -2086,6 +2089,7 @@
 				DD00EE00FF00AA00BB000115 /* UnityEmbedView.swift in Sources */,
 				DD00EE00FF00AA00BB000116 /* UnityHolder.swift in Sources */,
 				DD00EE00FF00AA00BB000117 /* NativeCallProxy.mm in Sources */,
+				B37DE0B08E88F1C42C102846 /* main.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
