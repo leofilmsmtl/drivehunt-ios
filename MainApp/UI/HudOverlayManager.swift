@@ -368,6 +368,65 @@ final class HudOverlayManager {
         modalHostingController = nil
     }
 
+    // MARK: - Casino Roll Overlay
+
+    private var casinoRollContainer: UIView?
+
+    /// Show the casino roll overlay on top of everything
+    func showCasinoRoll(data: LootRollData) {
+        guard let unityView = UnityHolder.shared.unityFramework?.appController()?.rootView else { return }
+
+        // Remove existing if any
+        dismissCasinoRoll()
+
+        let rollView = CasinoRollOverlay(
+            rollData: data,
+            onRollComplete: { result in
+                print("🎰 Roll complete: \(result.gemType) \(result.rarity)")
+            },
+            onDismiss: { [weak self] in
+                self?.dismissCasinoRoll()
+                // Refresh inventory after collecting
+                GemInventoryState.shared.fetchFromBackend()
+            }
+        )
+
+        let hostVC = UIHostingController(rootView: rollView)
+        hostVC.view.backgroundColor = .clear
+        hostVC.view.isOpaque = false
+
+        let container = UIView()
+        container.tag = 999
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = .clear
+
+        hostVC.view.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(hostVC.view)
+
+        NSLayoutConstraint.activate([
+            hostVC.view.topAnchor.constraint(equalTo: container.topAnchor),
+            hostVC.view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            hostVC.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            hostVC.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+        ])
+
+        unityView.addSubview(container)
+        NSLayoutConstraint.activate([
+            container.topAnchor.constraint(equalTo: unityView.topAnchor),
+            container.bottomAnchor.constraint(equalTo: unityView.bottomAnchor),
+            container.leadingAnchor.constraint(equalTo: unityView.leadingAnchor),
+            container.trailingAnchor.constraint(equalTo: unityView.trailingAnchor),
+        ])
+
+        self.casinoRollContainer = container
+        print("🎰 Casino roll overlay shown for: \(data.gemType)")
+    }
+
+    func dismissCasinoRoll() {
+        casinoRollContainer?.removeFromSuperview()
+        casinoRollContainer = nil
+    }
+
     /// Present a sub-modal on TOP of the existing modal (e.g., SkinPicker from Profile)
     func presentSubModal<Content: View>(_ content: Content) {
         guard let modalVC = modalHostingController else {

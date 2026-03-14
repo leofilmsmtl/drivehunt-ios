@@ -89,6 +89,13 @@ void _onInventoryUpdate(const char* jsonString) {
     });
 }
 
+void _onGemTapped(const char* payload) {
+    NSString* p = payload ? [NSString stringWithUTF8String:payload] : @"";
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onGemTapped", @"arg": p}];
+    });
+}
+
 // Capture callbacks
 void _setClaimable(const char* hexId, bool isSteal, const char* ownerName) {
     NSString* hex = hexId ? [NSString stringWithUTF8String:hexId] : @"";

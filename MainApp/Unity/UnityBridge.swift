@@ -32,6 +32,7 @@ final class UnityBridge: ObservableObject {
         case "onBootComplete":      onBootComplete()
         case "setPlayerId":         setPlayerId(arg)
         case "onInventoryUpdate":   onInventoryUpdate(arg)
+        case "onGemTapped":         onGemTapped(arg)
         case "setClaimable":
             let hexId = info["hexId"] as? String ?? ""
             let isSteal = info["isSteal"] as? Bool ?? false
@@ -119,6 +120,70 @@ final class UnityBridge: ObservableObject {
             GemInventoryState.shared.update(from: json)
             print("💎 UnityBridge: Inventory updated from Unity")
         }
+    }
+
+    /// Handle gem tap from Unity — payload: "id|value|gem|lat|lon"
+    func onGemTapped(_ payload: String) {
+        let parts = payload.split(separator: "|").map(String.init)
+        guard parts.count >= 5 else {
+            print("⚠️ UnityBridge: Invalid gem tap payload: \(payload)")
+            return
+        }
+
+        let lootId = parts[0]
+        let gem = parts[2]  // v5.1: quartz/jade/saphir/ruby/arcane/mystere
+        let lat = Double(parts[3].replacingOccurrences(of: ",", with: ".")) ?? 0.0
+        let lon = Double(parts[4].replacingOccurrences(of: ",", with: ".")) ?? 0.0
+
+        print("💎 UnityBridge: Gem tapped! id=\(lootId.prefix(8)) gem=\(gem)")
+
+        // Call backend to collect
+        collectGem(lootId: lootId, lat: lat, lon: lon, gem: gem)
+    }
+
+    /// Collect gem via backend API then show casino roll
+    private func collectGem(lootId: String, lat: Double, lon: Double, gem: String) {
+        guard let token = AuthManager.shared.getAccessToken() else { return }
+        let baseUrl = AppState.shared.backendBaseUrl
+        guard let url = URL(string: "\(baseUrl)/v2/game/collect-loot") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 8
+
+        let body: [String: Any] = ["lootId": lootId, "lat": lat, "lon": lon]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+
+            guard let data = data, code == 200,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let success = json["success"] as? Bool, success else {
+                print("❌ UnityBridge: collect-loot failed (HTTP \(code))")
+                return
+            }
+
+            let serverRarity = json["rarity"] as? String ?? "common"
+            let serverColor = json["color"] as? String ?? gem
+            let baseTier = (serverRarity == "epic") ? "gold" : "dark"
+
+            let rollData = LootRollData(
+                gemType: serverColor,
+                baseTier: baseTier,
+                gemId: lootId,
+                serverRarity: serverRarity
+            )
+
+            DispatchQueue.main.async {
+                // Remove gem from Unity map
+                self.send("RemoveLootById", value: lootId)
+                // Show casino roll
+                HudOverlayManager.shared.showCasinoRoll(data: rollData)
+            }
+        }.resume()
     }
 
     // MARK: - Messaging (Swift → Unity)

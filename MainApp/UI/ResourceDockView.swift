@@ -1,60 +1,67 @@
 import SwiftUI
 
-// MARK: - Gem Inventory Model
+// MARK: - v5.1 Gem Tier Model
+// 5 linear tiers — gem type IS the rarity. No common/rare/epic.
+// Matches backend game.defaults.js v5.1
 
-/// Matches Kotlin GemInventory — holds inventory counts per color and rarity
+/// Gem tier info (name, color, emoji, cap)
+struct GemTier {
+    let key: String
+    let label: String
+    let emoji: String
+    let color: Color
+    let cap: Int  // 0 = Infinity
+}
+
+let gemTiers: [GemTier] = [
+    GemTier(key: "quartz",  label: "Quartz",  emoji: "⬜", color: Color(hex: "#D9D2C0"), cap: 30),
+    GemTier(key: "jade",    label: "Jade",    emoji: "💚", color: Color(hex: "#2DBF73"), cap: 12),
+    GemTier(key: "saphir",  label: "Saphir",  emoji: "💙", color: Color(hex: "#2659F2"), cap: 5),
+    GemTier(key: "ruby",    label: "Ruby",    emoji: "❤️‍🔥", color: Color(hex: "#E61A26"), cap: 3),
+    GemTier(key: "arcane",  label: "Arcane",  emoji: "💜", color: Color(hex: "#B333F2"), cap: 0),  // 0 = ∞
+]
+
+// MARK: - Gem Inventory State
+
+/// v5.1 inventory: 5 gem tiers, flat counts.
+/// API response: { "quartz": 10, "jade": 5, "saphir": 2, "ruby": 1, "arcane": 0 }
 class GemInventoryState: ObservableObject {
     static let shared = GemInventoryState()
 
-    @Published var pierre: Int = 0
-    @Published var metal: Int = 0
-    @Published var energie: Int = 0
-    @Published var cristal: Int = 0
-    @Published var artefact: Int = 0
+    @Published var quartz: Int = 0
+    @Published var jade: Int = 0
+    @Published var saphir: Int = 0
+    @Published var ruby: Int = 0
+    @Published var arcane: Int = 0
 
-    // Detail breakdown (common/rare/epic per color)
-    @Published var pierreCommon: Int = 0
-    @Published var pierreRare: Int = 0
-    @Published var pierreEpic: Int = 0
-    @Published var metalCommon: Int = 0
-    @Published var metalRare: Int = 0
-    @Published var metalEpic: Int = 0
-    @Published var energieCommon: Int = 0
-    @Published var energieRare: Int = 0
-    @Published var energieEpic: Int = 0
-    @Published var cristalCommon: Int = 0
-    @Published var cristalRare: Int = 0
-    @Published var cristalEpic: Int = 0
-    @Published var artefactCommon: Int = 0
-    @Published var artefactRare: Int = 0
-    @Published var artefactEpic: Int = 0
+    /// Get count by tier key
+    func count(for key: String) -> Int {
+        switch key {
+        case "quartz": return quartz
+        case "jade": return jade
+        case "saphir": return saphir
+        case "ruby": return ruby
+        case "arcane": return arcane
+        default: return 0
+        }
+    }
 
     /// Update from API JSON response
-    /// API format: { "success": true, "data": { "pierre": { "common": N, "rare": N, "epic": N }, ... } }
+    /// API format: { "success": true, "data": { "quartz": N, "jade": N, ... } }
+    /// OR flat: { "quartz": N, "jade": N, ... }
     func update(from json: [String: Any]) {
-        // Handle nested "data" wrapper
         let data: [String: Any]
         if let d = json["data"] as? [String: Any] {
             data = d
         } else {
-            data = json  // Fallback: direct format
+            data = json
         }
 
-        func get(_ color: String, _ rarity: String) -> Int {
-            return (data[color] as? [String: Any])?[rarity] as? Int ?? 0
-        }
-
-        pierre = get("pierre", "common") + get("pierre", "rare") + get("pierre", "epic")
-        metal = get("metal", "common") + get("metal", "rare") + get("metal", "epic")
-        energie = get("energie", "common") + get("energie", "rare") + get("energie", "epic")
-        cristal = get("cristal", "common") + get("cristal", "rare") + get("cristal", "epic")
-        artefact = get("artefact", "common") + get("artefact", "rare") + get("artefact", "epic")
-
-        pierreCommon = get("pierre", "common"); pierreRare = get("pierre", "rare"); pierreEpic = get("pierre", "epic")
-        metalCommon = get("metal", "common"); metalRare = get("metal", "rare"); metalEpic = get("metal", "epic")
-        energieCommon = get("energie", "common"); energieRare = get("energie", "rare"); energieEpic = get("energie", "epic")
-        cristalCommon = get("cristal", "common"); cristalRare = get("cristal", "rare"); cristalEpic = get("cristal", "epic")
-        artefactCommon = get("artefact", "common"); artefactRare = get("artefact", "rare"); artefactEpic = get("artefact", "epic")
+        quartz  = data["quartz"] as? Int ?? 0
+        jade    = data["jade"]   as? Int ?? 0
+        saphir  = data["saphir"] as? Int ?? 0
+        ruby    = data["ruby"]   as? Int ?? 0
+        arcane  = data["arcane"] as? Int ?? 0
     }
 
     /// Fetch inventory from backend
@@ -91,44 +98,22 @@ class GemInventoryState: ObservableObject {
             }
             DispatchQueue.main.async {
                 self.update(from: json)
-                print("💎 ResourceDock: Inventory loaded — pierre=\(self.pierre) metal=\(self.metal) energie=\(self.energie) cristal=\(self.cristal) artefact=\(self.artefact)")
+                print("💎 ResourceDock: Inventory loaded — quartz=\(self.quartz) jade=\(self.jade) saphir=\(self.saphir) ruby=\(self.ruby) arcane=\(self.arcane)")
             }
         }.resume()
     }
 
     /// Reset all inventory — called on logout
     func reset() {
-        pierre = 0; metal = 0; energie = 0; cristal = 0; artefact = 0
-        pierreCommon = 0; pierreRare = 0; pierreEpic = 0
-        metalCommon = 0; metalRare = 0; metalEpic = 0
-        energieCommon = 0; energieRare = 0; energieEpic = 0
-        cristalCommon = 0; cristalRare = 0; cristalEpic = 0
-        artefactCommon = 0; artefactRare = 0; artefactEpic = 0
+        quartz = 0; jade = 0; saphir = 0; ruby = 0; arcane = 0
         print("💎 GemInventoryState: Reset")
     }
 }
 
-// MARK: - Gem Color Definitions (matching Unity GemColorMap)
-
-struct GemColorDef {
-    let emoji: String
-    let color: Color
-    let key: String
-}
-
-private let gemColors: [GemColorDef] = [
-    GemColorDef(emoji: "🟤", color: Color(hex: "#8B5E3C"), key: "pierre"),
-    GemColorDef(emoji: "⚪", color: Color(hex: "#C0C5D0"), key: "metal"),
-    GemColorDef(emoji: "🔵", color: Color(hex: "#1AC0F2"), key: "energie"),
-    GemColorDef(emoji: "🟣", color: Color(hex: "#A633E6"), key: "cristal"),
-    GemColorDef(emoji: "🟡", color: Color(hex: "#FFCC1A"), key: "artefact")
-]
-
 // MARK: - Resource Dock View
 
-/// Compact resource dock — shows 5 gem colors with total counts.
+/// v5.1 Resource dock — shows 5 gem tiers with counts + caps.
 /// Tapping toggles the expanded detail panel.
-/// Matches Kotlin ResourceDock composable.
 struct ResourceDockView: View {
     @ObservedObject var inventory = GemInventoryState.shared
     @State private var expanded = false
@@ -143,11 +128,9 @@ struct ResourceDockView: View {
                 withAnimation(.spring(response: 0.3)) { expanded.toggle() }
             } label: {
                 HStack(spacing: 10) {
-                    gemChip(color: Color(hex: "#8B5E3C"), count: inventory.pierre)
-                    gemChip(color: Color(hex: "#C0C5D0"), count: inventory.metal)
-                    gemChip(color: Color(hex: "#1AC0F2"), count: inventory.energie)
-                    gemChip(color: Color(hex: "#A633E6"), count: inventory.cristal)
-                    gemChip(color: Color(hex: "#FFCC1A"), count: inventory.artefact)
+                    ForEach(gemTiers, id: \.key) { tier in
+                        gemChip(tier: tier, count: inventory.count(for: tier.key))
+                    }
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
@@ -173,24 +156,49 @@ struct ResourceDockView: View {
 
                     // Column headers
                     HStack {
-                        Text("").frame(width: 80, alignment: .leading)
-                        Text("⚪").font(.system(size: 10)).frame(width: 36)
-                        Text("⭐").font(.system(size: 10)).frame(width: 36)
-                        Text("💎").font(.system(size: 10)).frame(width: 36)
+                        Text("Gemme")
+                            .frame(width: 80, alignment: .leading)
+                            .font(.system(size: 10))
+                            .foregroundColor(.gray)
+                        Spacer()
+                        Text("Qté")
+                            .frame(width: 36)
+                            .font(.system(size: 10))
+                            .foregroundColor(.gray)
+                        Text("Max")
+                            .frame(width: 36)
+                            .font(.system(size: 10))
+                            .foregroundColor(.gray)
                     }
 
-                    // Rows per color
-                    detailRow("🟤 Pierre", common: inventory.pierreCommon, rare: inventory.pierreRare, epic: inventory.pierreEpic, color: Color(hex: "#8B5E3C"))
-                    detailRow("⚪ Métal", common: inventory.metalCommon, rare: inventory.metalRare, epic: inventory.metalEpic, color: Color(hex: "#C0C5D0"))
-                    detailRow("🔵 Énergie", common: inventory.energieCommon, rare: inventory.energieRare, epic: inventory.energieEpic, color: Color(hex: "#1AC0F2"))
-                    detailRow("🟣 Cristal", common: inventory.cristalCommon, rare: inventory.cristalRare, epic: inventory.cristalEpic, color: Color(hex: "#A633E6"))
-                    detailRow("🟡 Artefact", common: inventory.artefactCommon, rare: inventory.artefactRare, epic: inventory.artefactEpic, color: Color(hex: "#FFCC1A"))
+                    // Rows per gem tier
+                    ForEach(gemTiers, id: \.key) { tier in
+                        let count = inventory.count(for: tier.key)
+                        let capText = tier.cap == 0 ? "∞" : "\(tier.cap)"
+                        let atCap = tier.cap > 0 && count >= tier.cap
 
-                    // Caps reminder
-                    Text("Max: 15⚪ / 8⭐ / 3💎 par couleur")
-                        .font(.system(size: 8))
-                        .foregroundColor(.gray.opacity(0.6))
-                        .padding(.top, 4)
+                        HStack {
+                            Text("\(tier.emoji) \(tier.label)")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(width: 80, alignment: .leading)
+                            Spacer()
+                            Text("\(count)")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(atCap ? Color(hex: "#FF6B6B") : .white)
+                                .frame(width: 36)
+                            Text(capText)
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray.opacity(0.6))
+                                .frame(width: 36)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(tier.color.opacity(0.1))
+                        )
+                    }
                 }
                 .padding(12)
                 .background(
@@ -202,7 +210,7 @@ struct ResourceDockView: View {
                         )
                 )
                 .shadow(color: .black.opacity(0.5), radius: 12)
-                .padding(.top, 12)
+                .padding(.top, 32)
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
@@ -210,41 +218,14 @@ struct ResourceDockView: View {
 
     // MARK: - Components
 
-    private func gemChip(color: Color, count: Int) -> some View {
+    private func gemChip(tier: GemTier, count: Int) -> some View {
         HStack(spacing: 2) {
             Circle()
-                .fill(color)
+                .fill(tier.color)
                 .frame(width: 14, height: 14)
             Text("\(count)")
                 .font(.system(size: 15, weight: .bold))
                 .foregroundColor(.white)
         }
-    }
-
-    private func detailRow(_ label: String, common: Int, rare: Int, epic: Int, color: Color) -> some View {
-        HStack {
-            Text(label)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.white)
-                .frame(width: 80, alignment: .leading)
-            Text("\(common)")
-                .font(.system(size: 12, weight: .bold))
-                .foregroundColor(.gray)
-                .frame(width: 36)
-            Text("\(rare)")
-                .font(.system(size: 12, weight: .bold))
-                .foregroundColor(Color(hex: "#FFD700"))
-                .frame(width: 36)
-            Text("\(epic)")
-                .font(.system(size: 12, weight: .bold))
-                .foregroundColor(Color(hex: "#FF6B6B"))
-                .frame(width: 36)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(color.opacity(0.1))
-        )
     }
 }
