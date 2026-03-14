@@ -262,12 +262,24 @@ final class UnityBridge: ObservableObject {
               let loaded = Int(parts[0]),
               let total = Int(parts[1]),
               total > 0 else { return }
-        let progress = Double(loaded) / Double(total)
+
+        // Ignore bogus updates where loaded exceeds total
+        let clamped = min(loaded, total)
+        let progress = Double(clamped) / Double(total)
+
         DispatchQueue.main.async {
-            self.textureProgress = progress
-            self.textureProgressTotal = total
+            // Only update if not already complete
+            if self.textureProgress < 1.0 {
+                self.textureProgress = progress
+                self.textureProgressTotal = total
+            }
         }
-        print("🖼️ Texture progress: \(loaded)/\(total) (\(Int(progress * 100))%)")
+
+        // Log only at milestones (every 25%) to avoid spam
+        let pct = Int(progress * 100)
+        if loaded <= total && (pct % 25 == 0 || loaded == total) {
+            print("🖼️ Texture progress: \(loaded)/\(total) (\(pct)%)")
+        }
     }
 
     private func keyToMethodName(_ key: String) -> String {
