@@ -68,6 +68,8 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
                             AuthManager.shared.saveTokens(access: token, refresh: refresh, role: role)
                             AppState.shared.isLoggedIn = true
                             HudOverlayManager.shared.dismissModal()
+                            // Reset boot flags so loading screen waits for new signals
+                            UnityBridge.shared.resetBootFlags()
                             // Show loading screen IMMEDIATELY after login
                             HudOverlayManager.shared.showLoadingScreen(on: rootView)
                             // Now add game overlays (behind loading screen)

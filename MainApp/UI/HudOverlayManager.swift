@@ -41,12 +41,46 @@ class PassthroughView: UIView {
 // MARK: - Boot Loading Screen (inlined to avoid target membership issues)
 
 /// Boot loading screen — shown while Unity loads.
-/// Premium design matching the native LaunchScreen storyboard.
+/// Premium design with real progress bar driven by Unity boot signals.
 struct BootLoadingScreen: View {
     @State private var ringRotation: Double = 0
-    @State private var dotCount = 0
+    @ObservedObject var bridge = UnityBridge.shared
 
-    let dotTimer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
+    /// Maps boot signals to progress 0.0–1.0
+    private var progress: Double {
+        var p = 0.0
+        if bridge.isUnityReady       { p = 0.125 }
+        if bridge.isAuthBridged      { p = 0.25 }
+        if bridge.isGPSLocked        { p = 0.375 }
+        if bridge.isHexHistoryLoaded { p = 0.50 }
+        if bridge.isTilesLoaded      { p = 0.625 }
+        if bridge.isZonesLoaded      {
+            // Interpolate 75%–95% using granular texture progress
+            p = 0.75 + (bridge.textureProgress * 0.20)
+        }
+        if bridge.isHexTexturesReady { p = 0.95 }
+        if bridge.isBootComplete     { p = 1.0 }
+        return p
+    }
+
+    /// Current step label
+    private var stepLabel: String {
+        if bridge.isBootComplete     { return "Prêt" }
+        if bridge.isHexTexturesReady { return "Finalisation..." }
+        if bridge.isZonesLoaded      {
+            let loaded = Int(bridge.textureProgress * Double(bridge.textureProgressTotal))
+            if bridge.textureProgressTotal > 0 {
+                return "Textures hex \(loaded)/\(bridge.textureProgressTotal)..."
+            }
+            return "Textures des hexagones..."
+        }
+        if bridge.isTilesLoaded      { return "Chargement des zones..." }
+        if bridge.isHexHistoryLoaded { return "Carte en cours..." }
+        if bridge.isGPSLocked        { return "Historique des hexagones..." }
+        if bridge.isAuthBridged      { return "Position GPS..." }
+        if bridge.isUnityReady       { return "Authentification..." }
+        return "Démarrage du moteur..."
+    }
 
     var body: some View {
         ZStack {
@@ -101,24 +135,35 @@ struct BootLoadingScreen: View {
 
                 Spacer()
 
-                // ── Bottom: loading text + first launch notice ──
-                VStack(spacing: 6) {
-                    HStack(spacing: 0) {
-                        Text("Chargement")
-                            .font(.system(size: 12))
-                            .foregroundColor(.white.opacity(0.3))
-                        Text(String(repeating: ".", count: dotCount))
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.3))
-                            .frame(width: 18, alignment: .leading)
-                    }
-                    .onReceive(dotTimer) { _ in
-                        dotCount = (dotCount % 3) + 1
+                // ── Bottom: progress bar + step label ──
+                VStack(spacing: 10) {
+                    // Step label
+                    Text(stepLabel)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.4))
+
+                    // Progress bar
+                    ZStack(alignment: .leading) {
+                        // Track
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.white.opacity(0.08))
+                            .frame(width: 220, height: 4)
+                        // Fill
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: "#00D991"), Color(hex: "#00B87A")],
+                                    startPoint: .leading, endPoint: .trailing
+                                )
+                            )
+                            .frame(width: 220 * progress, height: 4)
+                            .animation(.easeInOut(duration: 0.4), value: progress)
                     }
 
-                    Text("Première ouverture · Jusqu'à 30s")
-                        .font(.system(size: 10))
-                        .foregroundColor(.white.opacity(0.15))
+                    // Percentage
+                    Text("\(Int(progress * 100))%")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(Color(hex: "#00D991").opacity(0.5))
                 }
                 .padding(.bottom, 50)
             }
@@ -130,6 +175,7 @@ struct BootLoadingScreen: View {
         }
     }
 }
+
 
 /// Manages the HUD overlays on top of Unity's window.
 /// Retains UIHostingControllers so they don't get deallocated.

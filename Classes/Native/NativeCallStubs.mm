@@ -56,6 +56,13 @@ void _onZonesLoaded(const char* count) {
     });
 }
 
+void _onTextureProgress(const char* progress) {
+    NSString* p = progress ? [NSString stringWithUTF8String:progress] : @"0,0";
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onTextureProgress", @"arg": p}];
+    });
+}
+
 void _onHexTexturesReady() {
     dispatch_async(dispatch_get_main_queue(), ^{
         [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onHexTexturesReady"}];

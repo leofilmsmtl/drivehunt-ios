@@ -205,7 +205,6 @@ struct ResourceDockView: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
     }
 
     // MARK: - Components

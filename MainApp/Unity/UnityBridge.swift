@@ -28,6 +28,7 @@ final class UnityBridge: ObservableObject {
         case "onTilesLoaded":       onTilesLoaded()
         case "onZonesLoaded":       onZonesLoaded(count: arg)
         case "onHexTexturesReady":  onHexTexturesReady()
+        case "onTextureProgress":   onTextureProgress(arg)
         case "onBootComplete":      onBootComplete()
         case "setPlayerId":         setPlayerId(arg)
         case "onInventoryUpdate":   onInventoryUpdate(arg)
@@ -141,6 +142,13 @@ final class UnityBridge: ObservableObject {
     }
 
     func reset() {
+        resetBootFlags()
+        playerId = ""
+        UnityHolder.shared.reset()
+    }
+
+    /// Reset ONLY boot signal flags — used on re-login when Unity is still running.
+    func resetBootFlags() {
         isUnityReady = false
         isAuthBridged = false
         isGPSLocked = false
@@ -149,8 +157,26 @@ final class UnityBridge: ObservableObject {
         isZonesLoaded = false
         isHexTexturesReady = false
         isBootComplete = false
-        playerId = ""
-        UnityHolder.shared.reset()
+        textureProgress = 0.0
+        textureProgressTotal = 0
+    }
+
+    // Granular texture loading progress (0.0–1.0)
+    @Published var textureProgress: Double = 0.0
+    @Published var textureProgressTotal: Int = 0
+
+    func onTextureProgress(_ arg: String) {
+        let parts = arg.split(separator: ",")
+        guard parts.count == 2,
+              let loaded = Int(parts[0]),
+              let total = Int(parts[1]),
+              total > 0 else { return }
+        let progress = Double(loaded) / Double(total)
+        DispatchQueue.main.async {
+            self.textureProgress = progress
+            self.textureProgressTotal = total
+        }
+        print("🖼️ Texture progress: \(loaded)/\(total) (\(Int(progress * 100))%)")
     }
 
     private func keyToMethodName(_ key: String) -> String {
