@@ -18,7 +18,10 @@ final class UnityBridge: ObservableObject {
         guard let info = notification.userInfo,
               let signal = info["signal"] as? String else { return }
         let arg = info["arg"] as? String ?? ""
-        print("📡 UnityBridge received signal: \(signal) arg=\(arg)")
+        // Log all signals EXCEPT high-frequency ones (texture progress)
+        if signal != "onTextureProgress" {
+            print("📡 UnityBridge received signal: \(signal) arg=\(arg)")
+        }
 
         switch signal {
         case "onUnityReady":        onUnityReady()
