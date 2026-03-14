@@ -248,13 +248,14 @@ final class HudOverlayManager {
         // (NOT a 320×400 block that eats multi-touch gestures)
         let topView = AnyView(
             ResourceDockView()
-                .fixedSize()
                 .onAppear { GemInventoryState.shared.fetchFromBackend() }
         )
         let topHost = UIHostingController(rootView: topView)
         topHost.view.backgroundColor = .clear
         topHost.view.isOpaque = false
+        topHost.view.clipsToBounds = false
         let topContainer = makePassthroughContainer(for: topHost, tag: 998)
+        topContainer.clipsToBounds = false
         unityView.addSubview(topContainer)
 
         NSLayoutConstraint.activate([
@@ -268,7 +269,7 @@ final class HudOverlayManager {
     }
 
     /// Show boot loading screen and auto-dismiss when isBootComplete fires
-    func showLoadingScreen(on unityView: UIView) {
+    func showLoadingScreen(on unityView: UIView, isRelogin: Bool = false) {
         // Remove old loading if any
         unityView.subviews.first(where: { $0.tag == 997 })?.removeFromSuperview()
         bootCancellable?.cancel()
@@ -308,6 +309,13 @@ final class HudOverlayManager {
         if UnityBridge.shared.isHexTexturesReady {
             print("⚡ isHexTexturesReady already true — dismissing immediately")
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { dismiss() }
+            return
+        }
+
+        // FIX for re-login: Unity is already booted, signals won't re-fire
+        if isRelogin {
+            print("🔄 Re-login — dismissing loading screen after 3s")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { dismiss() }
             return
         }
 
