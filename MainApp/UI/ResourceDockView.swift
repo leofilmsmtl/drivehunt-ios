@@ -137,7 +137,7 @@ struct ResourceDockView: View {
     private let accentColor = Color(hex: "#00FF88")
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 8) {
+        VStack(alignment: .trailing, spacing: 0) {
             // === COMPACT DOCK (always visible) ===
             Button {
                 withAnimation(.spring(response: 0.3)) { expanded.toggle() }
@@ -202,6 +202,7 @@ struct ResourceDockView: View {
                         )
                 )
                 .shadow(color: .black.opacity(0.5), radius: 12)
+                .padding(.top, 12)
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }

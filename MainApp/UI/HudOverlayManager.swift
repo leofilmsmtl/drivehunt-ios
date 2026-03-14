@@ -56,12 +56,11 @@ struct BootLoadingScreen: View {
         if bridge.isHexHistoryLoaded { p = 0.50 }
         if bridge.isTilesLoaded      { p = 0.625 }
         if bridge.isZonesLoaded || bridge.isBootComplete {
-            // Interpolate 75%–95% using granular texture progress
             p = 0.75 + (bridge.textureProgress * 0.20)
         }
         if bridge.isHexTexturesReady { p = 0.95 }
-        // Only 100% when BOTH are done
         if bridge.isBootComplete && bridge.isHexTexturesReady { p = 1.0 }
+        print("📊 Progress: \(Int(p*100))% | unity=\(bridge.isUnityReady) auth=\(bridge.isAuthBridged) gps=\(bridge.isGPSLocked) hex=\(bridge.isHexHistoryLoaded) tiles=\(bridge.isTilesLoaded) zones=\(bridge.isZonesLoaded) texReady=\(bridge.isHexTexturesReady) boot=\(bridge.isBootComplete) texProg=\(bridge.textureProgress)")
         return p
     }
 
@@ -245,25 +244,26 @@ final class HudOverlayManager {
         ])
         self.bottomHostingController = bottomHost
 
-        // --- TOP RIGHT: Resource dock — on top ---
+        // --- TOP RIGHT: Resource dock ---
+        // Container sized to fit both compact + expanded states.
+        // PassthroughView forwards touches on empty areas to Unity.
         let topView = AnyView(
             ResourceDockView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                 .onAppear { GemInventoryState.shared.fetchFromBackend() }
         )
         let topHost = UIHostingController(rootView: topView)
         topHost.view.backgroundColor = .clear
         topHost.view.isOpaque = false
-        topHost.view.clipsToBounds = false
         let topContainer = makePassthroughContainer(for: topHost, tag: 998)
-        topContainer.clipsToBounds = false
         unityView.addSubview(topContainer)
 
         NSLayoutConstraint.activate([
             topContainer.trailingAnchor.constraint(equalTo: unityView.trailingAnchor, constant: -8),
             topContainer.topAnchor.constraint(equalTo: unityView.safeAreaLayoutGuide.topAnchor, constant: 4),
             topContainer.widthAnchor.constraint(equalToConstant: 280),
+            topContainer.heightAnchor.constraint(equalToConstant: 400),
         ])
-        // Let intrinsic content size determine width/height — no fixed 320×400
         self.topHostingController = topHost
 
         print("✅ HudOverlayManager: Overlays added with touch passthrough")
@@ -735,9 +735,9 @@ struct GameMenuOverlay: View {
 
                             // Re-add game overlays
                             if let rootView = UnityHolder.shared.unityFramework?.appController()?.rootView {
-                                // Show loading screen IMMEDIATELY after login
-                                HudOverlayManager.shared.showLoadingScreen(on: rootView)
+                                // Add overlays FIRST (behind), then loading screen ON TOP
                                 HudOverlayManager.shared.addOverlays(to: rootView)
+                                HudOverlayManager.shared.showLoadingScreen(on: rootView)
                             }
 
                             // Wait for Unity to be ready after OnLogout scene reload,

@@ -137,8 +137,6 @@
 		DD00EE00FF00AA00BB000108 /* SkinPickerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000008 /* SkinPickerScreen.swift */; };
 		DD00EE00FF00AA00BB000109 /* CaptureState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000009 /* CaptureState.swift */; };
 		DD00EE00FF00AA00BB000110 /* GameHud.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000010 /* GameHud.swift */; };
-		DD00EE00FF00AA00BB000118 /* SimulationHud.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000018 /* SimulationHud.swift */; };
-		DD00EE00FF00AA00BB000119 /* BootLoadingScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000019 /* BootLoadingScreen.swift */; };
 		DD00EE00FF00AA00BB000111 /* HudOverlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */; };
 		DD00EE00FF00AA00BB000112 /* ResourceDockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */; };
 		DD00EE00FF00AA00BB000113 /* NativeCallProxyDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */; };
@@ -146,6 +144,8 @@
 		DD00EE00FF00AA00BB000115 /* UnityEmbedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000015 /* UnityEmbedView.swift */; };
 		DD00EE00FF00AA00BB000116 /* UnityHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000016 /* UnityHolder.swift */; };
 		DD00EE00FF00AA00BB000117 /* NativeCallProxy.mm in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000017 /* NativeCallProxy.mm */; };
+		DD00EE00FF00AA00BB000118 /* NativeCallProxy.h in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000018 /* NativeCallProxy.h */; };
+		DD00EE00FF00AA00BB000119 /* DriveHunt-iOS-Bridging-Header.h in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000019 /* DriveHunt-iOS-Bridging-Header.h */; };
 		E1553120720B6BD941D137C1 /* UnityView+iOS.h in Headers */ = {isa = PBXBuildFile; fileRef = F2C7D0D55589551423C252C7 /* UnityView+iOS.h */; };
 		E16448E3D816EB05FB4703B1 /* UnityViewControllerBase+iOS.h in Headers */ = {isa = PBXBuildFile; fileRef = C2CA2D324D9CC969EAD21B65 /* UnityViewControllerBase+iOS.h */; };
 		E29298863AA8FBDD3A9886BB /* CVTextureCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 588503C58FDD1F1B5533177A /* CVTextureCache.h */; };
@@ -692,6 +692,7 @@
 		B44106D03DA333A3FDB45BC1 /* Il2CppCCTypeValuesTable.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = Il2CppCCTypeValuesTable.c; path = Il2CppOutputProject/Source/il2cppOutput/Il2CppCCTypeValuesTable.c; sourceTree = SOURCE_ROOT; };
 		B58EF12BF9B65BC74A92DC07 /* AppleRequiredReasonCSharpAPIs.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = AppleRequiredReasonCSharpAPIs.txt; path = UnityFramework/AppleRequiredReasonCSharpAPIs.txt; sourceTree = SOURCE_ROOT; };
 		B5A89C2D3588C3D4F6F6AEE2 /* Generics__37.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__37.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__37.cpp; sourceTree = SOURCE_ROOT; };
+		B5ABA8A36C35842C3A5CB076 /* endel.nativewebsocket_CodeGen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = endel.nativewebsocket_CodeGen.c; path = Il2CppOutputProject/Source/il2cppOutput/endel.nativewebsocket_CodeGen.c; sourceTree = SOURCE_ROOT; };
 		B65026F4E0A439EAE4490865 /* UnityEngine.IMGUIModule_CodeGen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = UnityEngine.IMGUIModule_CodeGen.c; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.IMGUIModule_CodeGen.c; sourceTree = SOURCE_ROOT; };
 		B656B188EE082EE9ACD22391 /* Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Prefix.pch; path = Classes/Prefix.pch; sourceTree = SOURCE_ROOT; };
 		B662E7588FD9F79EDCF63D17 /* Il2CppCCalculateFieldValues.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Il2CppCCalculateFieldValues.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Il2CppCCalculateFieldValues.cpp; sourceTree = SOURCE_ROOT; };
@@ -815,8 +816,6 @@
 		DD00EE00FF00AA00BB000008 /* SkinPickerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SkinPickerScreen.swift; path = MainApp/Screens/SkinPickerScreen.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000009 /* CaptureState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CaptureState.swift; path = MainApp/State/CaptureState.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000010 /* GameHud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GameHud.swift; path = MainApp/UI/GameHud.swift; sourceTree = SOURCE_ROOT; };
-		DD00EE00FF00AA00BB000018 /* SimulationHud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SimulationHud.swift; path = MainApp/UI/SimulationHud.swift; sourceTree = SOURCE_ROOT; };
-		DD00EE00FF00AA00BB000019 /* BootLoadingScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BootLoadingScreen.swift; path = MainApp/UI/BootLoadingScreen.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HudOverlayManager.swift; path = MainApp/UI/HudOverlayManager.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ResourceDockView.swift; path = MainApp/UI/ResourceDockView.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeCallProxyDelegate.swift; path = MainApp/Unity/NativeCallProxyDelegate.swift; sourceTree = SOURCE_ROOT; };
@@ -868,6 +867,7 @@
 		ECAF71504226E32235BC8E2F /* UnityEngine.CoreModule__3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UnityEngine.CoreModule__3.cpp; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.CoreModule__3.cpp; sourceTree = SOURCE_ROOT; };
 		ECC976B319C3C569FF99B79B /* DisplayManager.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = DisplayManager.mm; path = Classes/Unity/DisplayManager.mm; sourceTree = SOURCE_ROOT; };
 		ED613333B0729ED56AEDEA4D /* Unity.InputSystem__2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Unity.InputSystem__2.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Unity.InputSystem__2.cpp; sourceTree = SOURCE_ROOT; };
+		EE4013B02CD7A794E2CA7EEF /* endel.nativewebsocket.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = endel.nativewebsocket.cpp; path = Il2CppOutputProject/Source/il2cppOutput/endel.nativewebsocket.cpp; sourceTree = SOURCE_ROOT; };
 		EEA52B2559CD28EA0DA03753 /* UnityEngine.UIElementsModule__20.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UnityEngine.UIElementsModule__20.cpp; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__20.cpp; sourceTree = SOURCE_ROOT; };
 		EF141E2D5ED0FFC8B1D44A9A /* GenericMethods__24.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = GenericMethods__24.cpp; path = Il2CppOutputProject/Source/il2cppOutput/GenericMethods__24.cpp; sourceTree = SOURCE_ROOT; };
 		F02A78402345158DB659E78E /* UnityEngine.AudioModule_CodeGen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = UnityEngine.AudioModule_CodeGen.c; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.AudioModule_CodeGen.c; sourceTree = SOURCE_ROOT; };
@@ -1633,6 +1633,8 @@
 				87605856C2B447518B98EAF3 /* UnityICallRegistration.cpp */,
 				AED95C519544DEF0103B9C95 /* __Generated.cpp */,
 				8FE3E92069BB36F8854D7277 /* __Generated_CodeGen.c */,
+				EE4013B02CD7A794E2CA7EEF /* endel.nativewebsocket.cpp */,
+				B5ABA8A36C35842C3A5CB076 /* endel.nativewebsocket_CodeGen.c */,
 				4ED0B579112CB1E12AEF01F5 /* mscorlib.cpp */,
 				470F4DBFC6CF22AFB4920379 /* mscorlib_CodeGen.c */,
 				F1F28F611D1E7EE7CCC25F71 /* mscorlib__1.cpp */,
@@ -1773,14 +1775,14 @@
 				DD00EE00FF00AA00BB000001 /* AuthManager.swift */,
 				DD00EE00FF00AA00BB000009 /* CaptureState.swift */,
 				DD00EE00FF00AA00BB000019 /* DriveHunt-iOS-Bridging-Header.h */,
+				DD00EE00FF00AA00BB000019 /* DriveHunt-iOS-Bridging-Header.h */,
 				DD00EE00FF00AA00BB000000 /* DriveHuntApp.swift */,
 				DD00EE00FF00AA00BB000010 /* GameHud.swift */,
-				DD00EE00FF00AA00BB000018 /* SimulationHud.swift */,
-				DD00EE00FF00AA00BB000019 /* BootLoadingScreen.swift */,
 				DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */,
 				DD00EE00FF00AA00BB000002 /* LocationService.swift */,
 				DD00EE00FF00AA00BB000005 /* LoginScreen.swift */,
 				DD00EE00FF00AA00BB000006 /* MapScreen.swift */,
+				DD00EE00FF00AA00BB000018 /* NativeCallProxy.h */,
 				DD00EE00FF00AA00BB000018 /* NativeCallProxy.h */,
 				DD00EE00FF00AA00BB000017 /* NativeCallProxy.mm */,
 				DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */,
@@ -2084,8 +2086,8 @@
 				DD00EE00FF00AA00BB000108 /* SkinPickerScreen.swift in Sources */,
 				DD00EE00FF00AA00BB000109 /* CaptureState.swift in Sources */,
 				DD00EE00FF00AA00BB000110 /* GameHud.swift in Sources */,
-				DD00EE00FF00AA00BB000118 /* SimulationHud.swift in Sources */,
-				DD00EE00FF00AA00BB000119 /* BootLoadingScreen.swift in Sources */,
+				DD00EE00FF00AA00BB000118 /* NativeCallProxy.h in Sources */,
+				DD00EE00FF00AA00BB000119 /* DriveHunt-iOS-Bridging-Header.h in Sources */,
 				DD00EE00FF00AA00BB000111 /* HudOverlayManager.swift in Sources */,
 				DD00EE00FF00AA00BB000112 /* ResourceDockView.swift in Sources */,
 				DD00EE00FF00AA00BB000113 /* NativeCallProxyDelegate.swift in Sources */,

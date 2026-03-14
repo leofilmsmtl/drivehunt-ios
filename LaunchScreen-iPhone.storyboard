@@ -1,79 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="15702" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="UnityLaunchScreen-ViewController">
-    <device id="ipad9_7" orientation="portrait" layout="fullscreen" appearance="light"/>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="DriveHuntLaunch-VC">
+    <device id="retina6_1" orientation="portrait" appearance="dark"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="15704"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
-        <scene sceneID="UnityLaunchScreen-Scene">
+        <scene sceneID="DriveHuntLaunch-Scene">
             <objects>
-                <viewController id="UnityLaunchScreen-ViewController" sceneMemberID="viewController">
-                    <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="AFW-kw-awY"/>
-                        <viewControllerLayoutGuide type="bottom" id="BH2-mn-4Lm"/>
-                    </layoutGuides>
-                    <view key="view" userInteractionEnabled="NO" contentMode="scaleToFill" id="UnityLaunchScreen-RootView" userLabel="RootView">
+                <viewController id="DriveHuntLaunch-VC" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="DriveHuntLaunch-Root">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <!-- DRIVEHUNT main title — bold, large -->
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="DRIVEHUNT" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TitleLabel">
-                                <rect key="frame" x="57" y="370" width="300" height="50"/>
-                                <fontDescription key="fontDescription" type="boldSystem" pointSize="42"/>
+                            <!-- DRIVEHUNT Title -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="DRIVEHUNT" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="titleLabel">
+                                <rect key="frame" x="57" y="420" width="300" height="48"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="40"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
                             </label>
-                            <!-- Thin decorative line separator -->
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="SeparatorLine">
-                                <rect key="frame" x="157" y="428" width="100" height="1"/>
-                                <color key="backgroundColor" red="0" green="0.85" blue="0.6" alpha="0.4" colorSpace="custom" customColorSpace="sRGB"/>
+                            <!-- Thin green separator -->
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="separatorView">
+                                <rect key="frame" x="167" y="482" width="80" height="1"/>
+                                <color key="backgroundColor" red="0.0" green="0.85" blue="0.57" alpha="0.35" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="1" id="sepHeight"/>
-                                    <constraint firstAttribute="width" constant="100" id="sepWidth"/>
+                                    <constraint firstAttribute="height" constant="1" id="sepH"/>
+                                    <constraint firstAttribute="width" constant="80" id="sepW"/>
                                 </constraints>
                             </view>
-                            <!-- by P. HEXAGON -->
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="by P. HEXAGON" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SubtitleLabel">
-                                <rect key="frame" x="107" y="440" width="200" height="20"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
-                                <color key="textColor" red="0.45" green="0.45" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                            </label>
-                            <!-- Loading indicator — spinner auto-animates on LaunchScreen -->
-                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" animating="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="SpinnerView">
-                                <rect key="frame" x="197" y="700" width="20" height="20"/>
-                                <color key="color" red="0.35" green="0.35" blue="0.4" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                            </activityIndicatorView>
-                            <!-- First launch notice — near bottom -->
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Première ouverture · Chargement jusqu'à 30s" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FirstLaunchLabel">
-                                <rect key="frame" x="40" y="726" width="334" height="20"/>
+                            <!-- by P. HEXAGON subtitle -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="by P. HEXAGON" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="subtitleLabel">
+                                <rect key="frame" x="137" y="497" width="140" height="16"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="11"/>
-                                <color key="textColor" red="0.3" green="0.3" blue="0.35" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="textColor" white="1" alpha="0.25" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
                             </label>
                         </subviews>
-                        <color key="backgroundColor" red="0.02" green="0.02" blue="0.06" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <!-- Deep dark background matching BootLoadingScreen -->
+                        <color key="backgroundColor" red="0.01961" green="0.01961" blue="0.06275" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <!-- Title: centered, slightly above center -->
-                            <constraint firstItem="TitleLabel" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="titleCX"/>
-                            <constraint firstItem="TitleLabel" firstAttribute="centerY" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerY" constant="-50" id="titleCY"/>
-                            <!-- Separator: centered, below title -->
-                            <constraint firstItem="SeparatorLine" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="sepCX"/>
-                            <constraint firstItem="SeparatorLine" firstAttribute="top" secondItem="TitleLabel" secondAttribute="bottom" constant="14" id="sepBelowTitle"/>
-                            <!-- Subtitle: centered, below separator -->
-                            <constraint firstItem="SubtitleLabel" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="subCX"/>
-                            <constraint firstItem="SubtitleLabel" firstAttribute="top" secondItem="SeparatorLine" secondAttribute="bottom" constant="12" id="subBelowSep"/>
-                            <!-- Spinner: centered, above first launch label -->
-                            <constraint firstItem="SpinnerView" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="spinnerCX"/>
-                            <constraint firstItem="FirstLaunchLabel" firstAttribute="top" secondItem="SpinnerView" secondAttribute="bottom" constant="10" id="labelBelowSpinner"/>
-                            <!-- First launch notice: centered, near bottom -->
-                            <constraint firstItem="FirstLaunchLabel" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="firstLaunchCX"/>
-                            <constraint firstItem="FirstLaunchLabel" firstAttribute="width" secondItem="UnityLaunchScreen-RootView" secondAttribute="width" constant="-80" id="firstLaunchWidth"/>
-                            <constraint firstAttribute="bottom" secondItem="FirstLaunchLabel" secondAttribute="bottom" constant="70" id="firstLaunchBottom"/>
+                            <!-- Title: center X, center Y offset -20 -->
+                            <constraint firstItem="titleLabel" firstAttribute="centerX" secondItem="DriveHuntLaunch-Root" secondAttribute="centerX" id="titleCX"/>
+                            <constraint firstItem="titleLabel" firstAttribute="centerY" secondItem="DriveHuntLaunch-Root" secondAttribute="centerY" constant="-20" id="titleCY"/>
+                            <!-- Separator: center X, 14pt below title -->
+                            <constraint firstItem="separatorView" firstAttribute="centerX" secondItem="DriveHuntLaunch-Root" secondAttribute="centerX" id="sepCX"/>
+                            <constraint firstItem="separatorView" firstAttribute="top" secondItem="titleLabel" secondAttribute="bottom" constant="14" id="sepTop"/>
+                            <!-- Subtitle: center X, 12pt below separator -->
+                            <constraint firstItem="subtitleLabel" firstAttribute="centerX" secondItem="DriveHuntLaunch-Root" secondAttribute="centerX" id="subCX"/>
+                            <constraint firstItem="subtitleLabel" firstAttribute="top" secondItem="separatorView" secondAttribute="bottom" constant="12" id="subTop"/>
                         </constraints>
+                        <viewLayoutGuide key="safeArea" id="safeArea"/>
                     </view>
                 </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="firstResponder" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="53" y="375"/>
         </scene>

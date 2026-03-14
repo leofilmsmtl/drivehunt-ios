@@ -68,10 +68,10 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
                             AuthManager.shared.saveTokens(access: token, refresh: refresh, role: role)
                             AppState.shared.isLoggedIn = true
                             HudOverlayManager.shared.dismissModal()
-                            // Show loading screen briefly on re-login (Unity already booted)
-                            HudOverlayManager.shared.showLoadingScreen(on: rootView, isRelogin: true)
-                            // Now add game overlays (behind loading screen)
+                            // Add game overlays first (behind loading screen)
                             HudOverlayManager.shared.addOverlays(to: rootView)
+                            // Show loading screen ON TOP — dismiss after 3s (Unity already booted)
+                            HudOverlayManager.shared.showLoadingScreen(on: rootView, isRelogin: true)
                             LocationService.shared.requestPermission()
                             LocationService.shared.startTracking()
                             // Send backend URL + auth to Unity (matches Kotlin)
