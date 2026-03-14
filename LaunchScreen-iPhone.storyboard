@@ -16,19 +16,47 @@
                         <viewControllerLayoutGuide type="bottom" id="BH2-mn-4Lm"/>
                     </layoutGuides>
                     <view key="view" userInteractionEnabled="NO" contentMode="scaleToFill" id="UnityLaunchScreen-RootView" userLabel="RootView">
-                        <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LaunchScreen-iPhonePortrait.png" translatesAutoresizingMaskIntoConstraints="NO" id="UnityLaunchScreen-ImageView" userLabel="ImageView">
-                                <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
-                            </imageView>
+                            <!-- Hexagon Symbol ⬡ -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="⬡" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="HexSymbol">
+                                <rect key="frame" x="157" y="320" width="100" height="80"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="72"/>
+                                <color key="textColor" red="0" green="1" blue="0.667" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </label>
+                            <!-- P. HEXAGON title -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="P. HEXAGON" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TitleLabel">
+                                <rect key="frame" x="57" y="400" width="300" height="44"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="32"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </label>
+                            <!-- Subtitle -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="GPS Territory Capture Game" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SubtitleLabel">
+                                <rect key="frame" x="57" y="448" width="300" height="24"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                <color key="textColor" red="0.6" green="0.6" blue="0.6" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </label>
+                            <!-- Spinner (auto-animates in LaunchScreen!) -->
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" animating="YES" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="SpinnerView">
+                                <rect key="frame" x="186" y="510" width="42" height="42"/>
+                                <color key="color" red="0" green="1" blue="0.667" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </activityIndicatorView>
                         </subviews>
-                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="0.039" green="0.039" blue="0.102" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstAttribute="bottom" secondItem="UnityLaunchScreen-ImageView" secondAttribute="bottom" id="Y0U-Pe-L4d"/>
-                            <constraint firstItem="UnityLaunchScreen-ImageView" firstAttribute="top" secondItem="UnityLaunchScreen-RootView" secondAttribute="top" id="hwu-wP-OkZ"/>
-                            <constraint firstItem="UnityLaunchScreen-ImageView" firstAttribute="leading" secondItem="UnityLaunchScreen-RootView" secondAttribute="leading" id="oOc-bh-ihE"/>
-                            <constraint firstAttribute="trailing" secondItem="UnityLaunchScreen-ImageView" secondAttribute="trailing" id="rHJ-TI-xEc"/>
+                            <!-- Hex symbol: centered X, above title -->
+                            <constraint firstItem="HexSymbol" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="hexCX"/>
+                            <constraint firstItem="HexSymbol" firstAttribute="bottom" secondItem="TitleLabel" secondAttribute="top" constant="-12" id="hexAboveTitle"/>
+                            <!-- Title: centered -->
+                            <constraint firstItem="TitleLabel" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="titleCX"/>
+                            <constraint firstItem="TitleLabel" firstAttribute="centerY" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerY" constant="-30" id="titleCY"/>
+                            <!-- Subtitle: below title -->
+                            <constraint firstItem="SubtitleLabel" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="subCX"/>
+                            <constraint firstItem="SubtitleLabel" firstAttribute="top" secondItem="TitleLabel" secondAttribute="bottom" constant="4" id="subBelowTitle"/>
+                            <!-- Spinner: centered, below subtitle -->
+                            <constraint firstItem="SpinnerView" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="spinnerCX"/>
+                            <constraint firstItem="SpinnerView" firstAttribute="top" secondItem="SubtitleLabel" secondAttribute="bottom" constant="40" id="spinnerBelowSub"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -37,7 +65,4 @@
             <point key="canvasLocation" x="53" y="375"/>
         </scene>
     </scenes>
-    <resources>
-        <image name="LaunchScreen-iPhonePortrait.png" width="1242" height="2208"/>
-    </resources>
 </document>

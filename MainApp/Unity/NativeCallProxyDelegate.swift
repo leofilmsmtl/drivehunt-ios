@@ -15,8 +15,19 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
     override init() {
         super.init()
         // Do NOT call registerNativeDelegate — causes app freeze.
-        // Boot callbacks are handled via @_cdecl functions below instead.
+        // Boot callbacks are handled via NSNotificationCenter instead.
         print("✅ NativeCallProxyDelegate: Initialized")
+
+        // Show loading screen IMMEDIATELY on keyWindow (covers frozen LaunchScreen)
+        DispatchQueue.main.async {
+            if let window = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .flatMap({ $0.windows })
+                .first(where: { $0.isKeyWindow }) {
+                HudOverlayManager.shared.showLoadingScreen(on: window)
+                print("✅ Early loading screen shown on keyWindow")
+            }
+        }
 
         // Poll for Unity's view to be ready — adds overlays + location
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] timer in
@@ -104,42 +115,4 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
     func onClaimResult(_ success: Bool, wasSteal: Bool, message: String) {
         CaptureState.shared.onClaimResult(success: success, wasSteal: wasSteal, message: message)
     }
-}
-
-// MARK: - @_cdecl Boot callbacks (called from NativeCallProxy.mm C entry points)
-// Unity C# → [DllImport] → C entry point → dispatch_async(main) → @_cdecl Swift function
-
-@_cdecl("nativeOnUnityReady")
-func nativeOnUnityReady() { UnityBridge.shared.onUnityReady() }
-
-@_cdecl("nativeOnAuthBridged")
-func nativeOnAuthBridged() { UnityBridge.shared.onAuthBridged() }
-
-@_cdecl("nativeOnGPSLocked")
-func nativeOnGPSLocked() { UnityBridge.shared.onGPSLocked() }
-
-@_cdecl("nativeOnHexHistoryLoaded")
-func nativeOnHexHistoryLoaded(_ count: UnsafePointer<CChar>) {
-    UnityBridge.shared.onHexHistoryLoaded(count: String(cString: count))
-}
-
-@_cdecl("nativeOnTilesLoaded")
-func nativeOnTilesLoaded() { UnityBridge.shared.onTilesLoaded() }
-
-@_cdecl("nativeOnZonesLoaded")
-func nativeOnZonesLoaded(_ count: UnsafePointer<CChar>) {
-    UnityBridge.shared.onZonesLoaded(count: String(cString: count))
-}
-
-@_cdecl("nativeOnBootComplete")
-func nativeOnBootComplete() { UnityBridge.shared.onBootComplete() }
-
-@_cdecl("nativeSetPlayerId")
-func nativeSetPlayerId(_ playerId: UnsafePointer<CChar>) {
-    UnityBridge.shared.setPlayerId(String(cString: playerId))
-}
-
-@_cdecl("nativeOnInventoryUpdate")
-func nativeOnInventoryUpdate(_ jsonString: UnsafePointer<CChar>) {
-    UnityBridge.shared.onInventoryUpdate(String(cString: jsonString))
 }

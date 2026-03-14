@@ -2,114 +2,122 @@
 // NativeCallStubs — C function stubs for Unity DllImport calls
 // ═══════════════════════════════════════════════════════════════
 //
-// These are compiled into UnityFramework so libGameAssembly.a
-// can find the symbols. The actual Swift implementations are
-// called via the delegate pattern in MainApp/Unity/NativeCallProxy.mm.
+// Compiled into UnityFramework so IL2CPP (libGameAssembly.a)
+// can find the symbols via [DllImport("__Internal")].
 //
-// When the NativeCallProxy delegate is registered (from Swift),
-// these stubs forward to Swift. Before registration, they're no-ops.
+// Posts NSNotifications so the main app (Swift) can observe them.
+// NSNotificationCenter works across framework boundaries.
 //
 // ═══════════════════════════════════════════════════════════════
 
 #import <Foundation/Foundation.h>
 
-// Forward declaration of the delegate protocol
-@protocol NativeCallsProtocol <NSObject>
-@required
-- (void)onUnityReady;
-- (void)onAuthBridged;
-- (void)onGPSLocked;
-- (void)onHexHistoryLoaded:(NSString*)count;
-- (void)onTilesLoaded;
-- (void)onZonesLoaded:(NSString*)count;
-- (void)onBootComplete;
-- (void)setPlayerId:(NSString*)playerId;
-- (void)onInventoryUpdate:(NSString*)jsonString;
-- (void)setClaimable:(NSString*)hexId isSteal:(BOOL)isSteal ownerName:(NSString*)ownerName;
-- (void)clearClaimable;
-- (void)setHexStats:(int)owned total:(int)total;
-- (void)onClaimResult:(BOOL)success wasSteal:(BOOL)wasSteal message:(NSString*)message;
-@end
-
-// Shared delegate — set from MainApp side via registerNativeDelegate()
-__attribute__((visibility("default")))
-id<NativeCallsProtocol> _nativeCallDelegate = nil;
-
 extern "C" {
 
-void registerNativeDelegate(id<NativeCallsProtocol> delegate) {
-    _nativeCallDelegate = delegate;
+void registerNativeDelegate(id delegate) {
+    // No-op — we use NSNotificationCenter instead of delegate.
 }
 
 void _onUnityReady() {
-    if (_nativeCallDelegate) [_nativeCallDelegate onUnityReady];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onUnityReady"}];
+    });
 }
 
 void _onAuthBridged() {
-    if (_nativeCallDelegate) [_nativeCallDelegate onAuthBridged];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onAuthBridged"}];
+    });
 }
 
 void _onGPSLocked() {
-    if (_nativeCallDelegate) [_nativeCallDelegate onGPSLocked];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onGPSLocked"}];
+    });
 }
 
 void _onHexHistoryLoaded(const char* count) {
-    if (_nativeCallDelegate) {
-        NSString *s = count ? [NSString stringWithUTF8String:count] : @"0";
-        [_nativeCallDelegate onHexHistoryLoaded:s];
-    }
+    NSString* c = count ? [NSString stringWithUTF8String:count] : @"0";
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onHexHistoryLoaded", @"arg": c}];
+    });
 }
 
 void _onTilesLoaded() {
-    if (_nativeCallDelegate) [_nativeCallDelegate onTilesLoaded];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onTilesLoaded"}];
+    });
 }
 
 void _onZonesLoaded(const char* count) {
-    if (_nativeCallDelegate) {
-        NSString *s = count ? [NSString stringWithUTF8String:count] : @"0";
-        [_nativeCallDelegate onZonesLoaded:s];
-    }
+    NSString* c = count ? [NSString stringWithUTF8String:count] : @"0";
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onZonesLoaded", @"arg": c}];
+    });
 }
 
 void _onBootComplete() {
-    if (_nativeCallDelegate) [_nativeCallDelegate onBootComplete];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onBootComplete"}];
+    });
 }
 
 void _setPlayerId(const char* playerId) {
-    if (_nativeCallDelegate) {
-        NSString *s = playerId ? [NSString stringWithUTF8String:playerId] : @"";
-        [_nativeCallDelegate setPlayerId:s];
-    }
+    NSString* p = playerId ? [NSString stringWithUTF8String:playerId] : @"";
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"setPlayerId", @"arg": p}];
+    });
 }
 
 void _onInventoryUpdate(const char* jsonString) {
-    if (_nativeCallDelegate) {
-        NSString *s = jsonString ? [NSString stringWithUTF8String:jsonString] : @"{}";
-        [_nativeCallDelegate onInventoryUpdate:s];
-    }
+    NSString* j = jsonString ? [NSString stringWithUTF8String:jsonString] : @"{}";
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onInventoryUpdate", @"arg": j}];
+    });
 }
 
+// Capture callbacks
 void _setClaimable(const char* hexId, bool isSteal, const char* ownerName) {
-    if (_nativeCallDelegate) {
-        NSString *hex = hexId ? [NSString stringWithUTF8String:hexId] : @"";
-        NSString *owner = ownerName ? [NSString stringWithUTF8String:ownerName] : @"";
-        [_nativeCallDelegate setClaimable:hex isSteal:isSteal ownerName:owner];
-    }
+    NSString* hex = hexId ? [NSString stringWithUTF8String:hexId] : @"";
+    NSString* owner = ownerName ? [NSString stringWithUTF8String:ownerName] : @"";
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil
+            userInfo:@{@"signal": @"setClaimable", @"hexId": hex, @"isSteal": @(isSteal), @"ownerName": owner}];
+    });
 }
 
 void _clearClaimable() {
-    if (_nativeCallDelegate) [_nativeCallDelegate clearClaimable];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"clearClaimable"}];
+    });
 }
 
 void _setHexStats(int owned, int total) {
-    if (_nativeCallDelegate) [_nativeCallDelegate setHexStats:owned total:total];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil
+            userInfo:@{@"signal": @"setHexStats", @"owned": @(owned), @"total": @(total)}];
+    });
 }
 
 void _onClaimResult(bool success, bool wasSteal, const char* message) {
-    if (_nativeCallDelegate) {
-        NSString *msg = message ? [NSString stringWithUTF8String:message] : @"";
-        [_nativeCallDelegate onClaimResult:success wasSteal:wasSteal message:msg];
-    }
+    NSString* msg = message ? [NSString stringWithUTF8String:message] : @"";
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil
+            userInfo:@{@"signal": @"onClaimResult", @"success": @(success), @"wasSteal": @(wasSteal), @"message": msg}];
+    });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// TEMPORARY: Old IL2CPP build references _NativeOn* names.
+// These forward to the real _on* functions above.
+// Remove after next Unity rebuild.
+// ═══════════════════════════════════════════════════════════════
+void _NativeOnUnityReady() { _onUnityReady(); }
+void _NativeOnAuthBridged() { _onAuthBridged(); }
+void _NativeOnGPSLocked() { _onGPSLocked(); }
+void _NativeOnHexHistoryLoaded(const char* c) { _onHexHistoryLoaded(c); }
+void _NativeOnTilesLoaded() { _onTilesLoaded(); }
+void _NativeOnZonesLoaded(const char* c) { _onZonesLoaded(c); }
+void _NativeOnBootComplete() { _onBootComplete(); }
 
 } // extern "C"

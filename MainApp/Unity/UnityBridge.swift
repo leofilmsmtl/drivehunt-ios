@@ -6,6 +6,51 @@ import Combine
 final class UnityBridge: ObservableObject {
     static let shared = UnityBridge()
 
+    private init() {
+        // Observe boot callbacks from UnityFramework via NSNotificationCenter
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(handleBootCallback(_:)),
+            name: NSNotification.Name("UnityBootCallback"), object: nil
+        )
+    }
+
+    @objc private func handleBootCallback(_ notification: Notification) {
+        guard let info = notification.userInfo,
+              let signal = info["signal"] as? String else { return }
+        let arg = info["arg"] as? String ?? ""
+        print("📡 UnityBridge received signal: \(signal) arg=\(arg)")
+
+        switch signal {
+        case "onUnityReady":        onUnityReady()
+        case "onAuthBridged":       onAuthBridged()
+        case "onGPSLocked":         onGPSLocked()
+        case "onHexHistoryLoaded":  onHexHistoryLoaded(count: arg)
+        case "onTilesLoaded":       onTilesLoaded()
+        case "onZonesLoaded":       onZonesLoaded(count: arg)
+        case "onBootComplete":      onBootComplete()
+        case "setPlayerId":         setPlayerId(arg)
+        case "onInventoryUpdate":   onInventoryUpdate(arg)
+        case "setClaimable":
+            let hexId = info["hexId"] as? String ?? ""
+            let isSteal = info["isSteal"] as? Bool ?? false
+            let ownerName = info["ownerName"] as? String ?? ""
+            CaptureState.shared.setClaimable(hexId: hexId, isSteal: isSteal, ownerName: ownerName)
+        case "clearClaimable":
+            CaptureState.shared.clearClaimable()
+        case "setHexStats":
+            let owned = info["owned"] as? Int ?? 0
+            let total = info["total"] as? Int ?? 0
+            CaptureState.shared.setHexStats(owned: owned, total: total)
+        case "onClaimResult":
+            let success = info["success"] as? Bool ?? false
+            let wasSteal = info["wasSteal"] as? Bool ?? false
+            let message = info["message"] as? String ?? ""
+            CaptureState.shared.onClaimResult(success: success, wasSteal: wasSteal, message: message)
+        default:
+            print("⚠️ UnityBridge: unknown signal '\(signal)'")
+        }
+    }
+
     @Published var isUnityReady = false
     @Published var isAuthBridged = false
     @Published var isGPSLocked = false

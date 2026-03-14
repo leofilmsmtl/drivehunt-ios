@@ -2,14 +2,39 @@ import SwiftUI
 import UIKit
 import Combine
 
-/// UIView subclass that passes through touches on transparent areas.
-/// This lets taps reach Unity's view beneath our HUD overlays.
+/// UIView subclass that passes through touches on non-interactive areas.
+/// This lets multi-touch gestures (zoom, tilt) reach Unity's view beneath HUD overlays.
+/// Without this, the hosting controller's view eats ALL touches in its 320×400 frame,
+/// preventing Unity from seeing the second finger for pinch/tilt gestures.
 class PassthroughView: UIView {
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         let hit = super.hitTest(point, with: event)
-        // If the hit is this container itself, pass through to Unity
-        // Only intercept if a real child (button, etc.) was tapped
-        return hit === self ? nil : hit
+        // Pass through if:
+        // 1. Hit is this container itself (transparent area)
+        // 2. Hit is a non-interactive SwiftUI layout view (backgrounds, spacers, stacks)
+        guard let hitView = hit else { return nil }
+        if hitView === self { return nil }
+        // Check if the hit view is actually interactive (button, control, gesture recognizer)
+        if isInteractiveView(hitView) { return hit }
+        // Not interactive — pass through to Unity
+        return nil
+    }
+
+    /// Determines if a view is actually interactive (should intercept touches)
+    private func isInteractiveView(_ view: UIView) -> Bool {
+        // UIControl subclasses (buttons, sliders, switches, etc.)
+        if view is UIControl { return true }
+        // Views with tap/gesture recognizers attached
+        if let recognizers = view.gestureRecognizers, !recognizers.isEmpty { return true }
+        // Check parent chain — SwiftUI wraps interactive elements in container views
+        var parent = view.superview
+        while let p = parent {
+            if p === self { break }
+            if p is UIControl { return true }
+            if let recognizers = p.gestureRecognizers, !recognizers.isEmpty { return true }
+            parent = p.superview
+        }
+        return false
     }
 }
 
@@ -130,20 +155,24 @@ final class HudOverlayManager {
         self.bottomHostingController = bottomHost
 
         // --- TOP RIGHT: Resource dock — on top ---
+        // Use fixedSize so the container only covers the visible content
+        // (NOT a 320×400 block that eats multi-touch gestures)
         let topView = AnyView(
             ResourceDockView()
+                .fixedSize()
                 .onAppear { GemInventoryState.shared.fetchFromBackend() }
         )
         let topHost = UIHostingController(rootView: topView)
+        topHost.view.backgroundColor = .clear
+        topHost.view.isOpaque = false
         let topContainer = makePassthroughContainer(for: topHost, tag: 998)
         unityView.addSubview(topContainer)
 
         NSLayoutConstraint.activate([
             topContainer.trailingAnchor.constraint(equalTo: unityView.trailingAnchor, constant: -12),
             topContainer.topAnchor.constraint(equalTo: unityView.safeAreaLayoutGuide.topAnchor, constant: 4),
-            topContainer.widthAnchor.constraint(equalToConstant: 320),
-            topContainer.heightAnchor.constraint(equalToConstant: 400)
         ])
+        // Let intrinsic content size determine width/height — no fixed 320×400
         self.topHostingController = topHost
 
         print("✅ HudOverlayManager: Overlays added with touch passthrough")
@@ -171,23 +200,42 @@ final class HudOverlayManager {
         ])
         self.loadingHostingController = loadingHost
 
-        // Auto-dismiss when Unity signals boot complete (BootPipeline step 6/6).
-        // Full chain: C# SignalKotlin("onBootComplete") → [DllImport] _NativeOnBootComplete()
-        //   → NativeCallProxy.mm → dispatch_async(main) → @_cdecl nativeOnBootComplete()
-        //   → UnityBridge.shared.onBootComplete() → isBootComplete = true → Combine fires here.
+        // Dismiss helper — prevents double-dismiss
+        var dismissed = false
+        let dismiss = { [weak self] in
+            guard !dismissed else { return }
+            dismissed = true
+            self?.bootCancellable?.cancel()
+            UIView.animate(withDuration: 0.5, animations: {
+                loadingHost.view.alpha = 0
+            }) { _ in
+                loadingHost.view.removeFromSuperview()
+                self?.loadingHostingController = nil
+                print("✅ Boot complete — loading screen dismissed")
+            }
+        }
+
+        // FIX 1: If boot already completed (race condition), dismiss immediately
+        if UnityBridge.shared.isBootComplete {
+            print("⚡ isBootComplete already true — dismissing immediately")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { dismiss() }
+            return
+        }
+
+        // FIX 2: Subscribe to future boot complete signal
         bootCancellable = UnityBridge.shared.$isBootComplete
             .filter { $0 }
             .first()
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                UIView.animate(withDuration: 0.5, animations: {
-                    loadingHost.view.alpha = 0
-                }) { _ in
-                    loadingHost.view.removeFromSuperview()
-                    self?.loadingHostingController = nil
-                    print("✅ Boot complete — loading screen dismissed")
-                }
+            .sink { _ in dismiss() }
+
+        // FIX 3: Timeout fallback — never stay stuck forever (15 sec max)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) {
+            if !dismissed {
+                print("⏰ Loading screen timeout (15s) — force dismissing")
+                dismiss()
             }
+        }
     }
 
     private var modalHostingController: UIHostingController<AnyView>?
