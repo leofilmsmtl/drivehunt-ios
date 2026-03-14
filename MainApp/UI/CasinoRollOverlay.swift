@@ -236,13 +236,15 @@ struct CasinoRollOverlay: View {
             let numCycles = isHighTier ? 4 : (2 + Int.random(in: 0...2))
             let baseSpeed: UInt64 = isHighTier ? 90 : 80
             let speedRamp: UInt64 = isHighTier ? 35 : UInt64(30 + Int.random(in: 0...19))
+            var tickStep = 0
 
             // Fast scan cycles
             for cycle in 0..<numCycles {
                 for i in 0...4 {
                     scanIndex = i
                     currentGemColor = GEM_COLORS[GEM_TIERS[i]] ?? .white
-                    SoundEngine.shared.tick(step: cycle * 5 + i)
+                    SoundEngine.shared.tick(step: tickStep)
+                    tickStep += 1
                     SoundEngine.shared.vibrate(.soft)
                     try? await Task.sleep(nanoseconds: (baseSpeed + UInt64(cycle) * speedRamp) * 1_000_000)
                 }
@@ -255,14 +257,16 @@ struct CasinoRollOverlay: View {
                 for i in 0...4 {
                     scanIndex = i
                     currentGemColor = GEM_COLORS[GEM_TIERS[i]] ?? .white
-                    SoundEngine.shared.tick(step: i)
+                    SoundEngine.shared.tick(step: tickStep)
+                    tickStep += 1
                     SoundEngine.shared.vibrate(.soft)
                     try? await Task.sleep(nanoseconds: teaseMs[i] * 1_000_000)
                 }
                 for i in 0...targetIdx {
                     scanIndex = i
                     currentGemColor = GEM_COLORS[GEM_TIERS[i]] ?? .white
-                    SoundEngine.shared.tick(step: i)
+                    SoundEngine.shared.tick(step: tickStep)
+                    tickStep += 1
                     SoundEngine.shared.vibrate(.soft)
                     try? await Task.sleep(nanoseconds: (150 + UInt64(i) * 50) * 1_000_000)
                 }
@@ -270,7 +274,8 @@ struct CasinoRollOverlay: View {
                 for i in 0...targetIdx {
                     scanIndex = i
                     currentGemColor = GEM_COLORS[GEM_TIERS[i]] ?? .white
-                    SoundEngine.shared.tick(step: i)
+                    SoundEngine.shared.tick(step: tickStep)
+                    tickStep += 1
                     SoundEngine.shared.vibrate(.light)
                     try? await Task.sleep(nanoseconds: (200 + UInt64(i) * 80) * 1_000_000)
                 }
@@ -668,31 +673,67 @@ class SoundEngine {
 
     func revealEpic() {
         play(mix(
+            // Sub-bass boom
             generateTone(freq: 40, duration: 0.8, waveform: "sine", volume: 0.25),
             generateTone(freq: 60, duration: 0.6, waveform: "sine", volume: 0.18, delay: 0.05),
+            generateTone(freq: 80, duration: 0.5, waveform: "sine", volume: 0.12, delay: 0.1),
+            // Power chord
             generateTone(freq: 261, duration: 0.3, waveform: "sawtooth", volume: 0.14, delay: 0.08),
+            generateTone(freq: 392, duration: 0.3, waveform: "sawtooth", volume: 0.10, delay: 0.10),
             generateTone(freq: 523, duration: 0.25, waveform: "sawtooth", volume: 0.12, delay: 0.12),
+            generateTone(freq: 784, duration: 0.25, waveform: "sawtooth", volume: 0.08, delay: 0.16),
+            // Ascending fanfare
             generateTone(freq: 1047, duration: 0.4, waveform: "sine", volume: 0.16, delay: 0.20),
+            generateTone(freq: 1318, duration: 0.4, waveform: "sine", volume: 0.14, delay: 0.26),
             generateTone(freq: 1568, duration: 0.5, waveform: "sine", volume: 0.12, delay: 0.32),
+            generateTone(freq: 2093, duration: 0.6, waveform: "sine", volume: 0.10, delay: 0.38),
+            // Cymbal crash
             generateNoise(duration: 0.5, volume: 0.18, delay: 0.15),
-            generateTone(freq: 1047, duration: 1.0, waveform: "sine", volume: 0.05, delay: 0.55)
+            // Ethereal choir
+            generateTone(freq: 1047, duration: 1.0, waveform: "sine", volume: 0.05, delay: 0.55),
+            generateTone(freq: 1318, duration: 1.0, waveform: "sine", volume: 0.04, delay: 0.60),
+            generateTone(freq: 1568, duration: 1.2, waveform: "sine", volume: 0.04, delay: 0.65),
+            // Sparkle tail
+            generateTone(freq: 2093, duration: 1.5, waveform: "sine", volume: 0.03, delay: 0.70),
+            generateTone(freq: 1568, duration: 2.0, waveform: "triangle", volume: 0.015, delay: 0.90)
         ))
     }
 
     func revealLegendary() {
         play(mix(
+            // Phase 1: Earthquake (triple sub-bass)
             generateTone(freq: 30, duration: 1.2, waveform: "sine", volume: 0.30),
+            generateTone(freq: 40, duration: 1.0, waveform: "sine", volume: 0.25, delay: 0.03),
             generateTone(freq: 55, duration: 0.8, waveform: "sine", volume: 0.22, delay: 0.06),
+            generateTone(freq: 80, duration: 0.6, waveform: "sine", volume: 0.18, delay: 0.10),
             generateTone(freq: 100, duration: 0.15, waveform: "square", volume: 0.20, delay: 0.12),
             generateNoise(duration: 0.08, volume: 0.25, delay: 0.12),
+            // Phase 2: Orchestral hit (stacked fifths)
+            generateTone(freq: 131, duration: 0.4, waveform: "sawtooth", volume: 0.16, delay: 0.15),
+            generateTone(freq: 196, duration: 0.4, waveform: "sawtooth", volume: 0.14, delay: 0.16),
             generateTone(freq: 261, duration: 0.35, waveform: "sawtooth", volume: 0.16, delay: 0.17),
+            generateTone(freq: 392, duration: 0.35, waveform: "sawtooth", volume: 0.14, delay: 0.18),
             generateTone(freq: 523, duration: 0.3, waveform: "sawtooth", volume: 0.14, delay: 0.19),
+            generateTone(freq: 659, duration: 0.3, waveform: "sawtooth", volume: 0.12, delay: 0.20),
+            generateTone(freq: 784, duration: 0.3, waveform: "sawtooth", volume: 0.10, delay: 0.21),
+            // Phase 3: Ascending fanfare → G7
             generateTone(freq: 1047, duration: 0.35, waveform: "sine", volume: 0.18, delay: 0.30),
+            generateTone(freq: 1318, duration: 0.30, waveform: "sine", volume: 0.16, delay: 0.36),
             generateTone(freq: 1568, duration: 0.30, waveform: "sine", volume: 0.16, delay: 0.42),
+            generateTone(freq: 2093, duration: 0.35, waveform: "sine", volume: 0.14, delay: 0.48),
             generateTone(freq: 2637, duration: 0.40, waveform: "sine", volume: 0.10, delay: 0.54),
+            generateTone(freq: 3136, duration: 0.50, waveform: "sine", volume: 0.08, delay: 0.60),
+            // Phase 4: Triple crash
             generateNoise(duration: 0.6, volume: 0.22, delay: 0.18),
+            generateNoise(duration: 0.5, volume: 0.15, delay: 0.35),
+            generateNoise(duration: 0.4, volume: 0.10, delay: 0.55),
+            // Phase 5: Detuned heavenly choir
             generateTone(freq: 523, duration: 2.0, waveform: "sine", volume: 0.06, delay: 0.75),
-            generateTone(freq: 1047, duration: 2.5, waveform: "sine", volume: 0.05, delay: 0.85)
+            generateTone(freq: 527, duration: 2.0, waveform: "sine", volume: 0.06, delay: 0.75),
+            generateTone(freq: 784, duration: 2.0, waveform: "sine", volume: 0.05, delay: 0.80),
+            generateTone(freq: 788, duration: 2.0, waveform: "sine", volume: 0.05, delay: 0.80),
+            generateTone(freq: 1047, duration: 2.5, waveform: "sine", volume: 0.05, delay: 0.85),
+            generateTone(freq: 1051, duration: 2.5, waveform: "sine", volume: 0.05, delay: 0.85)
         ))
     }
 
