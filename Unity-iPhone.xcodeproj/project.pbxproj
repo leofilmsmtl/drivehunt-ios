@@ -139,8 +139,6 @@
 		DD00EE00FF00AA00BB000110 /* GameHud.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000010 /* GameHud.swift */; };
 		DD00EE00FF00AA00BB000111 /* HudOverlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */; };
 		DD00EE00FF00AA00BB000112 /* ResourceDockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */; };
-		C66A3FD278C1BAD56BFBB001 /* SimulationHud.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66A3FD278C1BAD56BFB85D3 /* SimulationHud.swift */; };
-		28566DBD9D42CC18DD79B001 /* BootLoadingScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28566DBD9D42CC18DD79812E /* BootLoadingScreen.swift */; };
 		CC11DD22EE33FF44AA550002 /* CasinoRollOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC11DD22EE33FF44AA550001 /* CasinoRollOverlay.swift */; };
 		DD00EE00FF00AA00BB000113 /* NativeCallProxyDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */; };
 		DD00EE00FF00AA00BB000114 /* UnityBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000014 /* UnityBridge.swift */; };
@@ -825,8 +823,6 @@
 		DD00EE00FF00AA00BB000010 /* GameHud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GameHud.swift; path = MainApp/UI/GameHud.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HudOverlayManager.swift; path = MainApp/UI/HudOverlayManager.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ResourceDockView.swift; path = MainApp/UI/ResourceDockView.swift; sourceTree = SOURCE_ROOT; };
-		C66A3FD278C1BAD56BFB85D3 /* SimulationHud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SimulationHud.swift; path = MainApp/UI/SimulationHud.swift; sourceTree = SOURCE_ROOT; };
-		28566DBD9D42CC18DD79812E /* BootLoadingScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = BootLoadingScreen.swift; path = MainApp/UI/BootLoadingScreen.swift; sourceTree = SOURCE_ROOT; };
 		CC11DD22EE33FF44AA550001 /* CasinoRollOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CasinoRollOverlay.swift; path = MainApp/UI/CasinoRollOverlay.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeCallProxyDelegate.swift; path = MainApp/Unity/NativeCallProxyDelegate.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000014 /* UnityBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UnityBridge.swift; path = MainApp/Unity/UnityBridge.swift; sourceTree = SOURCE_ROOT; };
@@ -1806,8 +1802,6 @@
 				DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */,
 				DD00EE00FF00AA00BB000007 /* ProfileScreen.swift */,
 				DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */,
-				C66A3FD278C1BAD56BFB85D3 /* SimulationHud.swift */,
-				28566DBD9D42CC18DD79812E /* BootLoadingScreen.swift */,
 				CC11DD22EE33FF44AA550001 /* CasinoRollOverlay.swift */,
 				DD00EE00FF00AA00BB000008 /* SkinPickerScreen.swift */,
 				DD00EE00FF00AA00BB000014 /* UnityBridge.swift */,
@@ -2111,8 +2105,6 @@
 				DD00EE00FF00AA00BB000119 /* DriveHunt-iOS-Bridging-Header.h in Sources */,
 				DD00EE00FF00AA00BB000111 /* HudOverlayManager.swift in Sources */,
 				DD00EE00FF00AA00BB000112 /* ResourceDockView.swift in Sources */,
-				C66A3FD278C1BAD56BFBB001 /* SimulationHud.swift in Sources */,
-				28566DBD9D42CC18DD79B001 /* BootLoadingScreen.swift in Sources */,
 				CC11DD22EE33FF44AA550002 /* CasinoRollOverlay.swift in Sources */,
 				DD00EE00FF00AA00BB000113 /* NativeCallProxyDelegate.swift in Sources */,
 				DD00EE00FF00AA00BB000114 /* UnityBridge.swift in Sources */,

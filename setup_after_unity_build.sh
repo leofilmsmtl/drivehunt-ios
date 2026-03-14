@@ -125,12 +125,35 @@ with open(pbx_path, "r") as f:
 swift_files = sorted(glob.glob(os.path.join(proj_dir, "MainApp", "**", "*.swift"), recursive=True))
 
 added = 0
+# Build set of all type names defined across ALL swift files (to detect duplicates)
+type_locations = {}  # type_name -> file_path
+import re
+for sp in swift_files:
+    try:
+        with open(sp, "r") as sf:
+            for line in sf:
+                m = re.match(r'\s*(?:public\s+|private\s+|internal\s+)?(?:struct|class|enum)\s+(\w+)', line)
+                if m:
+                    tname = m.group(1)
+                    if tname not in type_locations:
+                        type_locations[tname] = sp
+                    # else: duplicate found — the FIRST file wins
+    except:
+        pass
+
 for swift_path in swift_files:
     rel_path = os.path.relpath(swift_path, proj_dir)
     basename = os.path.basename(swift_path)
     
     # Skip if already in project
     if basename in content:
+        continue
+    
+    # Skip if the main type (matching filename) is already defined in ANOTHER file
+    type_name = os.path.splitext(basename)[0]
+    if type_name in type_locations and type_locations[type_name] != swift_path:
+        other = os.path.relpath(type_locations[type_name], proj_dir)
+        print(f"   ⏭️  Skipped: {basename} (type '{type_name}' already in {other})")
         continue
     
     # Generate deterministic unique IDs from the file path
