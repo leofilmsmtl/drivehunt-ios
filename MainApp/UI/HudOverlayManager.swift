@@ -244,10 +244,10 @@ final class HudOverlayManager {
         self.bottomHostingController = bottomHost
 
         // --- TOP RIGHT: Resource dock — on top ---
-        // Use fixedSize so the container only covers the visible content
-        // (NOT a 320×400 block that eats multi-touch gestures)
         let topView = AnyView(
             ResourceDockView()
+                .fixedSize()
+                .padding(.trailing, 4)
                 .onAppear { GemInventoryState.shared.fetchFromBackend() }
         )
         let topHost = UIHostingController(rootView: topView)
@@ -259,7 +259,7 @@ final class HudOverlayManager {
         unityView.addSubview(topContainer)
 
         NSLayoutConstraint.activate([
-            topContainer.trailingAnchor.constraint(equalTo: unityView.trailingAnchor, constant: -12),
+            topContainer.trailingAnchor.constraint(equalTo: unityView.trailingAnchor),
             topContainer.topAnchor.constraint(equalTo: unityView.safeAreaLayoutGuide.topAnchor, constant: 4),
         ])
         // Let intrinsic content size determine width/height — no fixed 320×400
@@ -305,17 +305,17 @@ final class HudOverlayManager {
             }
         }
 
+        // FIX 0: Re-login — Unity already booted, show loading screen briefly
+        if isRelogin {
+            print("🔄 Re-login — dismissing loading screen after 3s")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { dismiss() }
+            return
+        }
+
         // FIX 1: If hex textures already loaded (race condition), dismiss immediately
         if UnityBridge.shared.isHexTexturesReady {
             print("⚡ isHexTexturesReady already true — dismissing immediately")
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { dismiss() }
-            return
-        }
-
-        // FIX for re-login: Unity is already booted, signals won't re-fire
-        if isRelogin {
-            print("🔄 Re-login — dismissing loading screen after 3s")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { dismiss() }
             return
         }
 
