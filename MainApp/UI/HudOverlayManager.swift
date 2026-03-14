@@ -47,6 +47,7 @@ struct BootLoadingScreen: View {
     @ObservedObject var bridge = UnityBridge.shared
 
     /// Maps boot signals to progress 0.0–1.0
+    /// Only shows 100% when BOTH boot complete AND hex textures ready
     private var progress: Double {
         var p = 0.0
         if bridge.isUnityReady       { p = 0.125 }
@@ -54,20 +55,21 @@ struct BootLoadingScreen: View {
         if bridge.isGPSLocked        { p = 0.375 }
         if bridge.isHexHistoryLoaded { p = 0.50 }
         if bridge.isTilesLoaded      { p = 0.625 }
-        if bridge.isZonesLoaded      {
+        if bridge.isZonesLoaded || bridge.isBootComplete {
             // Interpolate 75%–95% using granular texture progress
             p = 0.75 + (bridge.textureProgress * 0.20)
         }
         if bridge.isHexTexturesReady { p = 0.95 }
-        if bridge.isBootComplete     { p = 1.0 }
+        // Only 100% when BOTH are done
+        if bridge.isBootComplete && bridge.isHexTexturesReady { p = 1.0 }
         return p
     }
 
-    /// Current step label
+    /// Current step label — never says "Prêt" while still loading textures
     private var stepLabel: String {
-        if bridge.isBootComplete     { return "Prêt" }
+        if bridge.isBootComplete && bridge.isHexTexturesReady { return "Prêt" }
         if bridge.isHexTexturesReady { return "Finalisation..." }
-        if bridge.isZonesLoaded      {
+        if bridge.isZonesLoaded || bridge.isBootComplete {
             let loaded = Int(bridge.textureProgress * Double(bridge.textureProgressTotal))
             if bridge.textureProgressTotal > 0 {
                 return "Textures hex \(loaded)/\(bridge.textureProgressTotal)..."
@@ -246,8 +248,6 @@ final class HudOverlayManager {
         // --- TOP RIGHT: Resource dock — on top ---
         let topView = AnyView(
             ResourceDockView()
-                .fixedSize()
-                .padding(.trailing, 4)
                 .onAppear { GemInventoryState.shared.fetchFromBackend() }
         )
         let topHost = UIHostingController(rootView: topView)
@@ -259,8 +259,9 @@ final class HudOverlayManager {
         unityView.addSubview(topContainer)
 
         NSLayoutConstraint.activate([
-            topContainer.trailingAnchor.constraint(equalTo: unityView.trailingAnchor),
+            topContainer.trailingAnchor.constraint(equalTo: unityView.trailingAnchor, constant: -8),
             topContainer.topAnchor.constraint(equalTo: unityView.safeAreaLayoutGuide.topAnchor, constant: 4),
+            topContainer.widthAnchor.constraint(equalToConstant: 280),
         ])
         // Let intrinsic content size determine width/height — no fixed 320×400
         self.topHostingController = topHost
