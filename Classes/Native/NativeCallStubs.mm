@@ -56,6 +56,12 @@ void _onZonesLoaded(const char* count) {
     });
 }
 
+void _onHexTexturesReady() {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onHexTexturesReady"}];
+    });
+}
+
 void _onBootComplete() {
     dispatch_async(dispatch_get_main_queue(), ^{
         [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onBootComplete"}];

@@ -41,50 +41,93 @@ class PassthroughView: UIView {
 // MARK: - Boot Loading Screen (inlined to avoid target membership issues)
 
 /// Boot loading screen — shown while Unity loads.
-/// Dismisses when GPS starts working or after timeout.
+/// Premium design matching the native LaunchScreen storyboard.
 struct BootLoadingScreen: View {
-    @State private var pulse = false
+    @State private var ringRotation: Double = 0
+    @State private var dotCount = 0
+
+    let dotTimer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Color(hex: "#0A0A1A"), Color(hex: "#1A1A3E")],
-                startPoint: .top, endPoint: .bottom
-            ).ignoresSafeArea()
+            // Deep dark background
+            Color(hex: "#050510").ignoresSafeArea()
 
-            VStack(spacing: 32) {
+            VStack(spacing: 0) {
                 Spacer()
 
-                Image(systemName: "hexagon.fill")
-                    .font(.system(size: 80))
+                // ── Spinning arc loader ──
+                ZStack {
+                    Circle()
+                        .stroke(Color.white.opacity(0.04), lineWidth: 2)
+                        .frame(width: 64, height: 64)
+                    Circle()
+                        .trim(from: 0, to: 0.25)
+                        .stroke(
+                            LinearGradient(
+                                colors: [Color(hex: "#00D991"), Color(hex: "#00D991").opacity(0.1)],
+                                startPoint: .leading, endPoint: .trailing
+                            ),
+                            style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
+                        )
+                        .frame(width: 64, height: 64)
+                        .rotationEffect(.degrees(ringRotation))
+                }
+                .padding(.bottom, 36)
+
+                // ── DRIVEHUNT title ──
+                Text("DRIVEHUNT")
+                    .font(.system(size: 40, weight: .black, design: .rounded))
+                    .tracking(5)
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [Color(hex: "#00FFAA"), Color(hex: "#00AAFF")],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
+                            colors: [.white, .white.opacity(0.85)],
+                            startPoint: .top, endPoint: .bottom
                         )
                     )
-                    .shadow(color: Color(hex: "#00FFAA").opacity(0.4), radius: 20)
-                    .scaleEffect(pulse ? 1.05 : 0.95)
-                    .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: pulse)
 
-                Text("P. HEXAGON")
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                // ── Thin separator ──
+                Rectangle()
+                    .fill(Color(hex: "#00D991").opacity(0.35))
+                    .frame(width: 80, height: 1)
+                    .padding(.top, 14)
 
-                ProgressView()
-                    .scaleEffect(1.3)
-                    .tint(Color(hex: "#00AAFF"))
-                    .padding(.top, 8)
+                // ── Subtitle ──
+                Text("by P. HEXAGON")
+                    .font(.system(size: 11, weight: .regular))
+                    .tracking(3)
+                    .foregroundColor(.white.opacity(0.25))
+                    .padding(.top, 12)
 
                 Spacer()
 
-                Text("Chargement du monde...")
-                    .font(.system(size: 14))
-                    .foregroundColor(.gray.opacity(0.6))
-                    .padding(.bottom, 40)
+                // ── Bottom: loading text + first launch notice ──
+                VStack(spacing: 6) {
+                    HStack(spacing: 0) {
+                        Text("Chargement")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.3))
+                        Text(String(repeating: ".", count: dotCount))
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.3))
+                            .frame(width: 18, alignment: .leading)
+                    }
+                    .onReceive(dotTimer) { _ in
+                        dotCount = (dotCount % 3) + 1
+                    }
+
+                    Text("Première ouverture · Jusqu'à 30s")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.15))
+                }
+                .padding(.bottom, 50)
             }
         }
-        .onAppear { pulse = true }
+        .onAppear {
+            withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
+                ringRotation = 360
+            }
+        }
     }
 }
 
@@ -215,24 +258,24 @@ final class HudOverlayManager {
             }
         }
 
-        // FIX 1: If boot already completed (race condition), dismiss immediately
-        if UnityBridge.shared.isBootComplete {
-            print("⚡ isBootComplete already true — dismissing immediately")
+        // FIX 1: If hex textures already loaded (race condition), dismiss immediately
+        if UnityBridge.shared.isHexTexturesReady {
+            print("⚡ isHexTexturesReady already true — dismissing immediately")
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { dismiss() }
             return
         }
 
-        // FIX 2: Subscribe to future boot complete signal
-        bootCancellable = UnityBridge.shared.$isBootComplete
+        // FIX 2: Subscribe to hex textures ready signal (not boot complete)
+        bootCancellable = UnityBridge.shared.$isHexTexturesReady
             .filter { $0 }
             .first()
             .receive(on: DispatchQueue.main)
             .sink { _ in dismiss() }
 
-        // FIX 3: Timeout fallback — never stay stuck forever (15 sec max)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) {
+        // FIX 3: Timeout fallback — 45s for first launch with many hexes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 45.0) {
             if !dismissed {
-                print("⏰ Loading screen timeout (15s) — force dismissing")
+                print("⏰ Loading screen timeout (45s) — force dismissing")
                 dismiss()
             }
         }

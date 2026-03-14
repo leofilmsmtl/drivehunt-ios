@@ -19,44 +19,57 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <!-- Hexagon Symbol ⬡ -->
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="⬡" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="HexSymbol">
-                                <rect key="frame" x="157" y="320" width="100" height="80"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="72"/>
-                                <color key="textColor" red="0" green="1" blue="0.667" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                            </label>
-                            <!-- P. HEXAGON title -->
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="P. HEXAGON" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TitleLabel">
-                                <rect key="frame" x="57" y="400" width="300" height="44"/>
-                                <fontDescription key="fontDescription" type="boldSystem" pointSize="32"/>
+                            <!-- DRIVEHUNT main title — bold, large -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="DRIVEHUNT" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TitleLabel">
+                                <rect key="frame" x="57" y="370" width="300" height="50"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="42"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </label>
-                            <!-- Subtitle -->
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="GPS Territory Capture Game" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SubtitleLabel">
-                                <rect key="frame" x="57" y="448" width="300" height="24"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
-                                <color key="textColor" red="0.6" green="0.6" blue="0.6" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            <!-- Thin decorative line separator -->
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="SeparatorLine">
+                                <rect key="frame" x="157" y="428" width="100" height="1"/>
+                                <color key="backgroundColor" red="0" green="0.85" blue="0.6" alpha="0.4" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="1" id="sepHeight"/>
+                                    <constraint firstAttribute="width" constant="100" id="sepWidth"/>
+                                </constraints>
+                            </view>
+                            <!-- by P. HEXAGON -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="by P. HEXAGON" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SubtitleLabel">
+                                <rect key="frame" x="107" y="440" width="200" height="20"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                <color key="textColor" red="0.45" green="0.45" blue="0.5" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             </label>
-                            <!-- Spinner (auto-animates in LaunchScreen!) -->
-                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" animating="YES" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="SpinnerView">
-                                <rect key="frame" x="186" y="510" width="42" height="42"/>
-                                <color key="color" red="0" green="1" blue="0.667" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            <!-- Loading indicator — spinner auto-animates on LaunchScreen -->
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" animating="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="SpinnerView">
+                                <rect key="frame" x="197" y="700" width="20" height="20"/>
+                                <color key="color" red="0.35" green="0.35" blue="0.4" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             </activityIndicatorView>
+                            <!-- First launch notice — near bottom -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Première ouverture · Chargement jusqu'à 30s" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FirstLaunchLabel">
+                                <rect key="frame" x="40" y="726" width="334" height="20"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="11"/>
+                                <color key="textColor" red="0.3" green="0.3" blue="0.35" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </label>
                         </subviews>
-                        <color key="backgroundColor" red="0.039" green="0.039" blue="0.102" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="0.02" green="0.02" blue="0.06" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <!-- Hex symbol: centered X, above title -->
-                            <constraint firstItem="HexSymbol" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="hexCX"/>
-                            <constraint firstItem="HexSymbol" firstAttribute="bottom" secondItem="TitleLabel" secondAttribute="top" constant="-12" id="hexAboveTitle"/>
-                            <!-- Title: centered -->
+                            <!-- Title: centered, slightly above center -->
                             <constraint firstItem="TitleLabel" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="titleCX"/>
-                            <constraint firstItem="TitleLabel" firstAttribute="centerY" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerY" constant="-30" id="titleCY"/>
-                            <!-- Subtitle: below title -->
+                            <constraint firstItem="TitleLabel" firstAttribute="centerY" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerY" constant="-50" id="titleCY"/>
+                            <!-- Separator: centered, below title -->
+                            <constraint firstItem="SeparatorLine" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="sepCX"/>
+                            <constraint firstItem="SeparatorLine" firstAttribute="top" secondItem="TitleLabel" secondAttribute="bottom" constant="14" id="sepBelowTitle"/>
+                            <!-- Subtitle: centered, below separator -->
                             <constraint firstItem="SubtitleLabel" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="subCX"/>
-                            <constraint firstItem="SubtitleLabel" firstAttribute="top" secondItem="TitleLabel" secondAttribute="bottom" constant="4" id="subBelowTitle"/>
-                            <!-- Spinner: centered, below subtitle -->
+                            <constraint firstItem="SubtitleLabel" firstAttribute="top" secondItem="SeparatorLine" secondAttribute="bottom" constant="12" id="subBelowSep"/>
+                            <!-- Spinner: centered, above first launch label -->
                             <constraint firstItem="SpinnerView" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="spinnerCX"/>
-                            <constraint firstItem="SpinnerView" firstAttribute="top" secondItem="SubtitleLabel" secondAttribute="bottom" constant="40" id="spinnerBelowSub"/>
+                            <constraint firstItem="FirstLaunchLabel" firstAttribute="top" secondItem="SpinnerView" secondAttribute="bottom" constant="10" id="labelBelowSpinner"/>
+                            <!-- First launch notice: centered, near bottom -->
+                            <constraint firstItem="FirstLaunchLabel" firstAttribute="centerX" secondItem="UnityLaunchScreen-RootView" secondAttribute="centerX" id="firstLaunchCX"/>
+                            <constraint firstItem="FirstLaunchLabel" firstAttribute="width" secondItem="UnityLaunchScreen-RootView" secondAttribute="width" constant="-80" id="firstLaunchWidth"/>
+                            <constraint firstAttribute="bottom" secondItem="FirstLaunchLabel" secondAttribute="bottom" constant="70" id="firstLaunchBottom"/>
                         </constraints>
                     </view>
                 </viewController>

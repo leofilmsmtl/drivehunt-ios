@@ -27,6 +27,7 @@ final class UnityBridge: ObservableObject {
         case "onHexHistoryLoaded":  onHexHistoryLoaded(count: arg)
         case "onTilesLoaded":       onTilesLoaded()
         case "onZonesLoaded":       onZonesLoaded(count: arg)
+        case "onHexTexturesReady":  onHexTexturesReady()
         case "onBootComplete":      onBootComplete()
         case "setPlayerId":         setPlayerId(arg)
         case "onInventoryUpdate":   onInventoryUpdate(arg)
@@ -57,6 +58,7 @@ final class UnityBridge: ObservableObject {
     @Published var isHexHistoryLoaded = false
     @Published var isTilesLoaded = false
     @Published var isZonesLoaded = false
+    @Published var isHexTexturesReady = false
     @Published var isBootComplete = false
     @Published var playerId = ""
 
@@ -88,12 +90,17 @@ final class UnityBridge: ObservableObject {
     }
 
     func onZonesLoaded(count: String) {
-        print("🏘️ [6/7] Zones LOADED (\(count) zones)")
+        print("🏘️ [6/8] Zones LOADED (\(count) zones)")
         DispatchQueue.main.async { self.isZonesLoaded = true }
     }
 
+    func onHexTexturesReady() {
+        print("🎨 [7/8] Hex textures ALL READY")
+        DispatchQueue.main.async { self.isHexTexturesReady = true }
+    }
+
     func onBootComplete() {
-        print("✅ [7/7] BOOT COMPLETE — all data loaded")
+        print("✅ [8/8] BOOT COMPLETE — all data loaded")
         DispatchQueue.main.async { self.isBootComplete = true }
     }
 
@@ -140,6 +147,7 @@ final class UnityBridge: ObservableObject {
         isHexHistoryLoaded = false
         isTilesLoaded = false
         isZonesLoaded = false
+        isHexTexturesReady = false
         isBootComplete = false
         playerId = ""
         UnityHolder.shared.reset()

@@ -103,6 +103,7 @@ class NativeCallProxyDelegate: NSObject, NativeCallsProtocol {
     func onTilesLoaded() { UnityBridge.shared.onTilesLoaded() }
     func onZonesLoaded(_ count: String) { UnityBridge.shared.onZonesLoaded(count: count) }
     func onBootComplete() { UnityBridge.shared.onBootComplete() }
+    func onHexTexturesReady() { UnityBridge.shared.onHexTexturesReady() }
     func setPlayerId(_ playerId: String) { UnityBridge.shared.setPlayerId(playerId) }
     func onInventoryUpdate(_ jsonString: String) { UnityBridge.shared.onInventoryUpdate(jsonString) }
     func setClaimable(_ hexId: String, isSteal: Bool, ownerName: String) {
