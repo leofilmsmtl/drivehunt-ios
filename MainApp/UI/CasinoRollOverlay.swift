@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 // MARK: - Data Models
 
@@ -209,11 +210,13 @@ struct CasinoRollOverlay: View {
         Task { @MainActor in
             // STEP 1 — overlay opens
             phase = 0
+            SoundEngine.shared.whoosh()
             SoundEngine.shared.vibrate(.light)
             try? await Task.sleep(nanoseconds: 400_000_000)
 
             // STEP 2 — base plate appears
             phase = 1
+            SoundEngine.shared.plateLand(tier: rollData.baseTier)
             SoundEngine.shared.vibrate(.medium)
             try? await Task.sleep(nanoseconds: 600_000_000)
 
@@ -233,6 +236,7 @@ struct CasinoRollOverlay: View {
                 for i in 0...4 {
                     scanIndex = i
                     currentGemColor = GEM_COLORS[GEM_TIERS[i]] ?? .white
+                    SoundEngine.shared.tick(step: cycle * 5 + i)
                     SoundEngine.shared.vibrate(.soft)
                     try? await Task.sleep(nanoseconds: (baseSpeed + UInt64(cycle) * speedRamp) * 1_000_000)
                 }
@@ -276,10 +280,11 @@ struct CasinoRollOverlay: View {
                 withAnimation(.easeOut(duration: 0.35)) { showFlash = false }
             }
 
-            // Tier-specific haptics
+            // Tier-specific SFX + haptics
             switch rollData.gemType {
             case "arcane":
                 isArcaneShake = true
+                SoundEngine.shared.revealLegendary()
                 SoundEngine.shared.vibrate(.heavy)
                 startShakeAnimation()
                 Task {
@@ -288,12 +293,16 @@ struct CasinoRollOverlay: View {
                     shakeOffset = .zero
                 }
             case "ruby":
+                SoundEngine.shared.revealEpic()
                 SoundEngine.shared.vibratePattern([.heavy, .light, .medium])
             case "saphir":
+                SoundEngine.shared.revealRare()
                 SoundEngine.shared.vibratePattern([.light, .light, .medium])
             case "jade":
+                SoundEngine.shared.revealUncommon()
                 SoundEngine.shared.vibratePattern([.light, .medium])
             default:
+                SoundEngine.shared.revealCommon()
                 SoundEngine.shared.vibrate(.light)
             }
 
@@ -305,6 +314,7 @@ struct CasinoRollOverlay: View {
 
             // Inventory refresh
             GemInventoryState.shared.fetchFromBackend()
+            SoundEngine.shared.ding()
             SoundEngine.shared.vibrate(.light)
             try? await Task.sleep(nanoseconds: 300_000_000)
 
@@ -453,14 +463,31 @@ struct EdgeGlowView: View {
     }
 }
 
-// MARK: - Sound Engine (iOS — haptics only for now, PCM audio later)
+// MARK: - Sound Engine (iOS — PCM synthesis + haptics, ported from Kotlin SoundEngine)
 
 class SoundEngine {
     static let shared = SoundEngine()
 
+    private let sampleRate: Double = 22050
+    private let engine = AVAudioEngine()
+    private let playerNode = AVAudioPlayerNode()
+    private let format: AVAudioFormat
+
     enum HapticIntensity {
         case soft, light, medium, heavy
     }
+
+    init() {
+        format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1)!
+        engine.attach(playerNode)
+        engine.connect(playerNode, to: engine.mainMixerNode, format: format)
+        // Set audio session for mixing with Unity
+        try? AVAudioSession.sharedInstance().setCategory(.ambient, options: .mixWithOthers)
+        try? AVAudioSession.sharedInstance().setActive(true)
+        try? engine.start()
+    }
+
+    // MARK: - Haptics
 
     func vibrate(_ intensity: HapticIntensity) {
         let generator: UIImpactFeedbackGenerator
@@ -481,4 +508,150 @@ class SoundEngine {
             }
         }
     }
+
+    // MARK: - PCM Tone Generation (matches Kotlin SoundEngine)
+
+    private func generateTone(freq: Float, duration: Float, waveform: String = "sine",
+                              volume: Float = 0.15, delay: Float = 0) -> [Float] {
+        let totalSamples = Int((delay + duration) * Float(sampleRate))
+        let delaySamples = Int(delay * Float(sampleRate))
+        var samples = [Float](repeating: 0, count: totalSamples)
+
+        for i in delaySamples..<totalSamples {
+            let t = Float(i - delaySamples) / Float(sampleRate)
+            let envelope = volume * max(0, 1 - t / duration)
+            let phase = 2.0 * Float.pi * freq * t
+
+            let wave: Float
+            switch waveform {
+            case "square":   wave = sin(phase) >= 0 ? 1 : -1
+            case "sawtooth": wave = 2 * (freq * t).truncatingRemainder(dividingBy: 1) - 1
+            case "triangle": wave = 2 * abs(2 * (freq * t).truncatingRemainder(dividingBy: 1) - 1) - 1
+            default:         wave = sin(phase)
+            }
+            samples[i] = wave * envelope
+        }
+        return samples
+    }
+
+    private func generateNoise(duration: Float, volume: Float = 0.1, delay: Float = 0) -> [Float] {
+        let totalSamples = Int((delay + duration) * Float(sampleRate))
+        let delaySamples = Int(delay * Float(sampleRate))
+        var samples = [Float](repeating: 0, count: totalSamples)
+
+        for i in delaySamples..<totalSamples {
+            let t = Float(i - delaySamples) / (duration * Float(sampleRate))
+            let envelope = volume * max(0, 1 - t) * 0.5
+            samples[i] = Float.random(in: -1...1) * envelope
+        }
+        return samples
+    }
+
+    private func mix(_ buffers: [Float]...) -> [Float] {
+        let maxLen = buffers.map(\.count).max() ?? 0
+        var mixed = [Float](repeating: 0, count: maxLen)
+        for buf in buffers {
+            for i in buf.indices { mixed[i] += buf[i] }
+        }
+        for i in mixed.indices { mixed[i] = min(1, max(-1, mixed[i])) }
+        return mixed
+    }
+
+    private func play(_ samples: [Float]) {
+        guard !samples.isEmpty else { return }
+        // Ensure engine is running
+        if !engine.isRunning { try? engine.start() }
+
+        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(samples.count))!
+        buffer.frameLength = AVAudioFrameCount(samples.count)
+        let channelData = buffer.floatChannelData![0]
+        for i in samples.indices { channelData[i] = samples[i] }
+
+        playerNode.stop()
+        playerNode.play()
+        playerNode.scheduleBuffer(buffer, completionHandler: nil)
+    }
+
+    // MARK: - Public SFX (matches Kotlin SoundEngine exactly)
+
+    func whoosh() {
+        play(mix(
+            generateNoise(duration: 0.3, volume: 0.08),
+            generateTone(freq: 200, duration: 0.3, waveform: "sine", volume: 0.06),
+            generateTone(freq: 100, duration: 0.4, waveform: "sine", volume: 0.04, delay: 0.1)
+        ))
+    }
+
+    func tick(step: Int = 0) {
+        let freq: Float = 400 + Float(step) * 100
+        play(generateTone(freq: freq, duration: 0.08, waveform: "square", volume: 0.10))
+    }
+
+    func plateLand(tier: String) {
+        let freq: Float = tier == "gold" ? 300 : (tier == "silver" ? 200 : 150)
+        play(mix(
+            generateTone(freq: freq, duration: 0.3, waveform: "sine", volume: 0.1),
+            generateNoise(duration: 0.1, volume: 0.05)
+        ))
+    }
+
+    func revealCommon() {
+        play(mix(
+            generateTone(freq: 330, duration: 0.25, waveform: "triangle", volume: 0.08),
+            generateTone(freq: 294, duration: 0.3, waveform: "triangle", volume: 0.05, delay: 0.1)
+        ))
+    }
+
+    func revealUncommon() {
+        play(mix(
+            generateTone(freq: 350, duration: 0.25, waveform: "triangle", volume: 0.08),
+            generateTone(freq: 330, duration: 0.3, waveform: "triangle", volume: 0.06, delay: 0.1)
+        ))
+    }
+
+    func revealRare() {
+        play(mix(
+            generateTone(freq: 523, duration: 0.25, waveform: "triangle", volume: 0.12),
+            generateTone(freq: 659, duration: 0.3, waveform: "triangle", volume: 0.10, delay: 0.12),
+            generateTone(freq: 784, duration: 0.35, waveform: "sine", volume: 0.06, delay: 0.25)
+        ))
+    }
+
+    func revealEpic() {
+        play(mix(
+            generateTone(freq: 40, duration: 0.8, waveform: "sine", volume: 0.25),
+            generateTone(freq: 60, duration: 0.6, waveform: "sine", volume: 0.18, delay: 0.05),
+            generateTone(freq: 261, duration: 0.3, waveform: "sawtooth", volume: 0.14, delay: 0.08),
+            generateTone(freq: 523, duration: 0.25, waveform: "sawtooth", volume: 0.12, delay: 0.12),
+            generateTone(freq: 1047, duration: 0.4, waveform: "sine", volume: 0.16, delay: 0.20),
+            generateTone(freq: 1568, duration: 0.5, waveform: "sine", volume: 0.12, delay: 0.32),
+            generateNoise(duration: 0.5, volume: 0.18, delay: 0.15),
+            generateTone(freq: 1047, duration: 1.0, waveform: "sine", volume: 0.05, delay: 0.55)
+        ))
+    }
+
+    func revealLegendary() {
+        play(mix(
+            generateTone(freq: 30, duration: 1.2, waveform: "sine", volume: 0.30),
+            generateTone(freq: 55, duration: 0.8, waveform: "sine", volume: 0.22, delay: 0.06),
+            generateTone(freq: 100, duration: 0.15, waveform: "square", volume: 0.20, delay: 0.12),
+            generateNoise(duration: 0.08, volume: 0.25, delay: 0.12),
+            generateTone(freq: 261, duration: 0.35, waveform: "sawtooth", volume: 0.16, delay: 0.17),
+            generateTone(freq: 523, duration: 0.3, waveform: "sawtooth", volume: 0.14, delay: 0.19),
+            generateTone(freq: 1047, duration: 0.35, waveform: "sine", volume: 0.18, delay: 0.30),
+            generateTone(freq: 1568, duration: 0.30, waveform: "sine", volume: 0.16, delay: 0.42),
+            generateTone(freq: 2637, duration: 0.40, waveform: "sine", volume: 0.10, delay: 0.54),
+            generateNoise(duration: 0.6, volume: 0.22, delay: 0.18),
+            generateTone(freq: 523, duration: 2.0, waveform: "sine", volume: 0.06, delay: 0.75),
+            generateTone(freq: 1047, duration: 2.5, waveform: "sine", volume: 0.05, delay: 0.85)
+        ))
+    }
+
+    func ding() {
+        play(mix(
+            generateTone(freq: 880, duration: 0.15, waveform: "sine", volume: 0.1),
+            generateTone(freq: 1320, duration: 0.2, waveform: "sine", volume: 0.08, delay: 0.08)
+        ))
+    }
 }
+
