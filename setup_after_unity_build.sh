@@ -90,7 +90,7 @@ done
 
 # ─── 3. Fix Xcode build settings ──────────────────────────────
 echo ""
-echo "⚙️  [3/4] Fixing Xcode build settings..."
+echo "⚙️  [3/5] Fixing Xcode build settings..."
 
 if [ -f "$PBXPROJ" ]; then
     sed -i '' 's/ENABLE_MODULE_VERIFIER = YES/ENABLE_MODULE_VERIFIER = NO/g' "$PBXPROJ"
@@ -108,9 +108,82 @@ else
     echo "   ❌ project.pbxproj not found!"
 fi
 
+# ─── 4. Auto-add missing Swift files to Xcode project ─────────
+echo ""
+echo "🔗 [4/5] Ensuring all Swift files are in Xcode project..."
+
+python3 << 'PYEOF'
+import os, hashlib, glob
+
+proj_dir = os.environ.get("PROJ_DIR", os.path.dirname(os.path.abspath(__file__)))
+pbx_path = os.path.join(proj_dir, "Unity-iPhone.xcodeproj", "project.pbxproj")
+
+with open(pbx_path, "r") as f:
+    content = f.read()
+
+# Find all .swift files under MainApp/
+swift_files = sorted(glob.glob(os.path.join(proj_dir, "MainApp", "**", "*.swift"), recursive=True))
+
+added = 0
+for swift_path in swift_files:
+    rel_path = os.path.relpath(swift_path, proj_dir)
+    basename = os.path.basename(swift_path)
+    
+    # Skip if already in project
+    if basename in content:
+        continue
+    
+    # Generate deterministic unique IDs from the file path
+    h = hashlib.md5(rel_path.encode()).hexdigest().upper()
+    file_ref_id = h[:24]
+    build_ref_id = h[:20] + "B001"  # Slightly different for build ref
+    
+    # Ensure IDs don't collide with existing ones
+    while file_ref_id in content:
+        file_ref_id = hashlib.md5((file_ref_id + "x").encode()).hexdigest().upper()[:24]
+    while build_ref_id in content:
+        build_ref_id = hashlib.md5((build_ref_id + "x").encode()).hexdigest().upper()[:20] + "B001"
+    
+    # Find anchor points (ResourceDockView.swift is always present)
+    anchor_build = 'DD00EE00FF00AA00BB000112 /* ResourceDockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */; };'
+    anchor_ref = 'DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ResourceDockView.swift; path = MainApp/UI/ResourceDockView.swift; sourceTree = SOURCE_ROOT; };'
+    anchor_group = 'DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */,'
+    anchor_sources = 'DD00EE00FF00AA00BB000112 /* ResourceDockView.swift in Sources */,'
+    
+    if anchor_build not in content:
+        print(f"   ⚠️  Anchor not found — cannot add {basename}")
+        continue
+    
+    # Add PBXBuildFile entry
+    content = content.replace(anchor_build, 
+        anchor_build + "\n\t\t" + build_ref_id + " /* " + basename + " in Sources */ = {isa = PBXBuildFile; fileRef = " + file_ref_id + " /* " + basename + " */; };", 1)
+    
+    # Add PBXFileReference entry
+    content = content.replace(anchor_ref,
+        anchor_ref + "\n\t\t" + file_ref_id + " /* " + basename + " */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = " + basename + "; path = " + rel_path + "; sourceTree = SOURCE_ROOT; };", 1)
+    
+    # Add to file group
+    content = content.replace(anchor_group,
+        anchor_group + "\n\t\t\t\t" + file_ref_id + " /* " + basename + " */,", 1)
+    
+    # Add to Sources build phase
+    content = content.replace(anchor_sources,
+        anchor_sources + "\n\t\t\t\t" + build_ref_id + " /* " + basename + " in Sources */,", 1)
+    
+    print(f"   ✅ Added: {rel_path}")
+    added += 1
+
+if added > 0:
+    with open(pbx_path, "w") as f:
+        f.write(content)
+    print(f"   🔗 {added} Swift file(s) added to Xcode project")
+else:
+    print("   ✅ All Swift files already in project")
+PYEOF
+
 # ─── 4. Clean DerivedData ──────────────────────────────────────
 echo ""
-echo "🧹 [4/4] Cleaning DerivedData..."
+echo "🧹 [5/5] Cleaning DerivedData..."
 DERIVED=$(find ~/Library/Developer/Xcode/DerivedData -maxdepth 1 -name "Unity-iPhone*" -type d 2>/dev/null | head -1)
 if [ -n "$DERIVED" ]; then
     rm -rf "$DERIVED"
