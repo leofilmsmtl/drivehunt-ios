@@ -123,7 +123,15 @@ final class UnityBridge: ObservableObject {
     }
 
     /// Handle gem tap from Unity — payload: "id|value|gem|lat|lon"
+    private var isCollectingGem = false  // Fix #4: prevent double-tap
+
     func onGemTapped(_ payload: String) {
+        // Fix #4: Block taps while a casino roll is active
+        guard !isCollectingGem else {
+            print("⚠️ UnityBridge: Ignoring gem tap — already collecting")
+            return
+        }
+
         let parts = payload.split(separator: "|").map(String.init)
         guard parts.count >= 5 else {
             print("⚠️ UnityBridge: Invalid gem tap payload: \(payload)")
@@ -137,15 +145,22 @@ final class UnityBridge: ObservableObject {
 
         print("💎 UnityBridge: Gem tapped! id=\(lootId.prefix(8)) gem=\(gem)")
 
+        isCollectingGem = true
         // Call backend to collect
         collectGem(lootId: lootId, lat: lat, lon: lon, gem: gem)
     }
 
     /// Collect gem via backend API then show casino roll
     private func collectGem(lootId: String, lat: Double, lon: Double, gem: String) {
-        guard let token = AuthManager.shared.getAccessToken() else { return }
+        guard let token = AuthManager.shared.getAccessToken() else {
+            isCollectingGem = false  // Reset on auth failure
+            return
+        }
         let baseUrl = AppState.shared.backendBaseUrl
-        guard let url = URL(string: "\(baseUrl)/v2/game/action") else { return }
+        guard let url = URL(string: "\(baseUrl)/v2/game/action") else {
+            isCollectingGem = false
+            return
+        }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -159,7 +174,7 @@ final class UnityBridge: ObservableObject {
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             let code = (response as? HTTPURLResponse)?.statusCode ?? 0
             let bodyStr = data.flatMap { String(data: $0, encoding: .utf8) } ?? "nil"
             print("💎 collect-loot response: HTTP \(code) — \(bodyStr.prefix(300))")
@@ -168,6 +183,7 @@ final class UnityBridge: ObservableObject {
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let success = json["success"] as? Bool, success else {
                 print("❌ UnityBridge: collect-loot failed (HTTP \(code))")
+                DispatchQueue.main.async { self?.isCollectingGem = false }  // Reset on failure
                 return
             }
 
@@ -184,11 +200,16 @@ final class UnityBridge: ObservableObject {
 
             DispatchQueue.main.async {
                 // Remove gem from Unity map
-                self.send("RemoveLootById", value: lootId)
-                // Show casino roll
+                self?.send("RemoveLootById", value: lootId)
+                // Show casino roll (isCollectingGem reset via dismissCasinoRoll)
                 HudOverlayManager.shared.showCasinoRoll(data: rollData)
             }
         }.resume()
+    }
+
+    /// Fix #4: Reset collecting state when casino roll is dismissed
+    func resetCollectingState() {
+        isCollectingGem = false
     }
 
     // MARK: - Messaging (Swift → Unity)

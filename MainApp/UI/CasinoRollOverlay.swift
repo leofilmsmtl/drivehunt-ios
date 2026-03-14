@@ -41,6 +41,7 @@ struct CasinoRollOverlay: View {
     @State private var showFlash = false
     @State private var isArcaneShake = false
     @State private var shakeOffset: CGSize = .zero
+    @State private var shakeTimer: Timer? = nil  // Fix #6: stored for cleanup
 
     private var gemColor: Color { GEM_COLORS[rollData.gemType] ?? .white }
     private var targetIdx: Int { max(0, GEM_TIERS.firstIndex(of: rollData.gemType) ?? 0) }
@@ -190,6 +191,11 @@ struct CasinoRollOverlay: View {
         }
         .onTapGesture { if phase >= 6 { onDismiss() } }
         .onAppear { startRollSequence() }
+        .onDisappear {
+            // Fix #6: Clean up shake timer on dismiss
+            shakeTimer?.invalidate()
+            shakeTimer = nil
+        }
     }
 
     // MARK: - Spotlight intensity by gem tier
@@ -249,12 +255,14 @@ struct CasinoRollOverlay: View {
                 for i in 0...4 {
                     scanIndex = i
                     currentGemColor = GEM_COLORS[GEM_TIERS[i]] ?? .white
+                    SoundEngine.shared.tick(step: i)
                     SoundEngine.shared.vibrate(.soft)
                     try? await Task.sleep(nanoseconds: teaseMs[i] * 1_000_000)
                 }
                 for i in 0...targetIdx {
                     scanIndex = i
                     currentGemColor = GEM_COLORS[GEM_TIERS[i]] ?? .white
+                    SoundEngine.shared.tick(step: i)
                     SoundEngine.shared.vibrate(.soft)
                     try? await Task.sleep(nanoseconds: (150 + UInt64(i) * 50) * 1_000_000)
                 }
@@ -262,6 +270,7 @@ struct CasinoRollOverlay: View {
                 for i in 0...targetIdx {
                     scanIndex = i
                     currentGemColor = GEM_COLORS[GEM_TIERS[i]] ?? .white
+                    SoundEngine.shared.tick(step: i)
                     SoundEngine.shared.vibrate(.light)
                     try? await Task.sleep(nanoseconds: (200 + UInt64(i) * 80) * 1_000_000)
                 }
@@ -291,6 +300,8 @@ struct CasinoRollOverlay: View {
                     try? await Task.sleep(nanoseconds: 1_500_000_000)
                     isArcaneShake = false
                     shakeOffset = .zero
+                    shakeTimer?.invalidate()
+                    shakeTimer = nil
                 }
             case "ruby":
                 SoundEngine.shared.revealEpic()
@@ -324,8 +335,8 @@ struct CasinoRollOverlay: View {
     }
 
     private func startShakeAnimation() {
-        Timer.scheduledTimer(withTimeInterval: 0.04, repeats: true) { timer in
-            if !isArcaneShake { timer.invalidate(); return }
+        shakeTimer = Timer.scheduledTimer(withTimeInterval: 0.04, repeats: true) { timer in
+            if !isArcaneShake { timer.invalidate(); shakeTimer = nil; return }
             shakeOffset = CGSize(
                 width: CGFloat.random(in: -8...8),
                 height: CGFloat.random(in: -5...5)
@@ -464,14 +475,28 @@ struct EdgeGlowView: View {
 }
 
 // MARK: - Sound Engine (iOS — PCM synthesis + haptics, ported from Kotlin SoundEngine)
+// Fix #1: Pool of AVAudioPlayerNode — sounds overlap instead of cutting each other
+// Fix #2: warmUp() for early init
+// Fix #3: .playback session = plays even in silent mode
+// Fix #8: Pre-created haptic generators
 
 class SoundEngine {
     static let shared = SoundEngine()
 
     private let sampleRate: Double = 22050
     private let engine = AVAudioEngine()
-    private let playerNode = AVAudioPlayerNode()
     private let format: AVAudioFormat
+
+    // Pool of player nodes — sounds can overlap (like Kotlin's per-sound AudioTrack)
+    private let poolSize = 4
+    private var playerNodes: [AVAudioPlayerNode] = []
+    private var nextNodeIndex = 0
+
+    // Pre-created haptic generators (fix #8)
+    private let hapticSoft = UIImpactFeedbackGenerator(style: .soft)
+    private let hapticLight = UIImpactFeedbackGenerator(style: .light)
+    private let hapticMedium = UIImpactFeedbackGenerator(style: .medium)
+    private let hapticHeavy = UIImpactFeedbackGenerator(style: .heavy)
 
     enum HapticIntensity {
         case soft, light, medium, heavy
@@ -479,12 +504,32 @@ class SoundEngine {
 
     init() {
         format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1)!
-        engine.attach(playerNode)
-        engine.connect(playerNode, to: engine.mainMixerNode, format: format)
-        // Set audio session for mixing with Unity
-        try? AVAudioSession.sharedInstance().setCategory(.ambient, options: .mixWithOthers)
+
+        // Create pool of player nodes
+        for _ in 0..<poolSize {
+            let node = AVAudioPlayerNode()
+            engine.attach(node)
+            engine.connect(node, to: engine.mainMixerNode, format: format)
+            playerNodes.append(node)
+        }
+
+        // Fix #3: .playback plays even with silent switch on
+        try? AVAudioSession.sharedInstance().setCategory(.playback, options: .mixWithOthers)
         try? AVAudioSession.sharedInstance().setActive(true)
         try? engine.start()
+
+        // Pre-prepare haptics
+        hapticSoft.prepare()
+        hapticLight.prepare()
+        hapticMedium.prepare()
+        hapticHeavy.prepare()
+    }
+
+    /// Call early (e.g. at app launch) to pre-warm the audio engine (fix #2)
+    func warmUp() {
+        // Accessing .shared triggers init() — play a silent buffer to fully warm the pipeline
+        let silence = [Float](repeating: 0, count: Int(sampleRate * 0.01))
+        play(silence)
     }
 
     // MARK: - Haptics
@@ -492,13 +537,13 @@ class SoundEngine {
     func vibrate(_ intensity: HapticIntensity) {
         let generator: UIImpactFeedbackGenerator
         switch intensity {
-        case .soft:   generator = UIImpactFeedbackGenerator(style: .soft)
-        case .light:  generator = UIImpactFeedbackGenerator(style: .light)
-        case .medium: generator = UIImpactFeedbackGenerator(style: .medium)
-        case .heavy:  generator = UIImpactFeedbackGenerator(style: .heavy)
+        case .soft:   generator = hapticSoft
+        case .light:  generator = hapticLight
+        case .medium: generator = hapticMedium
+        case .heavy:  generator = hapticHeavy
         }
-        generator.prepare()
         generator.impactOccurred()
+        generator.prepare() // Re-prepare for NEXT hit
     }
 
     func vibratePattern(_ pattern: [HapticIntensity]) {
@@ -557,9 +602,9 @@ class SoundEngine {
         return mixed
     }
 
+    /// Fix #1: Round-robin through pool of player nodes — no more stop() killing previous sounds
     private func play(_ samples: [Float]) {
         guard !samples.isEmpty else { return }
-        // Ensure engine is running
         if !engine.isRunning { try? engine.start() }
 
         let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(samples.count))!
@@ -567,9 +612,13 @@ class SoundEngine {
         let channelData = buffer.floatChannelData![0]
         for i in samples.indices { channelData[i] = samples[i] }
 
-        playerNode.stop()
-        playerNode.play()
-        playerNode.scheduleBuffer(buffer, completionHandler: nil)
+        // Round-robin: pick next player node (allows 4 overlapping sounds)
+        let node = playerNodes[nextNodeIndex]
+        nextNodeIndex = (nextNodeIndex + 1) % poolSize
+
+        // Don't stop — just schedule on top. Short sounds auto-finish.
+        if !node.isPlaying { node.play() }
+        node.scheduleBuffer(buffer, completionHandler: nil)
     }
 
     // MARK: - Public SFX (matches Kotlin SoundEngine exactly)
@@ -654,4 +703,3 @@ class SoundEngine {
         ))
     }
 }
-

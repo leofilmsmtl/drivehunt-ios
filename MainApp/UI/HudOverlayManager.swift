@@ -371,10 +371,12 @@ final class HudOverlayManager {
     // MARK: - Casino Roll Overlay
 
     private var casinoRollContainer: UIView?
+    private var casinoRollHostVC: UIHostingController<CasinoRollOverlay>?  // Fix #5: retain VC
 
     /// Show the casino roll overlay on top of everything
     func showCasinoRoll(data: LootRollData) {
         guard let unityView = UnityHolder.shared.unityFramework?.appController()?.rootView else { return }
+        let parentVC = UnityHolder.shared.unityFramework?.appController()?.rootViewController
 
         // Remove existing if any
         dismissCasinoRoll()
@@ -389,6 +391,9 @@ final class HudOverlayManager {
         let hostVC = UIHostingController(rootView: rollView)
         hostVC.view.backgroundColor = .clear
         hostVC.view.isOpaque = false
+
+        // Fix #5: Proper VC lifecycle
+        parentVC?.addChild(hostVC)
 
         let container = UIView()
         container.tag = 999
@@ -413,13 +418,23 @@ final class HudOverlayManager {
             container.trailingAnchor.constraint(equalTo: unityView.trailingAnchor),
         ])
 
+        hostVC.didMove(toParent: parentVC)
+
         self.casinoRollContainer = container
+        self.casinoRollHostVC = hostVC
         print("🎰 Casino roll overlay shown for: \(data.gemType)")
     }
 
     func dismissCasinoRoll() {
+        // Fix #5: Proper VC cleanup
+        casinoRollHostVC?.willMove(toParent: nil)
         casinoRollContainer?.removeFromSuperview()
+        casinoRollHostVC?.removeFromParent()
+        casinoRollHostVC = nil
         casinoRollContainer = nil
+
+        // Fix #4: Allow new gem taps
+        UnityBridge.shared.resetCollectingState()
     }
 
     /// Present a sub-modal on TOP of the existing modal (e.g., SkinPicker from Profile)
