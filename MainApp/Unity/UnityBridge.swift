@@ -145,7 +145,7 @@ final class UnityBridge: ObservableObject {
     private func collectGem(lootId: String, lat: Double, lon: Double, gem: String) {
         guard let token = AuthManager.shared.getAccessToken() else { return }
         let baseUrl = AppState.shared.backendBaseUrl
-        guard let url = URL(string: "\(baseUrl)/v2/game/collect-loot") else { return }
+        guard let url = URL(string: "\(baseUrl)/v2/game/action") else { return }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -153,11 +153,16 @@ final class UnityBridge: ObservableObject {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 8
 
-        let body: [String: Any] = ["lootId": lootId, "lat": lat, "lon": lon]
+        let body: [String: Any] = [
+            "action": "COLLECT_LOOT",
+            "payload": ["lootId": lootId, "lat": lat, "lon": lon]
+        ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+            let bodyStr = data.flatMap { String(data: $0, encoding: .utf8) } ?? "nil"
+            print("💎 collect-loot response: HTTP \(code) — \(bodyStr.prefix(300))")
 
             guard let data = data, code == 200,
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -166,12 +171,12 @@ final class UnityBridge: ObservableObject {
                 return
             }
 
+            let serverGem = json["gem"] as? String ?? gem
             let serverRarity = json["rarity"] as? String ?? "common"
-            let serverColor = json["color"] as? String ?? gem
-            let baseTier = (serverRarity == "epic") ? "gold" : "dark"
+            let baseTier = (json["baseTier"] as? String) ?? "dark"
 
             let rollData = LootRollData(
-                gemType: serverColor,
+                gemType: serverGem,
                 baseTier: baseTier,
                 gemId: lootId,
                 serverRarity: serverRarity

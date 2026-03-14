@@ -381,13 +381,8 @@ final class HudOverlayManager {
 
         let rollView = CasinoRollOverlay(
             rollData: data,
-            onRollComplete: { result in
-                print("🎰 Roll complete: \(result.gemType) \(result.rarity)")
-            },
             onDismiss: { [weak self] in
                 self?.dismissCasinoRoll()
-                // Refresh inventory after collecting
-                GemInventoryState.shared.fetchFromBackend()
             }
         )
 

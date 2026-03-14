@@ -823,6 +823,7 @@
 		DD00EE00FF00AA00BB000010 /* GameHud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GameHud.swift; path = MainApp/UI/GameHud.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HudOverlayManager.swift; path = MainApp/UI/HudOverlayManager.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ResourceDockView.swift; path = MainApp/UI/ResourceDockView.swift; sourceTree = SOURCE_ROOT; };
+		CC11DD22EE33FF44AA550001 /* CasinoRollOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CasinoRollOverlay.swift; path = MainApp/UI/CasinoRollOverlay.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeCallProxyDelegate.swift; path = MainApp/Unity/NativeCallProxyDelegate.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000014 /* UnityBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UnityBridge.swift; path = MainApp/Unity/UnityBridge.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000015 /* UnityEmbedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UnityEmbedView.swift; path = MainApp/Unity/UnityEmbedView.swift; sourceTree = SOURCE_ROOT; };

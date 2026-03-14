@@ -3,339 +3,360 @@ import SwiftUI
 // MARK: - Data Models
 
 struct LootRollData {
-    let gemType: String      // quartz, jade, saphir, ruby, arcane, mystere
+    let gemType: String      // quartz, jade, saphir, ruby, arcane
     let baseTier: String     // "dark" (normal) or "gold" (boosts rare loot)
     let gemId: String
-    let serverRarity: String // Server-authoritative rarity: common, rare, epic
+    let serverRarity: String
 }
 
 struct LootRollResult {
-    let rarity: String       // common, rare, epic
     let gemType: String
     let baseTier: String
 }
 
-// MARK: - Colors & Config
+// MARK: - v5.1 Gem Tier Colors — match Kotlin exactly
 
-private let gemColorsMap: [String: Color] = [
-    "quartz":  Color(hex: "#D9D2C0"),
-    "jade":    Color(hex: "#2DBF73"),
-    "saphir":  Color(hex: "#2659F2"),
-    "ruby":    Color(hex: "#E61A26"),
-    "arcane":  Color(hex: "#B333F2"),
-    "mystere": Color(hex: "#FF6B6B"),
+private let GEM_COLORS: [String: Color] = [
+    "quartz": Color(red: 0.75, green: 0.77, blue: 0.82),   // #C0C5D0
+    "jade":   Color(red: 0.29, green: 0.87, blue: 0.50),   // #4ADE80
+    "saphir": Color(red: 0.23, green: 0.51, blue: 0.96),   // #3B82F6
+    "ruby":   Color(red: 0.94, green: 0.27, blue: 0.27),   // #EF4444
+    "arcane": Color(red: 0.66, green: 0.33, blue: 0.97),   // #A855F7
 ]
 
-private let gemLabels: [String: String] = [
-    "quartz": "QUARTZ", "jade": "JADE", "saphir": "SAPHIR",
-    "ruby": "RUBY", "arcane": "ARCANE", "mystere": "MYSTÈRE",
-]
+private let GEM_TIERS = ["quartz", "jade", "saphir", "ruby", "arcane"]
+private let GEM_LABELS = ["QUARTZ", "JADE", "SAPHIR", "RUBY", "ARCANE"]
 
-private let rarityColors: [String: Color] = [
-    "common": Color(hex: "#AABBCC"),
-    "rare":   Color(hex: "#FFD700"),
-    "epic":   Color(hex: "#FF4444"),
-]
-
-private let rarityLabels: [String: String] = [
-    "common": "COMMUN",
-    "rare":   "RARE ⭐",
-    "epic":   "ÉPIQUE 💎",
-]
-
-// MARK: - Casino Roll Overlay
+// MARK: - Casino Roll Overlay (v5.1 — matches Kotlin exactly)
 
 struct CasinoRollOverlay: View {
     let rollData: LootRollData
-    let onRollComplete: (LootRollResult) -> Void
     let onDismiss: () -> Void
 
     @State private var phase: Int = 0
-    // 0=entering, 1=plate, 2=spinner, 3=scanning, 4=reveal, 5=result, 6=closeable
-
-    @State private var rolledRarity: String = "common"
     @State private var scanIndex: Int = -1
     @State private var winnerIndex: Int = -1
+    @State private var currentGemColor: Color = Color(red: 1, green: 0.42, blue: 0.42)
+    @State private var showFlash = false
+    @State private var isArcaneShake = false
+    @State private var shakeOffset: CGSize = .zero
 
-    private var gemColor: Color { gemColorsMap[rollData.gemType] ?? .white }
-    private var gemLabel: String { gemLabels[rollData.gemType] ?? "" }
-    private var rarityColor: Color { rarityColors[rolledRarity] ?? .white }
+    private var gemColor: Color { GEM_COLORS[rollData.gemType] ?? .white }
+    private var targetIdx: Int { max(0, GEM_TIERS.firstIndex(of: rollData.gemType) ?? 0) }
+    private var gemLabel: String { GEM_LABELS.indices.contains(targetIdx) ? GEM_LABELS[targetIdx] : "QUARTZ" }
 
     var body: some View {
         ZStack {
-            // === Scrim ===
-            Color.black.opacity(phase >= 0 ? 0.88 : 0)
+            // ── Scrim ──
+            Color.black.opacity(phase >= 1 ? 0.85 : 0)
+                .animation(.easeInOut(duration: 0.6), value: phase)
                 .ignoresSafeArea()
-                .animation(.easeIn(duration: 0.5), value: phase)
 
-            // === Edge glow ===
-            if phase >= 4 {
-                RoundedRectangle(cornerRadius: 0)
-                    .stroke(rarityColor.opacity(0.6), lineWidth: 2)
+            // ── Screen flash ──
+            if showFlash {
+                gemColor.opacity(0.7)
                     .ignoresSafeArea()
                     .transition(.opacity)
             }
 
-            // === Content ===
-            VStack(spacing: 24) {
-                // ── Base plate + gem ──
+            // ── Edge glow (4 edges) ──
+            if phase >= 4 {
+                EdgeGlowView(color: gemColor)
+                    .opacity(0.6)
+                    .transition(.opacity)
+                    .ignoresSafeArea()
+            }
+
+            // ── Main content ──
+            VStack(spacing: 0) {
+                Spacer()
+
+                // Spotlight cone
+                SpotlightCone(color: gemColor)
+                    .frame(width: 200, height: 140)
+                    .opacity(phase >= 4 ? spotIntensity * 2 : 0)
+                    .animation(.easeInOut(duration: 0.5), value: phase)
+
+                // Base plate + gem diamond
                 ZStack {
+                    // Background glow
                     Circle()
                         .fill(
-                            rollData.baseTier == "gold"
-                            ? LinearGradient(colors: [Color(hex: "#FFD700"), Color(hex: "#B8860B")], startPoint: .top, endPoint: .bottom)
-                            : LinearGradient(colors: [Color(hex: "#3A3A4E"), Color(hex: "#1A1A2E")], startPoint: .top, endPoint: .bottom)
+                            RadialGradient(
+                                colors: [
+                                    phase >= 4 ? gemColor.opacity(spotIntensity) : Color(white: 0.25, opacity: 0.5),
+                                    .clear
+                                ],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 100
+                            )
                         )
-                        .frame(width: 180, height: 180)
+                        .frame(width: 200, height: 200)
 
-                    // Diamond gem shape
-                    if phase >= 1 {
-                        DiamondGemShape(color: gemColor)
-                            .frame(width: 80, height: 80)
-                            .transition(.scale.combined(with: .opacity))
-                    }
+                    // Gem diamond
+                    GemDiamondView(
+                        color: currentGemColor,
+                        size: phase >= 4 ? 100 : 80,
+                        showGlow: phase >= 4
+                    )
                 }
-                .scaleEffect(phase >= 1 ? 1.0 : 0.3)
-                .opacity(phase >= 1 ? 1.0 : 0)
+                .scaleEffect(phase >= 1 ? 1 : 0.3)
+                .opacity(phase >= 1 ? 1 : 0)
                 .animation(.spring(response: 0.5, dampingFraction: 0.6), value: phase)
 
-                // ── Bonus hint ──
-                if phase >= 1 {
-                    if let hint = bonusHint {
-                        Text(hint.text)
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(hint.color)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 6)
-                            .background(Color.black.opacity(0.5))
-                            .cornerRadius(8)
-                            .transition(.opacity)
-                    }
+                // Gold plaque hint
+                if rollData.baseTier == "gold" {
+                    Text("✨ PLAQUE DORÉE")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(Color(red: 1, green: 0.84, blue: 0))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 6)
+                        .background(Color.black.opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .opacity(phase >= 1 ? 1 : 0)
+                        .padding(.top, 15)
                 }
 
-                // ── Rarity spinner ──
-                if phase >= 2 {
-                    HStack(spacing: 12) {
-                        ForEach(Array(["common", "rare", "epic"].enumerated()), id: \.offset) { idx, key in
-                            let label = key == "common" ? "COMMUN" : (key == "rare" ? "RARE" : "ÉPIQUE")
-                            let slotColor = rarityColors[key] ?? .white
-                            let isScanning = scanIndex == idx
-                            let isWinner = winnerIndex == idx
+                // ── Tier spinner (v5.1 — 5 gem labels) ──
+                HStack(spacing: 6) {
+                    ForEach(0..<5, id: \.self) { idx in
+                        let key = GEM_TIERS[idx]
+                        let isScanning = scanIndex == idx
+                        let isWinner = winnerIndex == idx
+                        let slotColor = GEM_COLORS[key] ?? .white
 
-                            Text(label)
-                                .font(.system(size: 12, weight: .heavy))
-                                .tracking(1)
-                                .foregroundColor(slotColor.opacity(isWinner || isScanning ? 1.0 : 0.3))
-                                .frame(width: 80, height: 42)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(slotColor.opacity(isScanning || isWinner ? 0.1 : 0.03))
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(slotColor.opacity(isScanning || isWinner ? 0.8 : 0), lineWidth: 2)
-                                )
-                                .scaleEffect(isWinner ? 1.15 : (isScanning ? 1.1 : 1.0))
-                                .animation(.spring(response: 0.2), value: scanIndex)
-                                .animation(.spring(response: 0.3), value: winnerIndex)
-                        }
+                        Text(GEM_LABELS[idx])
+                            .font(.system(size: 10, weight: .heavy))
+                            .tracking(0.5)
+                            .foregroundColor(slotColor.opacity(isScanning || isWinner ? 1 : 0.3))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 38)
+                            .background(slotColor.opacity(isScanning || isWinner ? 0.1 : 0.03))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(slotColor.opacity(isScanning || isWinner ? 1 : 0), lineWidth: 2)
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .scaleEffect(isWinner ? 1.15 : (isScanning ? 1.1 : 1.0))
+                            .animation(.easeInOut(duration: 0.15), value: scanIndex)
+                            .animation(.easeInOut(duration: 0.15), value: winnerIndex)
                     }
-                    .transition(.opacity)
                 }
+                .padding(.horizontal, 12)
+                .padding(.top, 20)
+                .opacity(phase >= 2 ? 1 : 0)
+                .animation(.easeInOut(duration: 0.3), value: phase)
 
                 // ── Result text ──
-                if phase >= 5 {
-                    VStack(spacing: 8) {
-                        Text("\(gemLabel) \(rarityLabels[rolledRarity] ?? "")")
-                            .font(.system(size: 26, weight: .black))
-                            .tracking(2)
-                            .foregroundColor(rarityColor)
-                            .scaleEffect(phase >= 5 ? 1.0 : 0.5)
-                            .animation(.spring(response: 0.4, dampingFraction: 0.5), value: phase)
+                VStack(spacing: 8) {
+                    Text(gemLabel)
+                        .font(.system(size: 28, weight: .black))
+                        .tracking(2)
+                        .foregroundColor(gemColor)
 
-                        Text("\(rollData.baseTier == "gold" ? "Base Épique 🌟" : "Base Normale") • Ajouté à l'inventaire")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.white.opacity(0.5))
-                    }
-                    .transition(.opacity)
+                    Text("\(rollData.baseTier == "gold" ? "Base Dorée" : "Base Sombre") • Ajouté à l'inventaire")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.5))
                 }
+                .opacity(phase >= 5 ? 1 : 0)
+                .scaleEffect(phase >= 5 ? 1 : 0.5)
+                .animation(.spring(response: 0.4, dampingFraction: 0.5), value: phase)
+                .padding(.top, 20)
 
                 // ── Close button ──
-                if phase >= 6 {
-                    Button {
-                        onDismiss()
-                    } label: {
-                        Text("FERMER")
-                            .font(.system(size: 12, weight: .semibold))
-                            .tracking(2)
-                            .foregroundColor(.white.opacity(0.5))
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .fill(Color.white.opacity(0.05))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 20)
-                                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                                    )
-                            )
-                    }
-                    .transition(.opacity)
+                Button(action: { if phase >= 6 { onDismiss() } }) {
+                    Text("FERMER")
+                        .font(.system(size: 12, weight: .semibold))
+                        .tracking(2)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 12)
+                        .background(Color.white.opacity(0.05))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
                 }
+                .opacity(phase >= 6 ? 0.5 : 0)
+                .animation(.easeInOut(duration: 0.4), value: phase)
+                .padding(.top, 20)
+
+                Spacer()
             }
+            .offset(isArcaneShake ? shakeOffset : .zero)
         }
-        .onTapGesture {
-            if phase >= 6 { onDismiss() }
-        }
-        .onAppear { startRollAnimation() }
+        .onTapGesture { if phase >= 6 { onDismiss() } }
+        .onAppear { startRollSequence() }
     }
 
-    // MARK: - Bonus Hint
-
-    private var bonusHint: (text: String, color: Color)? {
-        if rollData.gemType == "mystere" {
-            return ("🌈 MYSTÈRE!  60% Rare, 40% Épique!", Color(hex: "#CC44FF"))
-        } else if rollData.baseTier == "gold" {
-            return ("✨ BONUS!  30% Rare, 20% Épique!", Color(hex: "#FFD700"))
+    // MARK: - Spotlight intensity by gem tier
+    private var spotIntensity: Double {
+        switch rollData.gemType {
+        case "arcane": return 0.40
+        case "ruby":   return 0.25
+        case "saphir": return 0.16
+        case "jade":   return 0.10
+        default:       return 0.06
         }
-        return nil
     }
 
-    // MARK: - Roll Animation
+    // MARK: - Roll Sequence (matches Kotlin timing exactly)
+    private func startRollSequence() {
+        let targetIdx = self.targetIdx
 
-    private func startRollAnimation() {
-        // Determine rarity
-        let finalRarity: String
-        if !rollData.serverRarity.isEmpty {
-            finalRarity = rollData.serverRarity
-        } else {
-            let roll = Double.random(in: 0...1)
-            if rollData.gemType == "mystere" {
-                finalRarity = roll < 0.60 ? "rare" : "epic"
-            } else if rollData.baseTier == "gold" {
-                if roll < 0.50 { finalRarity = "common" }
-                else if roll < 0.80 { finalRarity = "rare" }
-                else { finalRarity = "epic" }
-            } else {
-                if roll < 0.90 { finalRarity = "common" }
-                else if roll < 0.98 { finalRarity = "rare" }
-                else { finalRarity = "epic" }
-            }
-        }
-
-        let targetIdx: Int
-        switch finalRarity {
-        case "common": targetIdx = 0
-        case "rare": targetIdx = 1
-        default: targetIdx = 2
-        }
-
-        rolledRarity = finalRarity
-
-        // Animation sequence
         Task { @MainActor in
-            // STEP 1 — enter
-            haptic(.light)
+            // STEP 1 — overlay opens
+            phase = 0
+            SoundEngine.shared.vibrate(.light)
             try? await Task.sleep(nanoseconds: 400_000_000)
 
-            // STEP 2 — plate
-            withAnimation { phase = 1 }
-            haptic(.medium)
-            try? await Task.sleep(nanoseconds: 700_000_000)
+            // STEP 2 — base plate appears
+            phase = 1
+            SoundEngine.shared.vibrate(.medium)
+            try? await Task.sleep(nanoseconds: 600_000_000)
 
-            // STEP 3 — spinner
-            withAnimation { phase = 2 }
+            // STEP 3 — spinner visible
+            phase = 2
             try? await Task.sleep(nanoseconds: 300_000_000)
 
-            // STEP 4 — scanning
+            // STEP 4 — scanning animation (matches Kotlin exactly)
             phase = 3
-            // Fast scans (3 cycles)
-            for cycle in 0...2 {
-                for i in 0...2 {
-                    withAnimation { scanIndex = i }
-                    haptic(.light)
-                    try? await Task.sleep(nanoseconds: UInt64((120 + cycle * 50)) * 1_000_000)
+            let isHighTier = rollData.gemType == "ruby" || rollData.gemType == "arcane"
+            let numCycles = isHighTier ? 4 : (2 + Int.random(in: 0...2))
+            let baseSpeed: UInt64 = isHighTier ? 90 : 80
+            let speedRamp: UInt64 = isHighTier ? 35 : UInt64(30 + Int.random(in: 0...19))
+
+            // Fast scan cycles
+            for cycle in 0..<numCycles {
+                for i in 0...4 {
+                    scanIndex = i
+                    currentGemColor = GEM_COLORS[GEM_TIERS[i]] ?? .white
+                    SoundEngine.shared.vibrate(.soft)
+                    try? await Task.sleep(nanoseconds: (baseSpeed + UInt64(cycle) * speedRamp) * 1_000_000)
                 }
             }
-            // Slow down to target
-            for i in 0...targetIdx {
-                withAnimation { scanIndex = i }
-                haptic(.medium)
-                try? await Task.sleep(nanoseconds: UInt64((250 + i * 100)) * 1_000_000)
+
+            // Tease: 25% on low results (quartz/jade)
+            let doTease = targetIdx <= 1 && Double.random(in: 0...1) < 0.25
+            if doTease {
+                let teaseMs: [UInt64] = [150, 180, 220, 350, 600]
+                for i in 0...4 {
+                    scanIndex = i
+                    currentGemColor = GEM_COLORS[GEM_TIERS[i]] ?? .white
+                    SoundEngine.shared.vibrate(.soft)
+                    try? await Task.sleep(nanoseconds: teaseMs[i] * 1_000_000)
+                }
+                for i in 0...targetIdx {
+                    scanIndex = i
+                    currentGemColor = GEM_COLORS[GEM_TIERS[i]] ?? .white
+                    SoundEngine.shared.vibrate(.soft)
+                    try? await Task.sleep(nanoseconds: (150 + UInt64(i) * 50) * 1_000_000)
+                }
+            } else {
+                for i in 0...targetIdx {
+                    scanIndex = i
+                    currentGemColor = GEM_COLORS[GEM_TIERS[i]] ?? .white
+                    SoundEngine.shared.vibrate(.light)
+                    try? await Task.sleep(nanoseconds: (200 + UInt64(i) * 80) * 1_000_000)
+                }
             }
 
             // STEP 5 — REVEAL
-            withAnimation {
-                phase = 4
-                scanIndex = -1
-                winnerIndex = targetIdx
+            phase = 4
+            scanIndex = -1
+            winnerIndex = targetIdx
+            currentGemColor = gemColor
+
+            // Screen flash
+            withAnimation(.easeIn(duration: 0.05)) { showFlash = true }
+            Task {
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                withAnimation(.easeOut(duration: 0.35)) { showFlash = false }
             }
-            hapticReveal(finalRarity)
-            try? await Task.sleep(nanoseconds: 400_000_000)
+
+            // Tier-specific haptics
+            switch rollData.gemType {
+            case "arcane":
+                isArcaneShake = true
+                SoundEngine.shared.vibrate(.heavy)
+                startShakeAnimation()
+                Task {
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    isArcaneShake = false
+                    shakeOffset = .zero
+                }
+            case "ruby":
+                SoundEngine.shared.vibratePattern([.heavy, .light, .medium])
+            case "saphir":
+                SoundEngine.shared.vibratePattern([.light, .light, .medium])
+            case "jade":
+                SoundEngine.shared.vibratePattern([.light, .medium])
+            default:
+                SoundEngine.shared.vibrate(.light)
+            }
+
+            try? await Task.sleep(nanoseconds: 300_000_000)
 
             // STEP 6 — result text
-            withAnimation { phase = 5 }
-            try? await Task.sleep(nanoseconds: 500_000_000)
+            phase = 5
+            try? await Task.sleep(nanoseconds: 400_000_000)
 
-            // Notify
-            onRollComplete(LootRollResult(rarity: finalRarity, gemType: rollData.gemType, baseTier: rollData.baseTier))
-            haptic(.light)
+            // Inventory refresh
+            GemInventoryState.shared.fetchFromBackend()
+            SoundEngine.shared.vibrate(.light)
             try? await Task.sleep(nanoseconds: 300_000_000)
 
             // STEP 7 — closeable
-            withAnimation { phase = 6 }
+            phase = 6
         }
     }
 
-    // MARK: - Haptics
-
-    private func haptic(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
-        UIImpactFeedbackGenerator(style: style).impactOccurred()
-    }
-
-    private func hapticReveal(_ rarity: String) {
-        switch rarity {
-        case "epic":
-            let gen = UINotificationFeedbackGenerator()
-            gen.notificationOccurred(.success)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-            }
-        case "rare":
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            }
-        default:
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    private func startShakeAnimation() {
+        Timer.scheduledTimer(withTimeInterval: 0.04, repeats: true) { timer in
+            if !isArcaneShake { timer.invalidate(); return }
+            shakeOffset = CGSize(
+                width: CGFloat.random(in: -8...8),
+                height: CGFloat.random(in: -5...5)
+            )
         }
     }
 }
 
-// MARK: - Diamond Gem Shape
+// MARK: - Gem Diamond Shape
 
-struct DiamondGemShape: View {
+struct GemDiamondView: View {
     let color: Color
+    let size: CGFloat
+    let showGlow: Bool
 
     var body: some View {
-        Canvas { context, size in
-            let cx = size.width / 2
-            let cy = size.height / 2
-            let r = size.width * 0.42
+        Canvas { context, canvasSize in
+            let cx = canvasSize.width / 2
+            let cy = canvasSize.height / 2
+            let r = canvasSize.width * 0.42
+
+            // Glow
+            if showGlow {
+                var glowPath = Path()
+                glowPath.addEllipse(in: CGRect(
+                    x: cx - r * 1.8, y: cy - r * 1.8,
+                    width: r * 3.6, height: r * 3.6
+                ))
+                context.fill(glowPath, with: .color(color.opacity(0.3)))
+            }
 
             // Outer diamond
-            var diamond = Path()
-            diamond.move(to: CGPoint(x: cx, y: cy - r))
-            diamond.addLine(to: CGPoint(x: cx + r, y: cy))
-            diamond.addLine(to: CGPoint(x: cx, y: cy + r))
-            diamond.addLine(to: CGPoint(x: cx - r, y: cy))
-            diamond.closeSubpath()
-            context.fill(diamond, with: .color(color))
+            var outer = Path()
+            outer.move(to: CGPoint(x: cx, y: cy - r))
+            outer.addLine(to: CGPoint(x: cx + r, y: cy))
+            outer.addLine(to: CGPoint(x: cx, y: cy + r))
+            outer.addLine(to: CGPoint(x: cx - r, y: cy))
+            outer.closeSubpath()
+            context.fill(outer, with: .color(color))
 
-            // Inner facet
+            // Inner diamond
             let ir = r * 0.58
             var inner = Path()
             inner.move(to: CGPoint(x: cx, y: cy - ir))
@@ -343,16 +364,121 @@ struct DiamondGemShape: View {
             inner.addLine(to: CGPoint(x: cx, y: cy + ir))
             inner.addLine(to: CGPoint(x: cx - ir, y: cy))
             inner.closeSubpath()
-            context.fill(inner, with: .color(color.opacity(0.6)))
+            context.fill(inner, with: .color(color.opacity(0.65)))
 
-            // Highlight
-            var highlight = Path()
-            highlight.move(to: CGPoint(x: cx, y: cy - r))
-            highlight.addLine(to: CGPoint(x: cx - r, y: cy))
-            highlight.addLine(to: CGPoint(x: cx - ir, y: cy))
-            highlight.addLine(to: CGPoint(x: cx, y: cy - ir))
-            highlight.closeSubpath()
-            context.fill(highlight, with: .color(.white.opacity(0.3)))
+            // Highlight facet
+            var hl = Path()
+            hl.move(to: CGPoint(x: cx, y: cy - r))
+            hl.addLine(to: CGPoint(x: cx - r, y: cy))
+            hl.addLine(to: CGPoint(x: cx - ir, y: cy))
+            hl.addLine(to: CGPoint(x: cx, y: cy - ir))
+            hl.closeSubpath()
+            context.fill(hl, with: .color(.white.opacity(0.35)))
+
+            // Sparkle dot
+            context.fill(
+                Path(ellipseIn: CGRect(
+                    x: cx - r * 0.12, y: cy - r * 0.16,
+                    width: r * 0.16, height: r * 0.16
+                )),
+                with: .color(.white.opacity(0.9))
+            )
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+// MARK: - Spotlight Cone
+
+struct SpotlightCone: View {
+    let color: Color
+
+    var body: some View {
+        Canvas { context, size in
+            var path = Path()
+            path.move(to: CGPoint(x: size.width * 0.4, y: 0))
+            path.addLine(to: CGPoint(x: size.width * 0.6, y: 0))
+            path.addLine(to: CGPoint(x: size.width, y: size.height))
+            path.addLine(to: CGPoint(x: 0, y: size.height))
+            path.closeSubpath()
+
+            context.fill(path, with: .linearGradient(
+                Gradient(colors: [.clear, color.opacity(0.3)]),
+                startPoint: CGPoint(x: size.width / 2, y: 0),
+                endPoint: CGPoint(x: size.width / 2, y: size.height)
+            ))
+        }
+    }
+}
+
+// MARK: - Edge Glow
+
+struct EdgeGlowView: View {
+    let color: Color
+
+    var body: some View {
+        Canvas { context, size in
+            let w = size.width * 0.15
+            let gc = color.opacity(0.25)
+
+            // Top edge
+            context.fill(Path(CGRect(x: 0, y: 0, width: size.width, height: w)),
+                         with: .linearGradient(
+                            Gradient(colors: [gc, .clear]),
+                            startPoint: CGPoint(x: 0, y: 0),
+                            endPoint: CGPoint(x: 0, y: w)
+                         ))
+            // Bottom edge
+            context.fill(Path(CGRect(x: 0, y: size.height - w, width: size.width, height: w)),
+                         with: .linearGradient(
+                            Gradient(colors: [.clear, gc]),
+                            startPoint: CGPoint(x: 0, y: size.height - w),
+                            endPoint: CGPoint(x: 0, y: size.height)
+                         ))
+            // Left edge
+            context.fill(Path(CGRect(x: 0, y: 0, width: w, height: size.height)),
+                         with: .linearGradient(
+                            Gradient(colors: [gc, .clear]),
+                            startPoint: CGPoint(x: 0, y: 0),
+                            endPoint: CGPoint(x: w, y: 0)
+                         ))
+            // Right edge
+            context.fill(Path(CGRect(x: size.width - w, y: 0, width: w, height: size.height)),
+                         with: .linearGradient(
+                            Gradient(colors: [.clear, gc]),
+                            startPoint: CGPoint(x: size.width - w, y: 0),
+                            endPoint: CGPoint(x: size.width, y: 0)
+                         ))
+        }
+    }
+}
+
+// MARK: - Sound Engine (iOS — haptics only for now, PCM audio later)
+
+class SoundEngine {
+    static let shared = SoundEngine()
+
+    enum HapticIntensity {
+        case soft, light, medium, heavy
+    }
+
+    func vibrate(_ intensity: HapticIntensity) {
+        let generator: UIImpactFeedbackGenerator
+        switch intensity {
+        case .soft:   generator = UIImpactFeedbackGenerator(style: .soft)
+        case .light:  generator = UIImpactFeedbackGenerator(style: .light)
+        case .medium: generator = UIImpactFeedbackGenerator(style: .medium)
+        case .heavy:  generator = UIImpactFeedbackGenerator(style: .heavy)
+        }
+        generator.prepare()
+        generator.impactOccurred()
+    }
+
+    func vibratePattern(_ pattern: [HapticIntensity]) {
+        for (i, intensity) in pattern.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.08) {
+                self.vibrate(intensity)
+            }
         }
     }
 }
