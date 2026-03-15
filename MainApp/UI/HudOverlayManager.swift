@@ -4,37 +4,116 @@ import Combine
 
 /// UIView subclass that passes through touches on non-interactive areas.
 /// This lets multi-touch gestures (zoom, tilt) reach Unity's view beneath HUD overlays.
-/// Without this, the hosting controller's view eats ALL touches in its 320×400 frame,
+/// Without this, the hosting controller's view eats ALL touches in its frame,
 /// preventing Unity from seeing the second finger for pinch/tilt gestures.
+///
+/// KEY INSIGHT: SwiftUI adds UIGestureRecognizers to internal layout/container views
+/// (not just buttons). Simply checking for gesture recognizers in the parent chain
+/// causes false positives — transparent spacers/stacks get treated as interactive.
+/// Instead we check if the hit view renders visible content before intercepting.
 class PassthroughView: UIView {
+    /// Posted when a touch passes through to Unity (no interactive SwiftUI element was hit)
+    static let touchPassedThrough = Notification.Name("PassthroughView.touchPassedThrough")
+    
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         let hit = super.hitTest(point, with: event)
-        // Pass through if:
-        // 1. Hit is this container itself (transparent area)
-        // 2. Hit is a non-interactive SwiftUI layout view (backgrounds, spacers, stacks)
-        guard let hitView = hit else { return nil }
-        if hitView === self { return nil }
-        // Check if the hit view is actually interactive (button, control, gesture recognizer)
-        if isInteractiveView(hitView) { return hit }
-        // Not interactive — pass through to Unity
+        guard let hitView = hit else {
+            NotificationCenter.default.post(name: Self.touchPassedThrough, object: nil)
+            return nil
+        }
+        // This container itself — always pass through
+        if hitView === self {
+            NotificationCenter.default.post(name: Self.touchPassedThrough, object: nil)
+            return nil
+        }
+        // Check if the hit view is ACTUALLY an interactive control with visible content
+        if isVisibleInteractiveView(hitView) { return hit }
+        // Everything else (transparent layout views, spacers, stacks) — pass through to Unity
+        NotificationCenter.default.post(name: Self.touchPassedThrough, object: nil)
         return nil
     }
 
-    /// Determines if a view is actually interactive (should intercept touches)
-    private func isInteractiveView(_ view: UIView) -> Bool {
-        // UIControl subclasses (buttons, sliders, switches, etc.)
+    /// A view is "visible interactive" if it's a UIControl OR has gesture recognizers
+    /// AND has visible rendered content (not just a transparent SwiftUI layout container).
+    private func isVisibleInteractiveView(_ view: UIView) -> Bool {
+        // Direct UIControl (UIButton, UISlider, etc.) — always interactive
         if view is UIControl { return true }
-        // Views with tap/gesture recognizers attached
-        if let recognizers = view.gestureRecognizers, !recognizers.isEmpty { return true }
-        // Check parent chain — SwiftUI wraps interactive elements in container views
+        
+        // Check the view itself — does it have gesture recognizers AND visible content?
+        if hasGestureRecognizers(view) && hasVisibleContent(view) { return true }
+        
+        // Walk UP the parent chain — but only flag as interactive if we find
+        // a UIControl or a view with BOTH recognizers AND visible content
         var parent = view.superview
         while let p = parent {
             if p === self { break }
             if p is UIControl { return true }
-            if let recognizers = p.gestureRecognizers, !recognizers.isEmpty { return true }
+            if hasGestureRecognizers(p) && hasVisibleContent(p) { return true }
             parent = p.superview
         }
         return false
+    }
+    
+    private func hasGestureRecognizers(_ view: UIView) -> Bool {
+        guard let recognizers = view.gestureRecognizers else { return false }
+        return !recognizers.isEmpty
+    }
+    
+    /// Checks if a view has actual visible rendered content (not transparent).
+    /// SwiftUI layout containers typically have clear backgrounds and zero-size visible content.
+    private func hasVisibleContent(_ view: UIView) -> Bool {
+        // Non-clear, non-nil background = visible
+        if let bg = view.backgroundColor, bg != .clear && bg.cgColor.alpha > 0.01 {
+            return true
+        }
+        // Has sublayers with non-transparent content (e.g. SwiftUI rendering layers)
+        if let layers = view.layer.sublayers {
+            for layer in layers {
+                if let bg = layer.backgroundColor, UIColor(cgColor: bg) != .clear && bg.alpha > 0.01 {
+                    return true
+                }
+            }
+        }
+        // Check if this is a SwiftUI control host (has accessible label or specific class)
+        let className = String(describing: type(of: view))
+        if className.contains("Button") || className.contains("Control") || className.contains("Slider") {
+            return true
+        }
+        return false
+    }
+}
+
+/// Full-screen container for the Resource Dock.
+/// Only the dock button area (top-right, 280×50px below safe area) intercepts touches.
+/// Everything else — including the expanded panel (read-only), zoom gestures, menu —
+/// passes through to Unity. Posts touchPassedThrough notification on pass-through.
+class ResourceDockContainerView: UIView {
+    /// The interactive dock button rect (set after layout)
+    private var dockButtonRect: CGRect = .zero
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // Calculate the dock button rect: top-right corner, below safe area
+        let safeTop = safeAreaInsets.top + 12  // matches constraint constant
+        let dockWidth: CGFloat = 280
+        let dockHeight: CGFloat = 50
+        dockButtonRect = CGRect(
+            x: bounds.width - dockWidth - 8,  // 8px from right edge
+            y: safeTop,
+            width: dockWidth,
+            height: dockHeight
+        )
+    }
+    
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        // Only intercept touches in the dock button area
+        if dockButtonRect.contains(point) {
+            // Let SwiftUI handle the dock button tap
+            return super.hitTest(point, with: event)
+        }
+        // Everything else: pass through to Unity + post dismiss notification
+        NotificationCenter.default.post(name: PassthroughView.touchPassedThrough, object: nil)
+        return nil
     }
 }
 
@@ -244,25 +323,45 @@ final class HudOverlayManager {
         ])
         self.bottomHostingController = bottomHost
 
+
         // --- TOP RIGHT: Resource dock ---
-        // Container sized to fit both compact + expanded states.
-        // PassthroughView forwards touches on empty areas to Unity.
+        // Uses ResourceDockContainerView — a purpose-built UIView that only intercepts
+        // touches in the top 50px (dock button area). Everything below passes through.
+        // Full-screen container so the expanded panel renders properly below.
         let topView = AnyView(
             ResourceDockView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                 .onAppear { GemInventoryState.shared.fetchFromBackend() }
         )
         let topHost = UIHostingController(rootView: topView)
         topHost.view.backgroundColor = .clear
         topHost.view.isOpaque = false
-        let topContainer = makePassthroughContainer(for: topHost, tag: 998)
+        let topContainer = ResourceDockContainerView()
+        topContainer.backgroundColor = .clear
+        topContainer.tag = 998
+        topContainer.translatesAutoresizingMaskIntoConstraints = false
+        topContainer.clipsToBounds = false
+
+        let hostedTop = topHost.view!
+        hostedTop.backgroundColor = .clear
+        hostedTop.isOpaque = false
+        hostedTop.translatesAutoresizingMaskIntoConstraints = false
+        hostedTop.clipsToBounds = false
+        topContainer.addSubview(hostedTop)
+        
+        NSLayoutConstraint.activate([
+            hostedTop.leadingAnchor.constraint(equalTo: topContainer.leadingAnchor),
+            hostedTop.trailingAnchor.constraint(equalTo: topContainer.trailingAnchor),
+            hostedTop.topAnchor.constraint(equalTo: topContainer.topAnchor),
+            hostedTop.bottomAnchor.constraint(equalTo: topContainer.bottomAnchor),
+        ])
+        
         unityView.addSubview(topContainer)
 
         NSLayoutConstraint.activate([
-            topContainer.trailingAnchor.constraint(equalTo: unityView.trailingAnchor, constant: -8),
-            topContainer.topAnchor.constraint(equalTo: unityView.safeAreaLayoutGuide.topAnchor, constant: 4),
-            topContainer.widthAnchor.constraint(equalToConstant: 280),
-            topContainer.heightAnchor.constraint(equalToConstant: 400),
+            topContainer.leadingAnchor.constraint(equalTo: unityView.leadingAnchor),
+            topContainer.trailingAnchor.constraint(equalTo: unityView.trailingAnchor),
+            topContainer.topAnchor.constraint(equalTo: unityView.topAnchor),
+            topContainer.bottomAnchor.constraint(equalTo: unityView.bottomAnchor),
         ])
         self.topHostingController = topHost
 

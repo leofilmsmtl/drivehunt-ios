@@ -212,6 +212,15 @@ struct ResourceDockView: View {
                 .shadow(color: .black.opacity(0.5), radius: 12)
                 .padding(.top, 32)
                 .transition(.opacity.combined(with: .move(edge: .top)))
+                .allowsHitTesting(false)  // Panel is read-only, let touches pass to Unity
+            }
+        }
+        .padding(.trailing, 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+        // When ANY touch passes through to Unity, dismiss the expanded panel
+        .onReceive(NotificationCenter.default.publisher(for: PassthroughView.touchPassedThrough)) { _ in
+            if expanded {
+                withAnimation(.spring(response: 0.3)) { expanded = false }
             }
         }
     }
