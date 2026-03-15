@@ -146,7 +146,17 @@ final class UnityBridge: ObservableObject {
         let lat = Double(parts[3].replacingOccurrences(of: ",", with: ".")) ?? 0.0
         let lon = Double(parts[4].replacingOccurrences(of: ",", with: ".")) ?? 0.0
 
-        print("💎 UnityBridge: Gem tapped! id=\(lootId.prefix(8)) gem=\(gem)")
+        // --- HEX CONTAINMENT CHECK (matches Kotlin CaptureState.OnGemTapped) ---
+        // Unity sends playerHexId and lootHexId in positions 5 and 6
+        let playerHexId = parts.count > 5 ? parts[5] : ""
+        let lootHexId = parts.count > 6 ? parts[6] : ""
+
+        if !playerHexId.isEmpty && !lootHexId.isEmpty && playerHexId != lootHexId {
+            print("⚠️ UnityBridge: Loot not in player's hex — player=\(playerHexId.prefix(8)) loot=\(lootHexId.prefix(8)). Blocked.")
+            return
+        }
+
+        print("💎 UnityBridge: Gem tapped! id=\(lootId.prefix(8)) gem=\(gem) hex=\(playerHexId.prefix(8))")
 
         isCollectingGem = true
         // Call backend to collect
