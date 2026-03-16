@@ -119,143 +119,6 @@ class ResourceDockContainerView: UIView {
 
 // MARK: - Boot Loading Screen (inlined to avoid target membership issues)
 
-/// Boot loading screen — shown while Unity loads.
-/// Premium design with real progress bar driven by Unity boot signals.
-struct BootLoadingScreen: View {
-    @State private var ringRotation: Double = 0
-    @ObservedObject var bridge = UnityBridge.shared
-
-    /// Maps boot signals to progress 0.0–1.0
-    /// Only shows 100% when BOTH boot complete AND hex textures ready
-    private var progress: Double {
-        var p = 0.0
-        if bridge.isUnityReady       { p = 0.125 }
-        if bridge.isAuthBridged      { p = 0.25 }
-        if bridge.isGPSLocked        { p = 0.375 }
-        if bridge.isHexHistoryLoaded { p = 0.50 }
-        if bridge.isTilesLoaded      { p = 0.625 }
-        if bridge.isZonesLoaded || bridge.isBootComplete {
-            p = 0.75 + (bridge.textureProgress * 0.20)
-        }
-        if bridge.isHexTexturesReady { p = 0.95 }
-        if bridge.isBootComplete && bridge.isHexTexturesReady { p = 1.0 }
-        print("📊 Progress: \(Int(p*100))% | unity=\(bridge.isUnityReady) auth=\(bridge.isAuthBridged) gps=\(bridge.isGPSLocked) hex=\(bridge.isHexHistoryLoaded) tiles=\(bridge.isTilesLoaded) zones=\(bridge.isZonesLoaded) texReady=\(bridge.isHexTexturesReady) boot=\(bridge.isBootComplete) texProg=\(bridge.textureProgress)")
-        return p
-    }
-
-    /// Current step label — never says "Prêt" while still loading textures
-    private var stepLabel: String {
-        if bridge.isBootComplete && bridge.isHexTexturesReady { return "Prêt" }
-        if bridge.isHexTexturesReady { return "Finalisation..." }
-        if bridge.isZonesLoaded || bridge.isBootComplete {
-            let loaded = Int(bridge.textureProgress * Double(bridge.textureProgressTotal))
-            if bridge.textureProgressTotal > 0 {
-                return "Textures hex \(loaded)/\(bridge.textureProgressTotal)..."
-            }
-            return "Textures des hexagones..."
-        }
-        if bridge.isTilesLoaded      { return "Chargement des zones..." }
-        if bridge.isHexHistoryLoaded { return "Carte en cours..." }
-        if bridge.isGPSLocked        { return "Historique des hexagones..." }
-        if bridge.isAuthBridged      { return "Position GPS..." }
-        if bridge.isUnityReady       { return "Authentification..." }
-        return "Démarrage du moteur..."
-    }
-
-    var body: some View {
-        ZStack {
-            // Deep dark background
-            Color(hex: "#050510").ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                Spacer()
-
-                // ── Spinning arc loader ──
-                ZStack {
-                    Circle()
-                        .stroke(Color.white.opacity(0.04), lineWidth: 2)
-                        .frame(width: 64, height: 64)
-                    Circle()
-                        .trim(from: 0, to: 0.25)
-                        .stroke(
-                            LinearGradient(
-                                colors: [Color(hex: "#00D991"), Color(hex: "#00D991").opacity(0.1)],
-                                startPoint: .leading, endPoint: .trailing
-                            ),
-                            style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
-                        )
-                        .frame(width: 64, height: 64)
-                        .rotationEffect(.degrees(ringRotation))
-                }
-                .padding(.bottom, 36)
-
-                // ── DRIVEHUNT title ──
-                Text("DRIVEHUNT")
-                    .font(.system(size: 40, weight: .black, design: .rounded))
-                    .tracking(5)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.white, .white.opacity(0.85)],
-                            startPoint: .top, endPoint: .bottom
-                        )
-                    )
-
-                // ── Thin separator ──
-                Rectangle()
-                    .fill(Color(hex: "#00D991").opacity(0.35))
-                    .frame(width: 80, height: 1)
-                    .padding(.top, 14)
-
-                // ── Subtitle ──
-                Text("by P. HEXAGON")
-                    .font(.system(size: 11, weight: .regular))
-                    .tracking(3)
-                    .foregroundColor(.white.opacity(0.25))
-                    .padding(.top, 12)
-
-                Spacer()
-
-                // ── Bottom: progress bar + step label ──
-                VStack(spacing: 10) {
-                    // Step label
-                    Text(stepLabel)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.white.opacity(0.4))
-
-                    // Progress bar
-                    ZStack(alignment: .leading) {
-                        // Track
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.white.opacity(0.08))
-                            .frame(width: 220, height: 4)
-                        // Fill
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color(hex: "#00D991"), Color(hex: "#00B87A")],
-                                    startPoint: .leading, endPoint: .trailing
-                                )
-                            )
-                            .frame(width: 220 * progress, height: 4)
-                            .animation(.easeInOut(duration: 0.4), value: progress)
-                    }
-
-                    // Percentage
-                    Text("\(Int(progress * 100))%")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(Color(hex: "#00D991").opacity(0.5))
-                }
-                .padding(.bottom, 50)
-            }
-        }
-        .onAppear {
-            withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
-                ringRotation = 360
-            }
-        }
-    }
-}
-
 
 /// Manages the HUD overlays on top of Unity's window.
 /// Retains UIHostingControllers so they don't get deallocated.
@@ -266,8 +129,6 @@ final class HudOverlayManager {
     private var topHostingController: UIHostingController<AnyView>?
     private var menuHostingController: UIHostingController<AnyView>?
     private var simHostingController: UIHostingController<AnyView>?
-    private var loadingHostingController: UIHostingController<AnyView>?
-    private var bootCancellable: AnyCancellable?
 
     /// Wraps a hosting controller's view in a PassthroughView
     private func makePassthroughContainer(for hostingController: UIHostingController<AnyView>, tag: Int) -> PassthroughView {
@@ -368,74 +229,9 @@ final class HudOverlayManager {
         print("✅ HudOverlayManager: Overlays added with touch passthrough")
     }
 
-    /// Show boot loading screen and auto-dismiss when isBootComplete fires
-    func showLoadingScreen(on unityView: UIView, isRelogin: Bool = false) {
-        // Remove old loading if any
-        unityView.subviews.first(where: { $0.tag == 997 })?.removeFromSuperview()
-        bootCancellable?.cancel()
-
-        let loadingView = AnyView(BootLoadingScreen())
-        let loadingHost = UIHostingController(rootView: loadingView)
-        loadingHost.view.backgroundColor = .clear
-        loadingHost.view.isOpaque = false
-        loadingHost.view.tag = 997
-        loadingHost.view.translatesAutoresizingMaskIntoConstraints = false
-        unityView.addSubview(loadingHost.view)
-
-        NSLayoutConstraint.activate([
-            loadingHost.view.leadingAnchor.constraint(equalTo: unityView.leadingAnchor),
-            loadingHost.view.trailingAnchor.constraint(equalTo: unityView.trailingAnchor),
-            loadingHost.view.topAnchor.constraint(equalTo: unityView.topAnchor),
-            loadingHost.view.bottomAnchor.constraint(equalTo: unityView.bottomAnchor)
-        ])
-        self.loadingHostingController = loadingHost
-
-        // Dismiss helper — prevents double-dismiss
-        var dismissed = false
-        let dismiss = { [weak self] in
-            guard !dismissed else { return }
-            dismissed = true
-            self?.bootCancellable?.cancel()
-            UIView.animate(withDuration: 0.5, animations: {
-                loadingHost.view.alpha = 0
-            }) { _ in
-                loadingHost.view.removeFromSuperview()
-                self?.loadingHostingController = nil
-                print("✅ Boot complete — loading screen dismissed")
-            }
-        }
-
-        // FIX 0: Re-login — Unity already booted, show loading screen briefly
-        if isRelogin {
-            print("🔄 Re-login — dismissing loading screen after 3s")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { dismiss() }
-            return
-        }
-
-        // FIX 1: If hex textures already loaded (race condition), dismiss immediately
-        if UnityBridge.shared.isHexTexturesReady {
-            print("⚡ isHexTexturesReady already true — dismissing immediately")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { dismiss() }
-            return
-        }
-
-        // FIX 2: Subscribe to hex textures ready signal (not boot complete)
-        bootCancellable = UnityBridge.shared.$isHexTexturesReady
-            .filter { $0 }
-            .first()
-            .receive(on: DispatchQueue.main)
-            .sink { _ in dismiss() }
-
-        // FIX 3: Timeout fallback — 45s for first launch with many hexes
-        DispatchQueue.main.asyncAfter(deadline: .now() + 45.0) {
-            if !dismissed {
-                print("⏰ Loading screen timeout (45s) — force dismissing")
-                dismiss()
-            }
-        }
-    }
 
     private var modalHostingController: UIHostingController<AnyView>?
+    private var loadingHostingController: UIHostingController<AnyView>?
 
     /// Present a SwiftUI screen as a fullScreen modal from Unity's root VC.
     /// IMPORTANT: We must present from Unity's VC, NOT from the SwiftUI WindowGroup
@@ -465,6 +261,46 @@ final class HudOverlayManager {
     func dismissModal() {
         modalHostingController?.dismiss(animated: true)
         modalHostingController = nil
+    }
+
+    // MARK: - Welcome / Loading Screen
+    
+    /// Show the real WelcomeScreen as a direct subview overlay instead of a modal!
+    /// Crucial because Unity's RootViewController doesn't exist yet on early launch.
+    func showLoadingScreen(on targetView: UIView) {
+        // Remove old loading if any
+        targetView.subviews.first(where: { $0.tag == 997 })?.removeFromSuperview()
+
+        let welcomeView = WelcomeScreen(onContinue: { [weak self] in
+            self?.dismissLoadingScreen()
+        }).environmentObject(AppState.shared)
+        
+        let loadingHost = UIHostingController(rootView: AnyView(welcomeView))
+        loadingHost.view.backgroundColor = .clear
+        loadingHost.view.isOpaque = false
+        loadingHost.view.tag = 997
+        loadingHost.view.translatesAutoresizingMaskIntoConstraints = false
+        targetView.addSubview(loadingHost.view)
+
+        NSLayoutConstraint.activate([
+            loadingHost.view.leadingAnchor.constraint(equalTo: targetView.leadingAnchor),
+            loadingHost.view.trailingAnchor.constraint(equalTo: targetView.trailingAnchor),
+            loadingHost.view.topAnchor.constraint(equalTo: targetView.topAnchor),
+            loadingHost.view.bottomAnchor.constraint(equalTo: targetView.bottomAnchor)
+        ])
+        self.loadingHostingController = loadingHost
+        print("✅ WelcomeScreen successfully shown via explicitly added UIHostingController")
+    }
+    
+    func dismissLoadingScreen() {
+        guard let host = loadingHostingController else { return }
+        UIView.animate(withDuration: 0.5, animations: { [weak host] in
+            host?.view.alpha = 0
+        }) { [weak self] _ in
+            host.view.removeFromSuperview()
+            self?.loadingHostingController = nil
+            print("✅ WelcomeScreen explicitly dismissed (user tapped continue)")
+        }
     }
 
     // MARK: - Casino Roll Overlay
@@ -875,61 +711,67 @@ struct GameMenuOverlay: View {
 
                 // Logout
                 Button {
-                    // 1. Clear tokens
+                    // 1. Server-side refresh token invalidation (fire-and-forget)
+                    AuthManager.shared.serverLogout(baseUrl: AppState.shared.backendBaseUrl)
+
+                    // 2. Clear tokens
                     AuthManager.shared.logout()
 
-                    // 2. Tell Unity to clear ALL game state + reload scene FIRST
-                    //    (must happen BEFORE UnityBridge.reset() which kills the connection)
+                    // 3. Clear ALL player-specific UserDefaults (matches Kotlin's SharedPreferences clear)
+                    for key in ["equipped_skins", "capture_prefs", "DriveHunt_prefs", "app_prefs"] {
+                        UserDefaults.standard.removeObject(forKey: key)
+                    }
+
+                    // 4. Tell Unity to clear ALL game state + reload scene FIRST
+                    UnityBridge.shared.send("ResetSession", value: "")
                     UnityBridge.shared.send("OnLogout", value: "")
 
-                    // 3. Reset ALL Swift singletons (matches Kotlin SessionManager.endSession)
+                    // 5. Reset ALL Swift singletons (matches Kotlin SessionManager.endSession)
                     CaptureState.shared.reset()
                     GemInventoryState.shared.reset()
                     LocationService.shared.stopRouteSimulation()
                     LocationService.shared.resetForNewSession()
-                    UnityBridge.shared.reset()  // Clear boot state flags AFTER sending OnLogout
+                    UnityBridge.shared.reset()
 
                     onDismiss()
 
-                    // 4. Remove HUD overlays + present login
+                    // 6. Remove HUD overlays + present login
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         HudOverlayManager.shared.removeOverlays()
 
-                        let loginView = LoginScreen(onLoginSuccess: { token, refresh, role in
+                        let loginView = LoginScreen(onLoginSuccess: { token, refresh, displayName, role in
+                            // Login guard: clear previous data
+                            for key in ["equipped_skins", "capture_prefs", "DriveHunt_prefs", "app_prefs"] {
+                                UserDefaults.standard.removeObject(forKey: key)
+                            }
+
                             // Save new tokens
-                            AuthManager.shared.saveTokens(access: token, refresh: refresh, role: role)
+                            AuthManager.shared.saveTokens(access: token, refresh: refresh ?? "", role: role)
                             AppState.shared.isLoggedIn = true
                             HudOverlayManager.shared.dismissModal()
 
-                            // Re-add game overlays
+                            // Re-add game overlays + show loading screen natively
                             if let rootView = UnityHolder.shared.unityFramework?.appController()?.rootView {
-                                // Add overlays FIRST (behind), then loading screen ON TOP
                                 HudOverlayManager.shared.addOverlays(to: rootView)
                                 HudOverlayManager.shared.showLoadingScreen(on: rootView)
                             }
+                            
+                            LocationService.shared.requestPermission()
+                            LocationService.shared.startTracking()
 
-                            // Wait for Unity to be ready after OnLogout scene reload,
-                            // then send auth (matches Kotlin boot callback ordering)
-                            var pollCount = 0
-                            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { timer in
-                                pollCount += 1
-                                // Fire when Unity is ready OR after 3s timeout (6 polls)
-                                guard UnityBridge.shared.isUnityReady || pollCount >= 6 else { return }
-                                timer.invalidate()
-
-                                DispatchQueue.main.async {
-                                    let baseUrl = AppState.shared.backendBaseUrl
-                                    UnityBridge.shared.send("SetBackendUrl", value: baseUrl)
-                                    UnityBridge.shared.send("SetAuthToken", value: token)
-                                    if let playerId = AuthManager.shared.getPlayerIdFromToken(token) {
-                                        UnityBridge.shared.send("SetPlayerId", value: playerId)
-                                    }
-                                    UnityBridge.shared.send("SetRefreshToken", value: refresh)
-                                    LocationService.shared.resetForNewSession()
-                                    GemInventoryState.shared.fetchFromBackend()
-                                    print("✅ Re-login: Auth sent (unityReady=\(UnityBridge.shared.isUnityReady), polls=\(pollCount))")
-                                }
+                            // Send auth payloads immediately (Unity is already running from the previous session)
+                            let baseUrl = AppState.shared.backendBaseUrl
+                            UnityBridge.shared.send("SetBackendUrl", value: baseUrl)
+                            UnityBridge.shared.send("SetAuthToken", value: token)
+                            if let playerId = AuthManager.shared.getPlayerIdFromToken(token) {
+                                UnityBridge.shared.send("SetPlayerId", value: playerId)
                             }
+                            if let refresh = refresh {
+                                UnityBridge.shared.send("SetRefreshToken", value: refresh)
+                            }
+                            LocationService.shared.resetForNewSession()
+                            GemInventoryState.shared.fetchFromBackend()
+                            print("✅ Re-login: Auth sent and WelcomeScreen deployed.")
                         }).environmentObject(AppState.shared)
                         HudOverlayManager.shared.presentModal(loginView)
                     }

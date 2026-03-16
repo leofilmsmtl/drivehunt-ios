@@ -12,6 +12,10 @@
 - (void)onTilesLoaded;
 - (void)onZonesLoaded:(NSString*)count;
 - (void)onBootComplete;
+- (void)onHexTexturesReady;
+- (void)onTextureProgress:(NSString*)progress;
+- (void)onAtlasProgress:(NSString*)progress;
+- (void)onInventoryUpdate:(NSString*)jsonString;
 - (void)setPlayerId:(NSString*)playerId;
 @end
 

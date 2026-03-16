@@ -32,6 +32,7 @@ final class UnityBridge: ObservableObject {
         case "onZonesLoaded":       onZonesLoaded(count: arg)
         case "onHexTexturesReady":  onHexTexturesReady()
         case "onTextureProgress":   onTextureProgress(arg)
+        case "onAtlasProgress":     onAtlasProgress(arg)
         case "onBootComplete":      onBootComplete()
         case "setPlayerId":         setPlayerId(arg)
         case "onInventoryUpdate":   onInventoryUpdate(arg)
@@ -57,7 +58,13 @@ final class UnityBridge: ObservableObject {
         }
     }
 
-    @Published var isUnityReady = false
+    @Published var isUnityReady = false {
+        didSet {
+            if isUnityReady {
+                drainMessageQueue()
+            }
+        }
+    }
     @Published var isAuthBridged = false
     @Published var isGPSLocked = false
     @Published var isHexHistoryLoaded = false
@@ -66,6 +73,11 @@ final class UnityBridge: ObservableObject {
     @Published var isHexTexturesReady = false
     @Published var isBootComplete = false
     @Published var playerId = ""
+
+    /// Session generation counter — incremented on every logout/reset.
+    /// AAA race condition prevention: WelcomeViewModel captures gen at start,
+    /// aborts if it changes mid-loop (stale session detected).
+    @Published var sessionGen: Int = 0
 
     // MARK: - Boot Callbacks (called from NativeCallProxy)
 
@@ -228,8 +240,18 @@ final class UnityBridge: ObservableObject {
     // MARK: - Messaging (Swift → Unity)
 
     private let gameObject = "GameManager"
+    
+    // Store messages sent before Unity is fully awake
+    private var messageQueue: [(method: String, value: String)] = []
 
     func send(_ method: String, value: String) {
+        // If engine isn't ready to receive messages, queue them!
+        guard isUnityReady else {
+            print("⏳ UnityBridge: Engine not ready. Queuing \(method) = \(value)")
+            messageQueue.append((method, value))
+            return
+        }
+        
         UnityHolder.shared.sendMessage(
             toGameObject: gameObject,
             methodName: method,
@@ -238,6 +260,16 @@ final class UnityBridge: ObservableObject {
         let defaults = UserDefaults.standard
         defaults.set(value, forKey: "bridge_\(method)")
         print("📤 UnityBridge: Sent \(method) = \(value)")
+    }
+    
+    private func drainMessageQueue() {
+        guard !messageQueue.isEmpty else { return }
+        print("🌊 UnityBridge: Engine ready. Draining \(messageQueue.count) queued messages...")
+        let queue = messageQueue
+        messageQueue.removeAll()
+        for msg in queue {
+            send(msg.method, value: msg.value)
+        }
     }
 
     func sendByKey(_ key: String, value: String) {
@@ -249,11 +281,13 @@ final class UnityBridge: ObservableObject {
         resetBootFlags()
         playerId = ""
         UnityHolder.shared.reset()
+        sessionGen += 1  // AAA: new generation — stale signals from old session are dropped
+        print("🔄 UnityBridge: Session reset — gen=\(sessionGen)")
     }
 
     /// Reset ONLY boot signal flags — used on re-login when Unity is still running.
     func resetBootFlags() {
-        isUnityReady = false
+        // isUnityReady is intentionally NOT reset! The engine only fires it once.
         isAuthBridged = false
         isGPSLocked = false
         isHexHistoryLoaded = false
@@ -261,37 +295,65 @@ final class UnityBridge: ObservableObject {
         isZonesLoaded = false
         isHexTexturesReady = false
         isBootComplete = false
-        textureProgress = 0.0
-        textureProgressTotal = 0
+        textureLoaded = 0
+        textureTotal = 0
+        atlasDownloaded = 0
+        atlasTotal = 0
     }
 
     // Granular texture loading progress (0.0–1.0)
-    @Published var textureProgress: Double = 0.0
-    @Published var textureProgressTotal: Int = 0
+    @Published var textureLoaded: Int = 0
+    @Published var textureTotal: Int = 0
+
+    // Atlas download progress: (downloaded, total)
+    @Published var atlasDownloaded: Int = 0
+    @Published var atlasTotal: Int = 0
 
     func onTextureProgress(_ arg: String) {
+        // Handle culturally-formatted decimal comma gracefully by dropping what's right of it? No, progress is always "loaded,total".
         let parts = arg.split(separator: ",")
         guard parts.count == 2,
-              let loaded = Int(parts[0]),
-              let total = Int(parts[1]),
-              total > 0 else { return }
+              let loaded = Int(parts[0].trimmingCharacters(in: .whitespacesAndNewlines)),
+              let total = Int(parts[1].trimmingCharacters(in: .whitespacesAndNewlines))
+        else {
+            print("⚠️ UnityBridge: Failed to parse onTextureProgress: '\(arg)'")
+            return
+        }
+        
+        // Prevent fatal division by 0 from 0,0
+        if total <= 0 { return }
 
         // Ignore bogus updates where loaded exceeds total
         let clamped = min(loaded, total)
-        let progress = Double(clamped) / Double(total)
 
         DispatchQueue.main.async {
-            // Only update if not already complete
-            if self.textureProgress < 1.0 {
-                self.textureProgress = progress
-                self.textureProgressTotal = total
-            }
+            self.textureLoaded = clamped
+            self.textureTotal = total
         }
 
         // Log only at milestones (every 25%) to avoid spam
+        let progress = Double(clamped) / Double(total)
         let pct = Int(progress * 100)
-        if loaded <= total && (pct % 25 == 0 || loaded == total) {
-            print("🖼️ Texture progress: \(loaded)/\(total) (\(pct)%)")
+        if clamped <= total && (pct % 25 == 0 || clamped == total) {
+            print("🖼️ Texture progress: \(clamped)/\(total) (\(pct)%)")
+        }
+    }
+
+    /// Atlas download progress — called from Unity: "downloaded,total"
+    func onAtlasProgress(_ arg: String) {
+        let parts = arg.split(separator: ",")
+        guard parts.count == 2,
+              let downloaded = Int(parts[0]),
+              let total = Int(parts[1]),
+              total > 0 else { return }
+
+        DispatchQueue.main.async {
+            self.atlasDownloaded = downloaded
+            self.atlasTotal = total
+        }
+
+        if downloaded == total {
+            print("📦 Atlas download complete: \(downloaded)/\(total)")
         }
     }
 

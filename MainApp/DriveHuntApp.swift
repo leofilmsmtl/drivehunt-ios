@@ -2,14 +2,32 @@ import SwiftUI
 
 // No @main — Unity-first mode uses main.mm as entry point
 
-/// Global app state observable
+/// Global app state observable — matches Kotlin's BackendConfigManager + state
 class AppState: ObservableObject {
     static let shared = AppState()
 
     @Published var isLoggedIn = false
-    @Published var backendBaseUrl = "https://drivehunt.ngrok.app"
+
+    // Backend URL configuration (matches Kotlin's BackendConfigManager)
+    @Published var useNgrok: Bool {
+        didSet { UserDefaults.standard.set(useNgrok, forKey: "backend_useNgrok") }
+    }
+    @Published var ngrokUrl: String {
+        didSet { UserDefaults.standard.set(ngrokUrl, forKey: "backend_ngrokUrl") }
+    }
+
+    /// Resolved backend URL — matches Kotlin's resolveBaseUrl()
+    var backendBaseUrl: String {
+        if useNgrok && !ngrokUrl.isEmpty {
+            return ngrokUrl
+        }
+        return "http://localhost:3070"
+    }
 
     private init() {
         isLoggedIn = AuthManager.shared.getAccessToken() != nil
+        useNgrok = UserDefaults.standard.bool(forKey: "backend_useNgrok")
+        ngrokUrl = UserDefaults.standard.string(forKey: "backend_ngrokUrl")
+            ?? "https://drivehunt.ngrok.app"
     }
 }

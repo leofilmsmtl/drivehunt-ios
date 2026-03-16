@@ -1,21 +1,16 @@
 import SwiftUI
 
-/// Main navigation controller — equivalent of Android's AppNavigation.kt.
+/// Main navigation controller — 1:1 port of Android's AppNavigation.kt.
 /// Uses NavigationStack with programmatic routing.
 struct AppNavigation: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var bridge = UnityBridge.shared
     @State private var navigationPath = NavigationPath()
+    @State private var showWelcome = false
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            Group {
-                if appState.isLoggedIn {
-                    MapScreen(navigationPath: $navigationPath)
-                } else {
-                    LoginScreen(onLoginSuccess: handleLoginSuccess)
-                }
-            }
+            MapScreen(navigationPath: $navigationPath)
             .navigationDestination(for: AppRoute.self) { route in
                 switch route {
                 case .map:
@@ -37,16 +32,13 @@ struct AppNavigation: View {
                 sendSkinDataToUnity()
             }
         }
-        // PERIODIC TOKEN REFRESH — matches Kotlin's UnityEmbedView.kt (lines 119-147)
-        // Kotlin: LaunchedEffect { delay(10s); while(true) { delay(30s); check+refresh } }
-        // Without this, iOS sessions fail silently after ~50min (token TTL = 1h, buffer = 10min)
+        // PERIODIC TOKEN REFRESH — matches Kotlin's UnityEmbedView.kt
         .task {
-            // Initial delay — let boot finish
-            try? await Task.sleep(nanoseconds: 10_000_000_000) // 10s
+            try? await Task.sleep(nanoseconds: 10_000_000_000) // 10s initial delay
             print("🔄 AppNavigation: Token refresh timer started")
 
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 30_000_000_000) // Check every 30s
+                try? await Task.sleep(nanoseconds: 30_000_000_000) // Every 30s
 
                 guard let currentToken = AuthManager.shared.getAccessToken() else { continue }
 
@@ -56,49 +48,75 @@ struct AppNavigation: View {
 
                     if refreshed {
                         if let newToken = AuthManager.shared.getAccessToken() {
-                            // Send refreshed token to Unity (matches Kotlin's UnitySendMessage("SetAuthToken"))
                             await MainActor.run {
                                 UnityBridge.shared.send("SetAuthToken", value: newToken)
                                 UnityHolder.shared.lastSentToken = newToken
                             }
-                            print("✅ AppNavigation: Token refreshed & sent to Unity (length: \(newToken.count))")
+                            print("✅ AppNavigation: Token refreshed & sent to Unity")
                         }
                     } else {
-                        print("❌ AppNavigation: Token refresh failed — backend unreachable?")
+                        print("❌ AppNavigation: Token refresh failed")
                     }
                 }
             }
         }
+        .onAppear {
+            // Auto-login check on launch
+            if let token = AuthManager.shared.getAccessToken(),
+               !AuthManager.shared.isTokenExpired(token) {
+                // Has valid token — go straight to welcome/loading
+                handleLoginSuccess(
+                    accessToken: token,
+                    refreshToken: AuthManager.shared.getRefreshToken(),
+                    displayName: AuthManager.shared.getDisplayNameFromToken(token),
+                    role: AuthManager.shared.getUserRole() ?? "user"
+                )
+            }
+        }
     }
 
-    // MARK: - Login Handler
+    // MARK: - Login Handler (matches Kotlin's onLoginSuccess)
 
-    private func handleLoginSuccess(accessToken: String, refreshToken: String, role: String) {
-        // Save tokens to Keychain
-        AuthManager.shared.saveTokens(access: accessToken, refresh: refreshToken, role: role)
+    private func handleLoginSuccess(accessToken: String, refreshToken: String?, displayName: String, role: String) {
+        // LOGIN GUARD: Clean previous session data (prevents cross-account leaks)
+        // Matches Kotlin's login guard in AppNavigation.kt
+        UserDefaults.standard.removeObject(forKey: "equipped_skins")
+        UserDefaults.standard.removeObject(forKey: "capture_prefs")
+        UserDefaults.standard.removeObject(forKey: "DriveHunt_prefs")
+        UserDefaults.standard.removeObject(forKey: "app_prefs")
+        print("🛡️ AppNavigation: Login guard — previous session data cleared")
+
+        // Save new tokens
+        AuthManager.shared.saveTokens(
+            access: accessToken,
+            refresh: refreshToken ?? "",
+            role: role
+        )
         appState.isLoggedIn = true
 
-        // Send auth token to Unity immediately (matches Android's onLoginSuccess)
+        // Send auth token to Unity immediately (matches Kotlin's onLoginSuccess)
         if UnityHolder.shared.isInitialized {
             UnityBridge.shared.send("SetAuthToken", value: accessToken)
 
-            // Extract and send player ID from JWT
             if let playerId = AuthManager.shared.getPlayerIdFromToken(accessToken) {
                 UnityBridge.shared.send("SetPlayerId", value: playerId)
             }
 
-            // Send refresh token
-            UnityBridge.shared.send("SetRefreshToken", value: refreshToken)
+            if let refresh = refreshToken {
+                UnityBridge.shared.send("SetRefreshToken", value: refresh)
+            }
+
             UnityHolder.shared.lastSentToken = accessToken
         }
 
         // Send backend URL
         UnityBridge.shared.send("SetBackendUrl", value: appState.backendBaseUrl)
 
+        // WelcomeScreen is now natively shown by NativeCallProxyDelegate upon login
         print("🔑 AppNavigation: Login success — tokens saved, auth sent to Unity")
     }
 
-    // MARK: - Skin Sync (matches Android's LaunchedEffect(isBootComplete))
+    // MARK: - Skin Sync (matches Kotlin's LaunchedEffect(isBootComplete))
 
     private func sendSkinDataToUnity() {
         guard let token = AuthManager.shared.getAccessToken() else { return }
@@ -145,9 +163,9 @@ struct AppNavigation: View {
                 }
             }
 
-            // Send to Unity in the correct order (same as Android):
-            // 1. TEXTURE FIRST
+            // Send to Unity in the correct order (same as Kotlin):
             await MainActor.run {
+                // 1. TEXTURE FIRST
                 UnityBridge.shared.send("SetPlayerSkinTexture", value: t2Texture.isEmpty ? "none" : t2Texture)
                 // 2. COLOR SECOND (triggers repaint WITH texture already set)
                 UnityBridge.shared.send("SetPlayerHexColor", value: t1Color)
@@ -162,13 +180,39 @@ struct AppNavigation: View {
     }
 }
 
-// MARK: - Logout
+// MARK: - Logout (matches Kotlin's performLogout())
 
+/// Shared logout handler — matches Kotlin's performLogout() exactly:
+/// 1. Server-side refresh token invalidation (fire-and-forget)
+/// 2. Clear Keychain tokens
+/// 3. Clear ALL UserDefaults (prevents cross-account leaks)
+/// 4. Send ResetSession to Unity
+/// 5. Reset UnityBridge + CaptureState
+/// 6. Navigate to login
 func performLogout(appState: AppState, navigationPath: inout NavigationPath) {
     print("🔒 LOGOUT: performLogout — clearing session")
+
+    // 1. Server-side refresh token invalidation (fire-and-forget)
+    AuthManager.shared.serverLogout(baseUrl: appState.backendBaseUrl)
+
+    // 2. Clear Keychain tokens
     AuthManager.shared.logout()
+
+    // 3. Clear ALL player-specific UserDefaults (matches Kotlin's SharedPreferences clear)
+    let prefsToClean = ["equipped_skins", "capture_prefs", "DriveHunt_prefs", "app_prefs"]
+    for prefKey in prefsToClean {
+        UserDefaults.standard.removeObject(forKey: prefKey)
+    }
+    print("🧹 All player UserDefaults cleared")
+
+    // 4. Tell Unity to reset session state
+    UnityBridge.shared.send("ResetSession", value: "")
+
+    // 5. Reset Swift-side bridge signals + capture state
     UnityBridge.shared.reset()
-    UnityBridge.shared.send("OnLogout", value: "")
+    CaptureState.shared.reset()
+
+    // 6. Navigate to login, clearing the entire back stack
     navigationPath = NavigationPath()
     appState.isLoggedIn = false
 }

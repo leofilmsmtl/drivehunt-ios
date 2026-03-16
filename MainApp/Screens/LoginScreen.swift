@@ -1,24 +1,30 @@
 import SwiftUI
 
-/// Login screen — equivalent of Android's LoginScreen.kt
-/// Connects to the backend's /v1/auth/login endpoint.
-/// Supports: login, register (with displayName + postalCode), and guest mode.
+/// Login screen — 1:1 port of Android's LoginScreen.kt
+/// Connects to /v1/auth/login, /v1/auth/register, /v1/auth/guest
+/// Supports: login, register, guest mode, auto-login, backend URL toggle
 struct LoginScreen: View {
-    var onLoginSuccess: (String, String, String) -> Void
+    var autoLogin: Bool = false
+    var onLoginSuccess: (String, String?, String, String) -> Void  // accessToken, refreshToken, displayName, role
 
-    @State private var username = "julien@leofilms.ca"
+    @State private var email = "julien@leofilms.ca"
     @State private var password = "monopoly3"
     @State private var displayName = ""
     @State private var postalCode = ""
+    @State private var rememberMe = true
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var isRegisterMode = false
+    @State private var passwordVisible = false
 
     @EnvironmentObject var appState: AppState
 
+    // DriveHunt brand colors
+    private let accentGreen = Color(hex: "#00FFAA")
+    private let accentBlue = Color(hex: "#00CCFF")
+
     var body: some View {
         ZStack {
-            // Background
             LinearGradient(
                 colors: [Color(hex: "#0A0A1A"), Color(hex: "#1A1A3E")],
                 startPoint: .top,
@@ -27,34 +33,32 @@ struct LoginScreen: View {
             .ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 24) {
-                    Spacer().frame(height: 60)
+                VStack(spacing: 16) {
+                    Spacer().frame(height: 40)
 
-                    // Logo / Title
+                    // ── Logo (iOS-native hexagon — kept from original) ──
                     VStack(spacing: 8) {
                         Image(systemName: "hexagon.fill")
                             .font(.system(size: 60))
                             .foregroundStyle(
                                 LinearGradient(
-                                    colors: [Color(hex: "#00FFAA"), Color(hex: "#00AAFF")],
+                                    colors: [accentGreen, Color(hex: "#00AAFF")],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
                             )
 
                         Text("P. HEXAGON")
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .font(.system(size: 28, weight: .bold))
+                            .tracking(1)
                             .foregroundColor(.white)
 
                         Text("GPS Territory Capture Game")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
+                            .font(.caption)
+                            .foregroundColor(Color(hex: "#888888"))
                     }
 
-                    // Title toggle
-                    Text(isRegisterMode ? "Créer un compte" : "Connexion")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(Color(hex: "#00FFAA"))
+                    Spacer().frame(height: 8)
 
                     // Error message
                     if let error = errorMessage {
@@ -65,62 +69,83 @@ struct LoginScreen: View {
                             .padding(.horizontal)
                     }
 
-                    // Input Fields
-                    VStack(spacing: 14) {
-                        TextField("Courriel", text: $username)
-                            .textFieldStyle(.plain)
-                            .padding()
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(12)
-                            .foregroundColor(.white)
-                            .autocapitalization(.none)
-                            .autocorrectionDisabled()
-                            .keyboardType(.emailAddress)
+                    // ── Glassmorphism Email Input ──
+                    glassField(placeholder: "Nom d'utilisateur", text: $email)
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
+                        .autocorrectionDisabled()
 
-                        SecureField("Mot de passe", text: $password)
-                            .textFieldStyle(.plain)
-                            .padding()
-                            .background(Color.white.opacity(0.1))
-                            .cornerRadius(12)
-                            .foregroundColor(.white)
+                    // ── Glassmorphism Password Input ──
+                    HStack {
+                        Group {
+                            if passwordVisible {
+                                TextField("Mot de passe", text: $password)
+                            } else {
+                                SecureField("Mot de passe", text: $password)
+                            }
+                        }
+                        .foregroundColor(.white)
+                        .autocapitalization(.none)
+                        .autocorrectionDisabled()
 
-                        if isRegisterMode {
-                            TextField("Nom d'affichage (public)", text: $displayName)
-                                .textFieldStyle(.plain)
-                                .padding()
-                                .background(Color.white.opacity(0.1))
-                                .cornerRadius(12)
-                                .foregroundColor(.white)
-                                .autocorrectionDisabled()
-
-                            TextField("Code postal (optionnel)", text: $postalCode)
-                                .textFieldStyle(.plain)
-                                .padding()
-                                .background(Color.white.opacity(0.1))
-                                .cornerRadius(12)
-                                .foregroundColor(.white)
-                                .autocapitalization(.allCharacters)
-                                .autocorrectionDisabled()
+                        Button(action: { passwordVisible.toggle() }) {
+                            Image(systemName: passwordVisible ? "eye" : "eye.slash")
+                                .foregroundColor(Color(hex: "#666666"))
+                                .frame(width: 20, height: 20)
                         }
                     }
+                    .padding()
+                    .background(Color.white.opacity(0.08))
+                    .cornerRadius(12)
                     .padding(.horizontal, 32)
 
-                    // Login / Register Button
-                    Button(action: isRegisterMode ? register : login) {
+                    // ── Backend URL Configuration Card (login mode only) ──
+                    if !isRegisterMode {
+                        backendConfigCard
+                    }
+
+                    // ── Register-only fields ──
+                    if isRegisterMode {
+                        glassField(placeholder: "Nom d'affichage (Public)", text: $displayName)
+                            .autocorrectionDisabled()
+
+                        glassField(placeholder: "Code Postal (optionnel)", text: Binding(
+                            get: { postalCode },
+                            set: { postalCode = String($0.uppercased().prefix(7)) }
+                        ))
+                        .autocapitalization(.allCharacters)
+                        .autocorrectionDisabled()
+                    } else {
+                        // Remember me
                         HStack {
+                            Button(action: { rememberMe.toggle() }) {
+                                Image(systemName: rememberMe ? "checkmark.square.fill" : "square")
+                                    .foregroundColor(accentGreen)
+                            }
+                            Text("Se souvenir de moi")
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 32)
+                    }
+
+                    // ── Gradient CTA Button ──
+                    Button(action: isRegisterMode ? register : login) {
+                        HStack(spacing: 8) {
                             if isLoading {
-                                ProgressView()
-                                    .tint(.black)
+                                ProgressView().tint(.black)
+                                if autoLogin { Text("Connexion...").foregroundColor(.black).fontWeight(.semibold) }
                             } else {
                                 Text(isRegisterMode ? "S'inscrire" : "Se connecter")
                                     .fontWeight(.semibold)
+                                    .font(.system(size: 16))
                             }
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(
                             LinearGradient(
-                                colors: [Color(hex: "#00FFAA"), Color(hex: "#00CCFF")],
+                                colors: [accentGreen, accentBlue],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -129,8 +154,7 @@ struct LoginScreen: View {
                         .cornerRadius(12)
                     }
                     .padding(.horizontal, 32)
-                    .disabled(isLoading || username.isEmpty || password.isEmpty || (isRegisterMode && displayName.isEmpty))
-                    .opacity(username.isEmpty || password.isEmpty ? 0.5 : 1)
+                    .disabled(isLoading)
 
                     // Toggle register / login
                     Button(isRegisterMode ? "Déjà un compte? Se connecter" : "Créer un compte") {
@@ -139,25 +163,24 @@ struct LoginScreen: View {
                             errorMessage = nil
                         }
                     }
-                    .foregroundColor(Color(hex: "#00FFAA"))
+                    .foregroundColor(accentGreen)
                     .font(.subheadline)
 
                     // Divider
                     HStack {
-                        Rectangle().fill(Color.white.opacity(0.15)).frame(height: 1)
-                        Text("OU").font(.caption).foregroundColor(.gray)
-                        Rectangle().fill(Color.white.opacity(0.15)).frame(height: 1)
+                        Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
+                        Text("Ou").font(.caption).foregroundColor(Color(hex: "#666666"))
+                        Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
                     }
                     .padding(.horizontal, 48)
+                    .padding(.vertical, 4)
 
-                    // Guest Login Button
+                    // ── Guest Login ──
                     Button(action: guestLogin) {
                         HStack {
                             if isLoading {
                                 ProgressView().tint(.white)
                             } else {
-                                Image(systemName: "person.badge.clock")
-                                    .font(.system(size: 16))
                                 Text("Mode Invité")
                                     .fontWeight(.medium)
                             }
@@ -165,10 +188,6 @@ struct LoginScreen: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.white.opacity(0.1))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color(hex: "#00FFAA").opacity(0.4), lineWidth: 1)
-                        )
                         .foregroundColor(.white)
                         .cornerRadius(12)
                     }
@@ -180,17 +199,102 @@ struct LoginScreen: View {
             }
         }
         .onAppear {
-            // Auto-login if token exists and valid
-            if let token = AuthManager.shared.getAccessToken(),
-               !AuthManager.shared.isTokenExpired(token) {
-                Task { await autoLogin() }
+            // Pre-fill debug credentials (matches Kotlin's BuildConfig.DEBUG)
+            #if DEBUG
+            if email.isEmpty { email = "julien@leofilms.ca" }
+            if password.isEmpty { password = "monopoly3" }
+            #endif
+
+            // Auto-login with saved token
+            if autoLogin {
+                Task { await performAutoLogin() }
             }
+        }
+    }
+
+    // MARK: - Backend Config Card (matches Kotlin's network config)
+
+    private var backendConfigCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("CONFIGURATION RÉSEAU")
+                .font(.system(size: 10, weight: .regular))
+                .tracking(0.5)
+                .foregroundColor(Color(hex: "#888888"))
+
+            HStack {
+                Text("Local").foregroundColor(Color(hex: "#CCCCCC")).font(.caption)
+                Spacer()
+                Toggle("", isOn: $appState.useNgrok)
+                    .toggleStyle(SwitchToggleStyle(tint: accentGreen))
+                    .labelsHidden()
+                Spacer()
+                Text("Distant").foregroundColor(Color(hex: "#CCCCCC")).font(.caption)
+            }
+        }
+        .padding(12)
+        .background(Color.white.opacity(0.05))
+        .cornerRadius(12)
+        .padding(.horizontal, 32)
+    }
+
+    // MARK: - Glass Field Helper
+
+    private func glassField(placeholder: String, text: Binding<String>) -> some View {
+        TextField(placeholder, text: text)
+            .foregroundColor(.white)
+            .padding()
+            .background(Color.white.opacity(0.08))
+            .cornerRadius(12)
+            .padding(.horizontal, 32)
+    }
+
+    // MARK: - Auto Login (matches Kotlin's LaunchedEffect(autoLogin))
+
+    private func performAutoLogin() async {
+        await MainActor.run { isLoading = true }
+
+        guard let token = AuthManager.shared.getAccessToken() else {
+            await MainActor.run {
+                isLoading = false
+                errorMessage = "Session expirée, veuillez vous reconnecter"
+            }
+            return
+        }
+
+        // Check expiry and refresh if needed
+        if AuthManager.shared.isTokenExpired(token) {
+            let refreshed = await AuthManager.shared.refreshAccessToken(baseUrl: appState.backendBaseUrl)
+            guard refreshed, let newToken = AuthManager.shared.getAccessToken() else {
+                await MainActor.run {
+                    isLoading = false
+                    errorMessage = "Session expirée, veuillez vous reconnecter"
+                }
+                return
+            }
+            let refresh = AuthManager.shared.getRefreshToken()
+            let displayName = AuthManager.shared.getDisplayNameFromToken(newToken)
+            let role = AuthManager.shared.getUserRole() ?? "user"
+            await MainActor.run { onLoginSuccess(newToken, refresh, displayName, role) }
+        } else {
+            let refresh = AuthManager.shared.getRefreshToken()
+            let displayName = AuthManager.shared.getDisplayNameFromToken(token)
+            let role = AuthManager.shared.getUserRole() ?? "user"
+            await MainActor.run { onLoginSuccess(token, refresh, displayName, role) }
         }
     }
 
     // MARK: - Login
 
     private func login() {
+        guard !email.isEmpty else {
+            errorMessage = "Veuillez entrer une adresse email valide."
+            return
+        }
+        guard password.count >= 6 else {
+            errorMessage = "Le mot de passe doit contenir au moins 6 caractères."
+            return
+        }
+
         isLoading = true
         errorMessage = nil
 
@@ -198,11 +302,11 @@ struct LoginScreen: View {
             do {
                 let result = try await performAuthRequest(
                     endpoint: "/v1/auth/login",
-                    body: ["email": username, "password": password]
+                    body: ["email": email, "password": password, "rememberMe": rememberMe]
                 )
                 await MainActor.run {
                     isLoading = false
-                    onLoginSuccess(result.token, result.refresh, result.role)
+                    onLoginSuccess(result.token, result.refresh, result.displayName ?? email.split(separator: "@").first.map(String.init) ?? "Joueur", result.role)
                 }
             } catch {
                 await MainActor.run {
@@ -227,7 +331,7 @@ struct LoginScreen: View {
         Task {
             do {
                 var body: [String: String] = [
-                    "email": username,
+                    "email": email,
                     "password": password,
                     "displayName": displayName
                 ]
@@ -248,32 +352,24 @@ struct LoginScreen: View {
                 request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
                 let (data, response) = try await URLSession.shared.data(for: request)
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    throw AuthError.message("Pas de réponse")
-                }
-
-                if httpResponse.statusCode == 201 || httpResponse.statusCode == 200 {
+                
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 201 {
                     await MainActor.run {
                         isLoading = false
                         isRegisterMode = false
-                        errorMessage = nil
-                        // Try to auto-login with the same credentials
-                        login()
+                        errorMessage = "Compte créé! Vérifiez vos courriels (simulé)."
                     }
                 } else {
+                    guard let httpResponse = response as? HTTPURLResponse else {
+                        throw AuthError.message("Pas de réponse")
+                    }
                     let msg = parseErrorResponse(data: data, code: httpResponse.statusCode)
                     throw AuthError.message(msg)
                 }
             } catch let error as AuthError {
-                await MainActor.run {
-                    isLoading = false
-                    errorMessage = error.message
-                }
+                await MainActor.run { isLoading = false; errorMessage = error.message }
             } catch {
-                await MainActor.run {
-                    isLoading = false
-                    errorMessage = error.localizedDescription
-                }
+                await MainActor.run { isLoading = false; errorMessage = error.localizedDescription }
             }
         }
     }
@@ -292,7 +388,7 @@ struct LoginScreen: View {
                 )
                 await MainActor.run {
                     isLoading = false
-                    onLoginSuccess(result.token, result.refresh, result.role)
+                    onLoginSuccess(result.token, result.refresh, result.displayName ?? "Invité", result.role)
                 }
             } catch {
                 await MainActor.run {
@@ -303,34 +399,12 @@ struct LoginScreen: View {
         }
     }
 
-    // MARK: - Auto Login
-
-    private func autoLogin() async {
-        guard let token = AuthManager.shared.getAccessToken(),
-              let refreshToken = AuthManager.shared.getRefreshToken(),
-              let role = AuthManager.shared.getUserRole() else { return }
-
-        if AuthManager.shared.isTokenExpired(token) {
-            let refreshed = await AuthManager.shared.refreshAccessToken(
-                baseUrl: appState.backendBaseUrl
-            )
-            if refreshed, let newToken = AuthManager.shared.getAccessToken() {
-                await MainActor.run {
-                    onLoginSuccess(newToken, refreshToken, role)
-                }
-            }
-        } else {
-            await MainActor.run {
-                onLoginSuccess(token, refreshToken, role)
-            }
-        }
-    }
-
     // MARK: - Network Helpers
 
     struct AuthResult {
         let token: String
-        let refresh: String
+        let refresh: String?
+        let displayName: String?
         let role: String
     }
 
@@ -344,7 +418,7 @@ struct LoginScreen: View {
         }
     }
 
-    private func performAuthRequest(endpoint: String, body: [String: String]) async throws -> AuthResult {
+    private func performAuthRequest(endpoint: String, body: [String: Any]) async throws -> AuthResult {
         let baseUrl = appState.backendBaseUrl
         guard let url = URL(string: "\(baseUrl)\(endpoint)") else {
             throw AuthError.message("URL invalide")
@@ -373,17 +447,17 @@ struct LoginScreen: View {
         }
 
         let accessToken = json["accessToken"] as? String ?? json["access_token"] as? String ?? json["token"] as? String
-        let refreshToken = json["refreshToken"] as? String ?? json["refresh_token"] as? String ?? ""
+        let refreshToken = json["refreshToken"] as? String ?? json["refresh_token"] as? String
 
         guard let token = accessToken else {
             throw AuthError.message("Réponse invalide — pas de token")
         }
 
-        let role = json["role"] as? String
-            ?? (json["user"] as? [String: Any])?["role"] as? String
-            ?? "USER"
+        let user = json["user"] as? [String: Any]
+        let name = user?["displayName"] as? String
+        let role = user?["role"] as? String ?? json["role"] as? String ?? "user"
 
-        return AuthResult(token: token, refresh: refreshToken, role: role)
+        return AuthResult(token: token, refresh: refreshToken, displayName: name, role: role)
     }
 
     private func parseErrorResponse(data: Data, code: Int) -> String {

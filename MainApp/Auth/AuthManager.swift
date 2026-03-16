@@ -54,6 +54,28 @@ final class AuthManager {
         print("🔒 AuthManager: All tokens cleared from Keychain")
     }
 
+    /// Server-side logout — invalidate refresh token (fire-and-forget)
+    /// Matches Kotlin performLogout() server call
+    func serverLogout(baseUrl: String) {
+        guard let refreshToken = getRefreshToken(),
+              let url = URL(string: "\(baseUrl)/v1/auth/logout") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 3
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["refreshToken": refreshToken])
+
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+            if code == 200 {
+                print("🔒 AuthManager: Server-side refresh token invalidated")
+            } else {
+                print("⚠️ AuthManager: Server logout failed (HTTP \(code)) — \(error?.localizedDescription ?? "offline?")")
+            }
+        }.resume()
+    }
+
     // MARK: - JWT Helpers
 
     /// Check if a JWT token is expired (with 10-minute buffer, like Android)
@@ -73,6 +95,15 @@ final class AuthManager {
             return nil
         }
         return sub
+    }
+
+    /// Extract display name from JWT (email prefix) — matches Kotlin's JWT decode in LoginScreen
+    func getDisplayNameFromToken(_ token: String) -> String {
+        guard let payload = decodeJWTPayload(token),
+              let email = payload["email"] as? String else {
+            return "Joueur"
+        }
+        return email.split(separator: "@").first.map(String.init) ?? "Joueur"
     }
 
     /// Refresh the access token using the stored refresh token

@@ -75,6 +75,13 @@ void _onBootComplete() {
     });
 }
 
+void _onAtlasProgress(const char* progress) {
+    NSString* p = progress ? [NSString stringWithUTF8String:progress] : @"0,0";
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onAtlasProgress", @"arg": p}];
+    });
+}
+
 void _setPlayerId(const char* playerId) {
     NSString* p = playerId ? [NSString stringWithUTF8String:playerId] : @"";
     dispatch_async(dispatch_get_main_queue(), ^{
