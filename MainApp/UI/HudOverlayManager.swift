@@ -159,7 +159,22 @@ final class HudOverlayManager {
 
     func addOverlays(to unityView: UIView) {
         // Remove old overlays
-        unityView.subviews.filter { [999, 998, 997, 996].contains($0.tag) }.forEach { $0.removeFromSuperview() }
+        unityView.subviews.filter { [999, 998, 997, 996, 995].contains($0.tag) }.forEach { $0.removeFromSuperview() }
+
+        // --- CAPTURE OVERLAY (border trace + flash + result popup) ---
+        // Added FIRST so it's behind all HUD controls but in front of Unity.
+        // Parity: 1:1 with Android CaptureOverlay.kt
+        let captureOverlay = AnyView(CaptureOverlayView())
+        let captureHost = UIHostingController(rootView: captureOverlay)
+        let captureContainer = makePassthroughContainer(for: captureHost, tag: 995)
+        unityView.addSubview(captureContainer)
+
+        NSLayoutConstraint.activate([
+            captureContainer.leadingAnchor.constraint(equalTo: unityView.leadingAnchor),
+            captureContainer.trailingAnchor.constraint(equalTo: unityView.trailingAnchor),
+            captureContainer.topAnchor.constraint(equalTo: unityView.topAnchor),
+            captureContainer.bottomAnchor.constraint(equalTo: unityView.bottomAnchor),
+        ])
 
         // --- SIMULATION HUD (added FIRST so it's behind other overlays) ---
         let simHud = AnyView(SimulationHud())

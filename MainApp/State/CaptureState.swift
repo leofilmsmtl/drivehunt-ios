@@ -88,6 +88,8 @@ final class CaptureState: ObservableObject {
             self.holdProgress = 0
             if success {
                 self.claimInfo = ClaimInfo() // Hide attack icon
+                // Refresh resource dock — claim consumes gems (parity: both platforms)
+                GemInventoryState.shared.fetchFromBackend()
             }
         }
     }

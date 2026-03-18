@@ -283,10 +283,10 @@ struct SkinPickerScreen: View {
 
     private func syncToUnity() {
         if let t1 = selectedT1 {
-            UnityBridge.shared.send("SetPlayerHexColor", value: t1.color)
+            CaptureState.shared.setPlayerHexColor(t1.color)
         }
-        UnityBridge.shared.send("SetPlayerSkinTexture", value: selectedT2?.texture ?? "none")
-        UnityBridge.shared.send("SetPlayerSkinAnimation", value: selectedT3?.animation ?? "none")
+        CaptureState.shared.setPlayerSkinTexture(selectedT2?.texture)
+        CaptureState.shared.setPlayerSkinAnimation(selectedT3?.animation)
 
         // Persist locally
         UserDefaults.standard.set(selectedT1?.id, forKey: "equipped_t1_id")

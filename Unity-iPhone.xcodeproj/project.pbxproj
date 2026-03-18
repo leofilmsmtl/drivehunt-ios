@@ -78,6 +78,7 @@
 		75D613554FE45929CB85740D /* Keyboard.h in Headers */ = {isa = PBXBuildFile; fileRef = 34C543234E59154390162261 /* Keyboard.h */; };
 		763ED5D885EABF761B2FE262 /* LaunchScreen-iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A6444ABDD2799CC877EBAF7E /* LaunchScreen-iPad.storyboard */; };
 		77631AE6DA50E25003FAB001 /* CasinoRollOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77631AE6DA50E25003FACD02 /* CasinoRollOverlay.swift */; };
+		DD00CC00AA00BB00CC000201 /* CaptureOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00CC00AA00BB00CC000200 /* CaptureOverlayView.swift */; };
 		77C0894FC16BA5631139FC8F /* StoreReview.m in Sources */ = {isa = PBXBuildFile; fileRef = 344F2C6BDED1BC5D75C5916F /* StoreReview.m */; };
 		78B59F8C2DA390FBAEA51160 /* UnityFramework.h in Headers */ = {isa = PBXBuildFile; fileRef = D53B5BD2EFDCE044275DF0AF /* UnityFramework.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C058CAE70F713F7AE4E6167 /* UnityScene.h in Headers */ = {isa = PBXBuildFile; fileRef = DD6123A9B450B0AB9F525AD2 /* UnityScene.h */; };
@@ -130,10 +131,8 @@
 		DD00EE00FF00AA00BB000100 /* DriveHuntApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000000 /* DriveHuntApp.swift */; };
 		DD00EE00FF00AA00BB000101 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000001 /* AuthManager.swift */; };
 		DD00EE00FF00AA00BB000102 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000002 /* LocationService.swift */; };
-		DD00EE00FF00AA00BB000103 /* AppNavigation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000003 /* AppNavigation.swift */; };
 		DD00EE00FF00AA00BB000104 /* AdminScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000004 /* AdminScreen.swift */; };
 		DD00EE00FF00AA00BB000105 /* LoginScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000005 /* LoginScreen.swift */; };
-		DD00EE00FF00AA00BB000106 /* MapScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000006 /* MapScreen.swift */; };
 		DD00EE00FF00AA00BB000107 /* ProfileScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000007 /* ProfileScreen.swift */; };
 		DD00EE00FF00AA00BB000108 /* SkinPickerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000008 /* SkinPickerScreen.swift */; };
 		DD00EE00FF00AA00BB000109 /* CaptureState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000009 /* CaptureState.swift */; };
@@ -540,6 +539,7 @@
 		76E90196E5C6B8BA16A9EB4C /* System_CodeGen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = System_CodeGen.c; path = Il2CppOutputProject/Source/il2cppOutput/System_CodeGen.c; sourceTree = SOURCE_ROOT; };
 		7748417FF6C019931EA6BBFD /* Generics__98.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__98.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__98.cpp; sourceTree = SOURCE_ROOT; };
 		77631AE6DA50E25003FACD02 /* CasinoRollOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CasinoRollOverlay.swift; path = MainApp/UI/CasinoRollOverlay.swift; sourceTree = SOURCE_ROOT; };
+		DD00CC00AA00BB00CC000200 /* CaptureOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CaptureOverlayView.swift; path = MainApp/UI/CaptureOverlayView.swift; sourceTree = SOURCE_ROOT; };
 		7771951A12B3A7284778E4C6 /* System__7.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = System__7.cpp; path = Il2CppOutputProject/Source/il2cppOutput/System__7.cpp; sourceTree = SOURCE_ROOT; };
 		777CD2AF69C4EDDDC8094D5F /* GenericMethods__12.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = GenericMethods__12.cpp; path = Il2CppOutputProject/Source/il2cppOutput/GenericMethods__12.cpp; sourceTree = SOURCE_ROOT; };
 		77A48A2BB7401CA008A09B2F /* UnityWebRequest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = UnityWebRequest.mm; path = Classes/Unity/UnityWebRequest.mm; sourceTree = SOURCE_ROOT; };
@@ -816,10 +816,8 @@
 		DD00EE00FF00AA00BB000000 /* DriveHuntApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = DriveHuntApp.swift; path = MainApp/DriveHuntApp.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000001 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AuthManager.swift; path = MainApp/Auth/AuthManager.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000002 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LocationService.swift; path = MainApp/Location/LocationService.swift; sourceTree = SOURCE_ROOT; };
-		DD00EE00FF00AA00BB000003 /* AppNavigation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppNavigation.swift; path = MainApp/Navigation/AppNavigation.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000004 /* AdminScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AdminScreen.swift; path = MainApp/Screens/AdminScreen.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000005 /* LoginScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LoginScreen.swift; path = MainApp/Screens/LoginScreen.swift; sourceTree = SOURCE_ROOT; };
-		DD00EE00FF00AA00BB000006 /* MapScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MapScreen.swift; path = MainApp/Screens/MapScreen.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000007 /* ProfileScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProfileScreen.swift; path = MainApp/Screens/ProfileScreen.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000008 /* SkinPickerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SkinPickerScreen.swift; path = MainApp/Screens/SkinPickerScreen.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000009 /* CaptureState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CaptureState.swift; path = MainApp/State/CaptureState.swift; sourceTree = SOURCE_ROOT; };
@@ -1789,10 +1787,10 @@
 			isa = PBXGroup;
 			children = (
 				DD00EE00FF00AA00BB000004 /* AdminScreen.swift */,
-				DD00EE00FF00AA00BB000003 /* AppNavigation.swift */,
 				DD00EE00FF00AA00BB000001 /* AuthManager.swift */,
 				DD00EE00FF00AA00BB000009 /* CaptureState.swift */,
 				77631AE6DA50E25003FACD02 /* CasinoRollOverlay.swift */,
+				DD00CC00AA00BB00CC000200 /* CaptureOverlayView.swift */,
 				DD00EE00FF00AA00BB000019 /* DriveHunt-iOS-Bridging-Header.h */,
 				DD00EE00FF00AA00BB000019 /* DriveHunt-iOS-Bridging-Header.h */,
 				DD00EE00FF00AA00BB000000 /* DriveHuntApp.swift */,
@@ -1800,7 +1798,6 @@
 				DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */,
 				DD00EE00FF00AA00BB000002 /* LocationService.swift */,
 				DD00EE00FF00AA00BB000005 /* LoginScreen.swift */,
-				DD00EE00FF00AA00BB000006 /* MapScreen.swift */,
 				DD00EE00FF00AA00BB000018 /* NativeCallProxy.h */,
 				DD00EE00FF00AA00BB000018 /* NativeCallProxy.h */,
 				DD00EE00FF00AA00BB000017 /* NativeCallProxy.mm */,
@@ -2099,10 +2096,8 @@
 				DD00EE00FF00AA00BB000100 /* DriveHuntApp.swift in Sources */,
 				DD00EE00FF00AA00BB000101 /* AuthManager.swift in Sources */,
 				DD00EE00FF00AA00BB000102 /* LocationService.swift in Sources */,
-				DD00EE00FF00AA00BB000103 /* AppNavigation.swift in Sources */,
 				DD00EE00FF00AA00BB000104 /* AdminScreen.swift in Sources */,
 				DD00EE00FF00AA00BB000105 /* LoginScreen.swift in Sources */,
-				DD00EE00FF00AA00BB000106 /* MapScreen.swift in Sources */,
 				DD00EE00FF00AA00BB000107 /* ProfileScreen.swift in Sources */,
 				DD00EE00FF00AA00BB000108 /* SkinPickerScreen.swift in Sources */,
 				DD00EE00FF00AA00BB000109 /* CaptureState.swift in Sources */,
@@ -2114,6 +2109,7 @@
 				E1178BCB24780A84362BB001 /* WelcomeViewModel.swift in Sources */,
 				EB8AB6D1CE6B2E66D01AB001 /* WelcomeScreen.swift in Sources */,
 				77631AE6DA50E25003FAB001 /* CasinoRollOverlay.swift in Sources */,
+				DD00CC00AA00BB00CC000201 /* CaptureOverlayView.swift in Sources */,
 				DD00EE00FF00AA00BB000113 /* NativeCallProxyDelegate.swift in Sources */,
 				DD00EE00FF00AA00BB000114 /* UnityBridge.swift in Sources */,
 				DD00EE00FF00AA00BB000115 /* UnityEmbedView.swift in Sources */,
