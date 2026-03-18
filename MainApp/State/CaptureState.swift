@@ -119,20 +119,34 @@ final class CaptureState: ObservableObject {
         holdProgress = progress
     }
 
-    // ═══ Skin setters ═══
+    // ═══ Skin setters — LIVE PUSH to Unity (matches Android CaptureState.kt) ═══
 
     func setPlayerHexColor(_ color: String) {
         playerHexColor = color
+        // IMMEDIATE: send to Unity right now (matches Android CaptureState.setPlayerHexColor)
+        if UnityBridge.shared.isUnityReady {
+            UnityBridge.shared.send("SetPlayerHexColor", value: color)
+        }
         print("🎨 CaptureState: T1 Color = \(color)")
     }
 
     func setPlayerSkinTexture(_ texture: String?) {
         playerSkinTexture = texture ?? ""
+        // IMMEDIATE: send to Unity right now (matches Android CaptureState.setPlayerSkinTexture)
+        let texMsg = (texture?.isEmpty == false && texture != "null") ? texture! : "none"
+        if UnityBridge.shared.isUnityReady {
+            UnityBridge.shared.send("SetPlayerSkinTexture", value: texMsg)
+        }
         print("🎨 CaptureState: T2 Texture = \(playerSkinTexture)")
     }
 
     func setPlayerSkinAnimation(_ animation: String?) {
         playerSkinAnimation = animation ?? ""
+        // IMMEDIATE: send to Unity right now (matches Android CaptureState.setPlayerSkinAnimation)
+        let animMsg = (animation?.isEmpty == false && animation != "null") ? animation! : "none"
+        if UnityBridge.shared.isUnityReady {
+            UnityBridge.shared.send("SetPlayerSkinAnimation", value: animMsg)
+        }
         print("🎨 CaptureState: T3 Animation = \(playerSkinAnimation)")
     }
 

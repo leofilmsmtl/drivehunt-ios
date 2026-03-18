@@ -272,11 +272,6 @@ final class UnityBridge: ObservableObject {
         }
     }
 
-    func sendByKey(_ key: String, value: String) {
-        let method = keyToMethodName(key)
-        send(method, value: value)
-    }
-
     func reset() {
         resetBootFlags()
         playerId = ""
@@ -355,15 +350,5 @@ final class UnityBridge: ObservableObject {
         if downloaded == total {
             print("📦 Atlas download complete: \(downloaded)/\(total)")
         }
-    }
-
-    private func keyToMethodName(_ key: String) -> String {
-        let parts = key.split(separator: "_")
-        let camelCase = parts.map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined()
-        let verbPrefixes = ["Start", "Stop", "Toggle", "Reset", "Refresh", "Clear"]
-        if verbPrefixes.contains(where: { camelCase.hasPrefix($0) }) {
-            return camelCase
-        }
-        return "Set\(camelCase)"
     }
 }

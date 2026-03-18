@@ -130,6 +130,11 @@ final class HudOverlayManager {
     private var menuHostingController: UIHostingController<AnyView>?
     private var simHostingController: UIHostingController<AnyView>?
 
+    // MARK: - Token Refresh Timer (parity with Android UnityEmbedView.kt)
+    // Android refreshes proactively every 30s, starting 10min before token expiry.
+    // With 1h token: refresh starts at ~50min, 20 retry attempts before 60min expiry.
+    private var tokenRefreshTimer: Timer?
+
     /// Wraps a hosting controller's view in a PassthroughView
     private func makePassthroughContainer(for hostingController: UIHostingController<AnyView>, tag: Int) -> PassthroughView {
         let container = PassthroughView()
@@ -227,6 +232,46 @@ final class HudOverlayManager {
         self.topHostingController = topHost
 
         print("✅ HudOverlayManager: Overlays added with touch passthrough")
+
+        // Start periodic token refresh (matches Android's 30s loop)
+        startTokenRefreshTimer()
+    }
+
+    // MARK: - Token Refresh Timer (Android parity)
+    // Ported from AppNavigation.swift L62-89 — proactive refresh every 30s
+    // Android: isTokenExpired() triggers at (exp - 600s) = 10min before expiry
+    // With 1h token: ~20 retry attempts in the 10min window before real expiry
+    private func startTokenRefreshTimer() {
+        tokenRefreshTimer?.invalidate()
+        tokenRefreshTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] _ in
+            guard let _ = self else { return }
+            Task { @MainActor in
+                guard let token = AuthManager.shared.getAccessToken() else { return }
+
+                if AuthManager.shared.isTokenExpired(token) {
+                    print("🔄 HudOverlayManager: Token near-expiry — refreshing...")
+                    let baseUrl = AppState.shared.backendBaseUrl
+                    let refreshed = await AuthManager.shared.refreshAccessToken(baseUrl: baseUrl)
+                    if refreshed {
+                        if let newToken = AuthManager.shared.getAccessToken() {
+                            UnityBridge.shared.send("SetAuthToken", value: newToken)
+                            UnityHolder.shared.lastSentToken = newToken
+                            print("✅ HudOverlayManager: Token refreshed & sent to Unity")
+                        }
+                    } else {
+                        print("❌ HudOverlayManager: Token refresh failed")
+                    }
+                }
+            }
+        }
+        print("🔄 HudOverlayManager: Token refresh timer started (every 30s)")
+    }
+
+    /// Stop token refresh timer — called on logout
+    func stopTokenRefreshTimer() {
+        tokenRefreshTimer?.invalidate()
+        tokenRefreshTimer = nil
+        print("🔄 HudOverlayManager: Token refresh timer stopped")
     }
 
 
@@ -732,6 +777,7 @@ struct GameMenuOverlay: View {
                     LocationService.shared.stopRouteSimulation()
                     LocationService.shared.resetForNewSession()
                     UnityBridge.shared.reset()
+                    HudOverlayManager.shared.stopTokenRefreshTimer()
 
                     onDismiss()
 
@@ -771,6 +817,8 @@ struct GameMenuOverlay: View {
                             }
                             LocationService.shared.resetForNewSession()
                             GemInventoryState.shared.fetchFromBackend()
+                            // PARITY: Fetch + push equipped skins (matches Android re-login)
+                            NativeCallProxyDelegate.shared.fetchAndPushSkins(token: token)
                             print("✅ Re-login: Auth sent and WelcomeScreen deployed.")
                         }).environmentObject(AppState.shared)
                         HudOverlayManager.shared.presentModal(loginView)

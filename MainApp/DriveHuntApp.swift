@@ -8,6 +8,11 @@ class AppState: ObservableObject {
 
     @Published var isLoggedIn = false
 
+    // Skin caching for 0ms Unity boot injection (Option A Parity)
+    @Published var playerT1Color: String = ""
+    @Published var playerT2Texture: String = ""
+    @Published var playerT3Animation: String = ""
+
     // Backend URL configuration (matches Kotlin's BackendConfigManager)
     @Published var useNgrok: Bool {
         didSet { UserDefaults.standard.set(useNgrok, forKey: "backend_useNgrok") }

@@ -75,8 +75,10 @@ final class WelcomeViewModel: ObservableObject {
             // continue with refreshed token
             return await continueAfterAuth(accWeight: accWeight, startTime: startTime)
         }
+        
+        
 
-        // Check expiry
+        // Check  expiry
         if AuthManager.shared.isTokenExpired(token) {
             await setStatus("Token expiré — renouvellement...")
             let refreshed = await AuthManager.shared.refreshAccessToken(
