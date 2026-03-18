@@ -185,8 +185,8 @@ final class HudOverlayManager {
         NSLayoutConstraint.activate([
             simContainer.leadingAnchor.constraint(equalTo: unityView.leadingAnchor),
             simContainer.trailingAnchor.constraint(equalTo: unityView.trailingAnchor),
-            simContainer.bottomAnchor.constraint(equalTo: unityView.bottomAnchor),
-            simContainer.heightAnchor.constraint(equalToConstant: 120)
+            simContainer.topAnchor.constraint(equalTo: unityView.topAnchor),
+            simContainer.bottomAnchor.constraint(equalTo: unityView.bottomAnchor)
         ])
         self.simHostingController = simHost
 

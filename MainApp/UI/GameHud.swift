@@ -138,7 +138,7 @@ struct SimulationHud: View {
                         .shadow(color: .black.opacity(0.4), radius: 12)
                 )
                 .padding(.horizontal, 12)
-                .padding(.bottom, 100) // Above game HUD
+                .padding(.bottom, 190) // Above game HUD + bottom menu pill
             }
             .transition(.move(edge: .bottom).combined(with: .opacity))
             .animation(.spring(response: 0.4), value: locationService.isSimRunning)
