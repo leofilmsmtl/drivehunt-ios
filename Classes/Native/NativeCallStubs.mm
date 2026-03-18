@@ -134,6 +134,14 @@ void _onClaimResult(bool success, bool wasSteal, const char* message) {
     });
 }
 
+// Compass data (yaw,height,mode CSV from CameraFollower)
+void _updateCompass(const char* csv) {
+    NSString* c = csv ? [NSString stringWithUTF8String:csv] : @"0,2000,0";
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"updateCompass", @"arg": c}];
+    });
+}
+
 // ═══════════════════════════════════════════════════════════════
 // TEMPORARY: Old IL2CPP build references _NativeOn* names.
 // These forward to the real _on* functions above.

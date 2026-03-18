@@ -19,7 +19,7 @@ final class UnityBridge: ObservableObject {
               let signal = info["signal"] as? String else { return }
         let arg = info["arg"] as? String ?? ""
         // Log all signals EXCEPT high-frequency ones (texture progress)
-        if signal != "onTextureProgress" {
+        if signal != "onTextureProgress" && signal != "updateCompass" {
             print("📡 UnityBridge received signal: \(signal) arg=\(arg)")
         }
 
@@ -37,6 +37,7 @@ final class UnityBridge: ObservableObject {
         case "setPlayerId":         setPlayerId(arg)
         case "onInventoryUpdate":   onInventoryUpdate(arg)
         case "onGemTapped":         onGemTapped(arg)
+        case "updateCompass":       CompassState.shared.update(arg)
         case "setClaimable":
             let hexId = info["hexId"] as? String ?? ""
             let isSteal = info["isSteal"] as? Bool ?? false

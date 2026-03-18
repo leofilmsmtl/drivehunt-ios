@@ -78,7 +78,6 @@
 		75D613554FE45929CB85740D /* Keyboard.h in Headers */ = {isa = PBXBuildFile; fileRef = 34C543234E59154390162261 /* Keyboard.h */; };
 		763ED5D885EABF761B2FE262 /* LaunchScreen-iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A6444ABDD2799CC877EBAF7E /* LaunchScreen-iPad.storyboard */; };
 		77631AE6DA50E25003FAB001 /* CasinoRollOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77631AE6DA50E25003FACD02 /* CasinoRollOverlay.swift */; };
-		DD00CC00AA00BB00CC000201 /* CaptureOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00CC00AA00BB00CC000200 /* CaptureOverlayView.swift */; };
 		77C0894FC16BA5631139FC8F /* StoreReview.m in Sources */ = {isa = PBXBuildFile; fileRef = 344F2C6BDED1BC5D75C5916F /* StoreReview.m */; };
 		78B59F8C2DA390FBAEA51160 /* UnityFramework.h in Headers */ = {isa = PBXBuildFile; fileRef = D53B5BD2EFDCE044275DF0AF /* UnityFramework.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C058CAE70F713F7AE4E6167 /* UnityScene.h in Headers */ = {isa = PBXBuildFile; fileRef = DD6123A9B450B0AB9F525AD2 /* UnityScene.h */; };
@@ -139,8 +138,14 @@
 		DD00EE00FF00AA00BB000110 /* GameHud.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000010 /* GameHud.swift */; };
 		DD00EE00FF00AA00BB000111 /* HudOverlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */; };
 		DD00EE00FF00AA00BB000112 /* ResourceDockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */; };
+		F5ED8872FB9B397773E1B001 /* CompassOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5ED8872FB9B397773E19ABD /* CompassOverlay.swift */; };
+		1103E6F132D6068BDFE4B001 /* CaptureOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1103E6F132D6068BDFE439FD /* CaptureOverlayView.swift */; };
+		BF4C1611CC9EA4AA2961B001 /* SeasonModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4C1611CC9EA4AA29612585 /* SeasonModels.swift */; };
+		81141BD6E90977CD7856B001 /* FortressModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81141BD6E90977CD7856B686 /* FortressModels.swift */; };
 		E1178BCB24780A84362BB001 /* WelcomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1178BCB24780A84362B16E1 /* WelcomeViewModel.swift */; };
 		EB8AB6D1CE6B2E66D01AB001 /* WelcomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB8AB6D1CE6B2E66D01A90F9 /* WelcomeScreen.swift */; };
+		3DCEE393B9899C47E901B001 /* SeasonQuestScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DCEE393B9899C47E9017C16 /* SeasonQuestScreen.swift */; };
+		219DB0220693A86ED346B001 /* FortressScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 219DB0220693A86ED3461CB5 /* FortressScreen.swift */; };
 		DD00EE00FF00AA00BB000113 /* NativeCallProxyDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */; };
 		DD00EE00FF00AA00BB000114 /* UnityBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000014 /* UnityBridge.swift */; };
 		DD00EE00FF00AA00BB000115 /* UnityEmbedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000015 /* UnityEmbedView.swift */; };
@@ -539,7 +544,6 @@
 		76E90196E5C6B8BA16A9EB4C /* System_CodeGen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = System_CodeGen.c; path = Il2CppOutputProject/Source/il2cppOutput/System_CodeGen.c; sourceTree = SOURCE_ROOT; };
 		7748417FF6C019931EA6BBFD /* Generics__98.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__98.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__98.cpp; sourceTree = SOURCE_ROOT; };
 		77631AE6DA50E25003FACD02 /* CasinoRollOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CasinoRollOverlay.swift; path = MainApp/UI/CasinoRollOverlay.swift; sourceTree = SOURCE_ROOT; };
-		DD00CC00AA00BB00CC000200 /* CaptureOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CaptureOverlayView.swift; path = MainApp/UI/CaptureOverlayView.swift; sourceTree = SOURCE_ROOT; };
 		7771951A12B3A7284778E4C6 /* System__7.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = System__7.cpp; path = Il2CppOutputProject/Source/il2cppOutput/System__7.cpp; sourceTree = SOURCE_ROOT; };
 		777CD2AF69C4EDDDC8094D5F /* GenericMethods__12.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = GenericMethods__12.cpp; path = Il2CppOutputProject/Source/il2cppOutput/GenericMethods__12.cpp; sourceTree = SOURCE_ROOT; };
 		77A48A2BB7401CA008A09B2F /* UnityWebRequest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = UnityWebRequest.mm; path = Classes/Unity/UnityWebRequest.mm; sourceTree = SOURCE_ROOT; };
@@ -824,8 +828,14 @@
 		DD00EE00FF00AA00BB000010 /* GameHud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GameHud.swift; path = MainApp/UI/GameHud.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HudOverlayManager.swift; path = MainApp/UI/HudOverlayManager.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ResourceDockView.swift; path = MainApp/UI/ResourceDockView.swift; sourceTree = SOURCE_ROOT; };
+		F5ED8872FB9B397773E19ABD /* CompassOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CompassOverlay.swift; path = MainApp/UI/CompassOverlay.swift; sourceTree = SOURCE_ROOT; };
+		1103E6F132D6068BDFE439FD /* CaptureOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CaptureOverlayView.swift; path = MainApp/UI/CaptureOverlayView.swift; sourceTree = SOURCE_ROOT; };
+		BF4C1611CC9EA4AA29612585 /* SeasonModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SeasonModels.swift; path = MainApp/State/SeasonModels.swift; sourceTree = SOURCE_ROOT; };
+		81141BD6E90977CD7856B686 /* FortressModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FortressModels.swift; path = MainApp/State/FortressModels.swift; sourceTree = SOURCE_ROOT; };
 		E1178BCB24780A84362B16E1 /* WelcomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WelcomeViewModel.swift; path = MainApp/Screens/WelcomeViewModel.swift; sourceTree = SOURCE_ROOT; };
 		EB8AB6D1CE6B2E66D01A90F9 /* WelcomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WelcomeScreen.swift; path = MainApp/Screens/WelcomeScreen.swift; sourceTree = SOURCE_ROOT; };
+		3DCEE393B9899C47E9017C16 /* SeasonQuestScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SeasonQuestScreen.swift; path = MainApp/Screens/SeasonQuestScreen.swift; sourceTree = SOURCE_ROOT; };
+		219DB0220693A86ED3461CB5 /* FortressScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FortressScreen.swift; path = MainApp/Screens/FortressScreen.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeCallProxyDelegate.swift; path = MainApp/Unity/NativeCallProxyDelegate.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000014 /* UnityBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UnityBridge.swift; path = MainApp/Unity/UnityBridge.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000015 /* UnityEmbedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UnityEmbedView.swift; path = MainApp/Unity/UnityEmbedView.swift; sourceTree = SOURCE_ROOT; };
@@ -1790,7 +1800,6 @@
 				DD00EE00FF00AA00BB000001 /* AuthManager.swift */,
 				DD00EE00FF00AA00BB000009 /* CaptureState.swift */,
 				77631AE6DA50E25003FACD02 /* CasinoRollOverlay.swift */,
-				DD00CC00AA00BB00CC000200 /* CaptureOverlayView.swift */,
 				DD00EE00FF00AA00BB000019 /* DriveHunt-iOS-Bridging-Header.h */,
 				DD00EE00FF00AA00BB000019 /* DriveHunt-iOS-Bridging-Header.h */,
 				DD00EE00FF00AA00BB000000 /* DriveHuntApp.swift */,
@@ -1804,8 +1813,14 @@
 				DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */,
 				DD00EE00FF00AA00BB000007 /* ProfileScreen.swift */,
 				DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */,
+				F5ED8872FB9B397773E19ABD /* CompassOverlay.swift */,
+				1103E6F132D6068BDFE439FD /* CaptureOverlayView.swift */,
+				BF4C1611CC9EA4AA29612585 /* SeasonModels.swift */,
+				81141BD6E90977CD7856B686 /* FortressModels.swift */,
 				E1178BCB24780A84362B16E1 /* WelcomeViewModel.swift */,
 				EB8AB6D1CE6B2E66D01A90F9 /* WelcomeScreen.swift */,
+				3DCEE393B9899C47E9017C16 /* SeasonQuestScreen.swift */,
+				219DB0220693A86ED3461CB5 /* FortressScreen.swift */,
 				DD00EE00FF00AA00BB000008 /* SkinPickerScreen.swift */,
 				DD00EE00FF00AA00BB000014 /* UnityBridge.swift */,
 				DD00EE00FF00AA00BB000015 /* UnityEmbedView.swift */,
@@ -2106,10 +2121,15 @@
 				DD00EE00FF00AA00BB000119 /* DriveHunt-iOS-Bridging-Header.h in Sources */,
 				DD00EE00FF00AA00BB000111 /* HudOverlayManager.swift in Sources */,
 				DD00EE00FF00AA00BB000112 /* ResourceDockView.swift in Sources */,
+				F5ED8872FB9B397773E1B001 /* CompassOverlay.swift in Sources */,
+				1103E6F132D6068BDFE4B001 /* CaptureOverlayView.swift in Sources */,
+				BF4C1611CC9EA4AA2961B001 /* SeasonModels.swift in Sources */,
+				81141BD6E90977CD7856B001 /* FortressModels.swift in Sources */,
 				E1178BCB24780A84362BB001 /* WelcomeViewModel.swift in Sources */,
 				EB8AB6D1CE6B2E66D01AB001 /* WelcomeScreen.swift in Sources */,
+				3DCEE393B9899C47E901B001 /* SeasonQuestScreen.swift in Sources */,
+				219DB0220693A86ED346B001 /* FortressScreen.swift in Sources */,
 				77631AE6DA50E25003FAB001 /* CasinoRollOverlay.swift in Sources */,
-				DD00CC00AA00BB00CC000201 /* CaptureOverlayView.swift in Sources */,
 				DD00EE00FF00AA00BB000113 /* NativeCallProxyDelegate.swift in Sources */,
 				DD00EE00FF00AA00BB000114 /* UnityBridge.swift in Sources */,
 				DD00EE00FF00AA00BB000115 /* UnityEmbedView.swift in Sources */,

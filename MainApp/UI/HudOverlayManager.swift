@@ -159,7 +159,7 @@ final class HudOverlayManager {
 
     func addOverlays(to unityView: UIView) {
         // Remove old overlays
-        unityView.subviews.filter { [999, 998, 997, 996, 995].contains($0.tag) }.forEach { $0.removeFromSuperview() }
+        unityView.subviews.filter { [999, 998, 997, 996, 995, 994].contains($0.tag) }.forEach { $0.removeFromSuperview() }
 
         // --- CAPTURE OVERLAY (border trace + flash + result popup) ---
         // Added FIRST so it's behind all HUD controls but in front of Unity.
@@ -203,6 +203,19 @@ final class HudOverlayManager {
             bottomContainer.heightAnchor.constraint(equalToConstant: 100)
         ])
         self.bottomHostingController = bottomHost
+
+        // --- TOP LEFT: Compass Overlay (mirrors Android MapScreen.kt:371) ---
+        let compassView = AnyView(CompassOverlay())
+        let compassHost = UIHostingController(rootView: compassView)
+        let compassContainer = makePassthroughContainer(for: compassHost, tag: 994)
+        unityView.addSubview(compassContainer)
+
+        NSLayoutConstraint.activate([
+            compassContainer.leadingAnchor.constraint(equalTo: unityView.leadingAnchor),
+            compassContainer.topAnchor.constraint(equalTo: unityView.safeAreaLayoutGuide.topAnchor, constant: -21),
+            compassContainer.widthAnchor.constraint(equalToConstant: 80),
+            compassContainer.heightAnchor.constraint(equalToConstant: 80),
+        ])
 
 
         // --- TOP RIGHT: Resource dock ---
@@ -764,6 +777,31 @@ struct GameMenuOverlay: View {
                 }
                 .padding(.horizontal, 16)
                 .offset(y: appeared ? 0 : 60)
+                .opacity(appeared ? 1 : 0)
+
+                // Row 2: Saison — mirrors Android ModernUI.kt L666-671
+                HStack(spacing: 10) {
+                    MenuCard(label: "🏆 Saison", icon: "star.fill", accentColor: Color(red: 1.0, green: 215/255, blue: 0)) {
+                        let seasonView = SeasonQuestScreen(onBack: { HudOverlayManager.shared.dismissModal() })
+                        HudOverlayManager.shared.presentModal(seasonView)
+                    }
+                    MenuCard(label: "🏰 Forteresse", icon: "building.columns.fill", accentColor: Color(red: 0xCD/255, green: 0x7F/255, blue: 0x32/255)) {
+                        let fortressView = FortressScreen(onBack: { HudOverlayManager.shared.dismissModal() })
+                        HudOverlayManager.shared.presentModal(fortressView)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .offset(y: appeared ? 0 : 80)
+                .opacity(appeared ? 1 : 0)
+
+                // Row 2.5: Compagnon — mirrors Android ModernUI.kt L675-681
+                HStack(spacing: 10) {
+                    MenuCard(label: "🐉 Compagnon", icon: "pawprint.fill", accentColor: Color(red: 0x66/255, green: 0xBB/255, blue: 0x6A/255)) {
+                        UnityBridge.shared.send("RandomizeDragon", value: "")
+                    }
+                }
+                .padding(.horizontal, 16)
+                .offset(y: appeared ? 0 : 80)
                 .opacity(appeared ? 1 : 0)
 
                 // Divider
