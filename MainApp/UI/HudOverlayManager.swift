@@ -373,10 +373,11 @@ final class HudOverlayManager {
         UnityBridge.shared.reset()
         stopTokenRefreshTimer()
 
-        // 6. Dismiss any existing modal (ProfileScreen, MenuOverlay...) using UIKit's
-        //    completion handler, then present the LoginScreen. This avoids the race
-        //    condition where a timer-based delay could fire while the dismissal
-        //    animation is still in progress, causing presentModal to silently fail.
+        // 6. Tear down modals and present LoginScreen safely.
+        // Avoid using `dismiss(animated: true, completion:)` for chaining,
+        // as a ghost `modalHostingController` (e.g. dismissed by swipe)
+        // will silently drop the completion block, deadlocking the UI!
+        
         let showLogin = { [weak self] in
             guard let self = self else { return }
             self.removeOverlays()
@@ -417,21 +418,24 @@ final class HudOverlayManager {
                 NativeCallProxyDelegate.shared.fetchAndPushSkins(token: token)
                 print("✅ Re-login: Auth sent and WelcomeScreen deployed.")
             }).environmentObject(AppState.shared)
-            self.presentModal(loginView)
+            
+            // Wait a fraction of a second to ensure any ongoing dismissal completes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.presentModal(loginView)
+            }
         }
 
         if let existingModal = modalHostingController {
-            // Dismiss the current modal (ProfileScreen, etc.) and use the UIKit
-            // completion handler to guarantee it's fully gone before we present.
-            existingModal.dismiss(animated: true) {
-                DispatchQueue.main.async { showLogin() }
-            }
+            existingModal.dismiss(animated: true)
             modalHostingController = nil
-            print("🔄 performLogout: Dismissing existing modal before showing login")
-        } else {
-            // No modal open — present login immediately
-            DispatchQueue.main.async { showLogin() }
+            print("🔄 performLogout: Dismissed existing modal.")
+        } else if let presented = rootViewController?.presentedViewController {
+            presented.dismiss(animated: true)
+            print("🔄 performLogout: Dismissed presented view controller.")
         }
+        
+        // ALWAYS queue showLogin directly, never rely on a view controller's completion block
+        DispatchQueue.main.async { showLogin() }
     }
 
     /// Show a UIKit alert explaining why the user was disconnected
