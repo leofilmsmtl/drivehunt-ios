@@ -302,6 +302,80 @@ final class HudOverlayManager {
         print("🔄 HudOverlayManager: Token refresh timer stopped")
     }
 
+    /// Full application logout sequence. 
+    /// Clears tokens, UserDefaults, notifies Unity, resets singletons, and forces navigation to the Login screen.
+    @MainActor
+    func performLogout(_ beforeStateChange: (() -> Void)? = nil) {
+        // 1. Server-side refresh token invalidation (fire-and-forget)
+        AuthManager.shared.serverLogout(baseUrl: AppState.shared.backendBaseUrl)
+
+        // 2. Clear tokens
+        AuthManager.shared.logout()
+
+        // 3. Clear ALL player-specific UserDefaults (matches Kotlin's SharedPreferences clear)
+        for key in ["equipped_skins", "capture_prefs", "DriveHunt_prefs", "app_prefs"] {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+
+        // 4. Tell Unity to clear ALL game state + reload scene FIRST
+        UnityBridge.shared.send("ResetSession", value: "")
+        UnityBridge.shared.send("OnLogout", value: "")
+
+        // 5. Reset ALL Swift singletons (matches Kotlin SessionManager.endSession)
+        CaptureState.shared.reset()
+        GemInventoryState.shared.reset()
+        LocationService.shared.stopRouteSimulation()
+        LocationService.shared.resetForNewSession()
+        UnityBridge.shared.reset()
+        stopTokenRefreshTimer()
+
+        // Hook for UI teardown (e.g. dismissing modals)
+        beforeStateChange?()
+
+        // 6. Remove HUD overlays + present login
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.removeOverlays()
+
+            let loginView = LoginScreen(onLoginSuccess: { token, refresh, displayName, role in
+                // Login guard: clear previous data
+                for key in ["equipped_skins", "capture_prefs", "DriveHunt_prefs", "app_prefs"] {
+                    UserDefaults.standard.removeObject(forKey: key)
+                }
+
+                // Save new tokens
+                AuthManager.shared.saveTokens(access: token, refresh: refresh ?? "", role: role)
+                AppState.shared.isLoggedIn = true
+                self.dismissModal()
+
+                // Re-add game overlays + show loading screen natively
+                if let rootView = UnityHolder.shared.unityFramework?.appController()?.rootView {
+                    self.addOverlays(to: rootView)
+                    self.showLoadingScreen(on: rootView)
+                }
+                
+                LocationService.shared.requestPermission()
+                LocationService.shared.startTracking()
+
+                // Send auth payloads immediately (Unity is already running from the previous session)
+                let baseUrl = AppState.shared.backendBaseUrl
+                UnityBridge.shared.send("SetBackendUrl", value: baseUrl)
+                UnityBridge.shared.send("SetAuthToken", value: token)
+                if let playerId = AuthManager.shared.getPlayerIdFromToken(token) {
+                    UnityBridge.shared.send("SetPlayerId", value: playerId)
+                }
+                if let refresh = refresh {
+                    UnityBridge.shared.send("SetRefreshToken", value: refresh)
+                }
+                LocationService.shared.resetForNewSession()
+                GemInventoryState.shared.fetchFromBackend()
+                // PARITY: Fetch + push equipped skins (matches Android re-login)
+                NativeCallProxyDelegate.shared.fetchAndPushSkins(token: token)
+                print("✅ Re-login: Auth sent and WelcomeScreen deployed.")
+            }).environmentObject(AppState.shared)
+            self.presentModal(loginView)
+        }
+    }
+
 
     private var modalHostingController: UIHostingController<AnyView>?
     private var loadingHostingController: UIHostingController<AnyView>?
@@ -993,73 +1067,7 @@ struct GameMenuOverlay: View {
 
                 // Logout
                 Button {
-                    // 1. Server-side refresh token invalidation (fire-and-forget)
-                    AuthManager.shared.serverLogout(baseUrl: AppState.shared.backendBaseUrl)
-
-                    // 2. Clear tokens
-                    AuthManager.shared.logout()
-
-                    // 3. Clear ALL player-specific UserDefaults (matches Kotlin's SharedPreferences clear)
-                    for key in ["equipped_skins", "capture_prefs", "DriveHunt_prefs", "app_prefs"] {
-                        UserDefaults.standard.removeObject(forKey: key)
-                    }
-
-                    // 4. Tell Unity to clear ALL game state + reload scene FIRST
-                    UnityBridge.shared.send("ResetSession", value: "")
-                    UnityBridge.shared.send("OnLogout", value: "")
-
-                    // 5. Reset ALL Swift singletons (matches Kotlin SessionManager.endSession)
-                    CaptureState.shared.reset()
-                    GemInventoryState.shared.reset()
-                    LocationService.shared.stopRouteSimulation()
-                    LocationService.shared.resetForNewSession()
-                    UnityBridge.shared.reset()
-                    HudOverlayManager.shared.stopTokenRefreshTimer()
-
-                    onDismiss()
-
-                    // 6. Remove HUD overlays + present login
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        HudOverlayManager.shared.removeOverlays()
-
-                        let loginView = LoginScreen(onLoginSuccess: { token, refresh, displayName, role in
-                            // Login guard: clear previous data
-                            for key in ["equipped_skins", "capture_prefs", "DriveHunt_prefs", "app_prefs"] {
-                                UserDefaults.standard.removeObject(forKey: key)
-                            }
-
-                            // Save new tokens
-                            AuthManager.shared.saveTokens(access: token, refresh: refresh ?? "", role: role)
-                            AppState.shared.isLoggedIn = true
-                            HudOverlayManager.shared.dismissModal()
-
-                            // Re-add game overlays + show loading screen natively
-                            if let rootView = UnityHolder.shared.unityFramework?.appController()?.rootView {
-                                HudOverlayManager.shared.addOverlays(to: rootView)
-                                HudOverlayManager.shared.showLoadingScreen(on: rootView)
-                            }
-                            
-                            LocationService.shared.requestPermission()
-                            LocationService.shared.startTracking()
-
-                            // Send auth payloads immediately (Unity is already running from the previous session)
-                            let baseUrl = AppState.shared.backendBaseUrl
-                            UnityBridge.shared.send("SetBackendUrl", value: baseUrl)
-                            UnityBridge.shared.send("SetAuthToken", value: token)
-                            if let playerId = AuthManager.shared.getPlayerIdFromToken(token) {
-                                UnityBridge.shared.send("SetPlayerId", value: playerId)
-                            }
-                            if let refresh = refresh {
-                                UnityBridge.shared.send("SetRefreshToken", value: refresh)
-                            }
-                            LocationService.shared.resetForNewSession()
-                            GemInventoryState.shared.fetchFromBackend()
-                            // PARITY: Fetch + push equipped skins (matches Android re-login)
-                            NativeCallProxyDelegate.shared.fetchAndPushSkins(token: token)
-                            print("✅ Re-login: Auth sent and WelcomeScreen deployed.")
-                        }).environmentObject(AppState.shared)
-                        HudOverlayManager.shared.presentModal(loginView)
-                    }
+                    HudOverlayManager.shared.performLogout { onDismiss() }
                 } label: {
                     Text("Déconnexion")
                         .font(.system(size: 15, weight: .semibold))
