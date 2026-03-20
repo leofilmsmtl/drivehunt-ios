@@ -46,6 +46,12 @@ final class UnityBridge: ObservableObject {
         case "onShowcaseExited":
             // Game camera restored — fade out transition overlay
             HudOverlayManager.shared.fadeOutTransition()
+        case "onForceLogout":
+            // AAA Force Logout: Server pushed instant disconnect via Socket.IO → Unity → native
+            print("🔒 UnityBridge: FORCE LOGOUT from server — \(arg)")
+            DispatchQueue.main.async {
+                HudOverlayManager.shared.performLogout(reason: arg.isEmpty ? "Déconnexion forcée par l'administrateur." : arg)
+            }
         case "setClaimable":
             let hexId = info["hexId"] as? String ?? ""
             let isSteal = info["isSteal"] as? Bool ?? false

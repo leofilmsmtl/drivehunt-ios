@@ -103,6 +103,14 @@ void _onGemTapped(const char* payload) {
     });
 }
 
+// AAA Force Logout: Server → Socket.IO → Unity → Native → Swift performLogout()
+void _onForceLogout(const char* reason) {
+    NSString* r = reason ? [NSString stringWithUTF8String:reason] : @"";
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UnityBootCallback" object:nil userInfo:@{@"signal": @"onForceLogout", @"arg": r}];
+    });
+}
+
 // Capture callbacks
 void _setClaimable(const char* hexId, bool isSteal, const char* ownerName) {
     NSString* hex = hexId ? [NSString stringWithUTF8String:hexId] : @"";
