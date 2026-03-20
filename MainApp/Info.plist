@@ -42,6 +42,11 @@
     <true/>
     <key>UIStatusBarStyle</key>
     <string>UIStatusBarStyleLightContent</string>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
     <key>GOOGLE_CLIENT_ID</key>
     <string>621077472993-4m2ks90gkf7ivn04i3931d0ki2lag044.apps.googleusercontent.com</string>
     <key>CFBundleURLTypes</key>

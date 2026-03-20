@@ -145,33 +145,41 @@ struct EmailVerificationScreen: View {
     // MARK: - Code Digit Field
     
     private func codeDigitField(index: Int) -> some View {
-        TextField("", text: Binding(
-            get: { code[index] },
-            set: { newValue in
+        TextField("", text: $code[index])
+            .keyboardType(.numberPad)
+            .multilineTextAlignment(.center)
+            .font(.system(size: 28, weight: .bold, design: .monospaced))
+            .foregroundColor(theme.colors.textPrimary)
+            .frame(width: 48, height: 56)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(theme.colors.textPrimary.opacity(focusedIndex == index ? 0.12 : 0.06))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(focusedIndex == index ? theme.colors.accent : Color.clear, lineWidth: 2)
+            )
+            .focused($focusedIndex, equals: index)
+            .onChange(of: code[index]) { newValue in
                 let filtered = newValue.filter { $0.isNumber }
+                
                 if filtered.isEmpty {
                     code[index] = ""
-                    if index > 0 { focusedIndex = index - 1 }
+                    // Only move focus back if we are the one being edited
+                    if index > 0 && focusedIndex == index {
+                        DispatchQueue.main.async { focusedIndex = index - 1 }
+                    }
                 } else {
-                    code[index] = String(filtered.prefix(1))
-                    if index < 5 { focusedIndex = index + 1 }
+                    let newChar = String(filtered.suffix(1))
+                    if code[index] != newChar {
+                        code[index] = newChar
+                    }
+                    // Only advance focus forward if we are the one being edited
+                    if index < 5 && focusedIndex == index && !newChar.isEmpty {
+                        DispatchQueue.main.async { focusedIndex = index + 1 }
+                    }
                 }
             }
-        ))
-        .keyboardType(.numberPad)
-        .multilineTextAlignment(.center)
-        .font(.system(size: 28, weight: .bold, design: .monospaced))
-        .foregroundColor(theme.colors.textPrimary)
-        .frame(width: 48, height: 56)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(theme.colors.textPrimary.opacity(focusedIndex == index ? 0.12 : 0.06))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(focusedIndex == index ? theme.colors.accent : Color.clear, lineWidth: 2)
-        )
-        .focused($focusedIndex, equals: index)
     }
     
     // MARK: - Actions

@@ -76,6 +76,30 @@ final class AuthManager {
         }.resume()
     }
 
+    /// Server-side account deletion — complies with App Store Guideline 5.1.1(v)
+    func deleteAccount(baseUrl: String) async -> Bool {
+        guard let token = getAccessToken(),
+              let url = URL(string: "\(baseUrl)/v1/auth/account") else { return false }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.timeoutInterval = 10
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                print("🚨 AuthManager: Account deleted successfully from server")
+                logout() // Clear local tokens
+                return true
+            }
+            return false
+        } catch {
+            print("❌ AuthManager: Account deletion failed — \(error.localizedDescription)")
+            return false
+        }
+    }
+
     // MARK: - JWT Helpers
 
     /// Check if a JWT token is expired (with 10-minute buffer, like Android)

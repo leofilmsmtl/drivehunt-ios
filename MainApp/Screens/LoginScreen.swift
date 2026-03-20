@@ -264,31 +264,6 @@ struct LoginScreen: View {
         }
     }
 
-    // MARK: - Backend Config Card (matches Kotlin's network config)
-
-    private var backendConfigCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("CONFIGURATION RÉSEAU")
-                .font(.system(size: 10, weight: .regular))
-                .tracking(0.5)
-                .foregroundColor(theme.colors.textMuted)
-
-            HStack {
-                Text("Local").foregroundColor(theme.colors.textSecondary).font(.caption)
-                Spacer()
-                Toggle("", isOn: $appState.useNgrok)
-                    .toggleStyle(SwitchToggleStyle(tint: theme.colors.textPrimary))
-                    .labelsHidden()
-                Spacer()
-                Text("Distant").foregroundColor(theme.colors.textSecondary).font(.caption)
-            }
-        }
-        .padding(12)
-        .background(theme.colors.textPrimary.opacity(0.05))
-        .cornerRadius(12)
-        .padding(.horizontal, 32)
-    }
-
     // MARK: - Glass Field Helper
 
     private func glassField(placeholder: String, text: Binding<String>) -> some View {
@@ -360,6 +335,14 @@ struct LoginScreen: View {
                     isLoading = false
                     onLoginSuccess(result.token, result.refresh, result.displayName ?? email.split(separator: "@").first.map(String.init) ?? "Joueur", result.role)
                 }
+            } catch AuthError.emailNotVerified {
+                await MainActor.run {
+                    isLoading = false
+                    errorMessage = "Email non vérifié. Entrez le code."
+                    showVerification = true
+                }
+            } catch let error as AuthError {
+                await MainActor.run { isLoading = false; errorMessage = error.message }
             } catch {
                 await MainActor.run {
                     isLoading = false
@@ -536,11 +519,19 @@ struct LoginScreen: View {
 
     enum AuthError: LocalizedError {
         case message(String)
+        case emailNotVerified
+        
         var errorDescription: String? {
-            switch self { case .message(let msg): return msg }
+            switch self { 
+            case .message(let msg): return msg 
+            case .emailNotVerified: return "Email non vérifié"
+            }
         }
         var message: String {
-            switch self { case .message(let msg): return msg }
+            switch self { 
+            case .message(let msg): return msg 
+            case .emailNotVerified: return "Email non vérifié"
+            }
         }
     }
 
@@ -565,6 +556,9 @@ struct LoginScreen: View {
 
         guard httpResponse.statusCode == 200 else {
             let msg = parseErrorResponse(data: data, code: httpResponse.statusCode)
+            if httpResponse.statusCode == 403 && (msg.localizedCaseInsensitiveContains("vérifié") || msg.localizedCaseInsensitiveContains("verifi")) {
+                throw AuthError.emailNotVerified
+            }
             throw AuthError.message(msg)
         }
 

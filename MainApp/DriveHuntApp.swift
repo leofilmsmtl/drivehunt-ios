@@ -13,27 +13,22 @@ class AppState: ObservableObject {
     @Published var playerT2Texture: String = ""
     @Published var playerT3Animation: String = ""
 
-    // Backend URL configuration (matches Kotlin's BackendConfigManager)
-    @Published var useNgrok: Bool {
-        didSet { UserDefaults.standard.set(useNgrok, forKey: "backend_useNgrok") }
-    }
+    // Backend URL configuration
     @Published var ngrokUrl: String {
         didSet { UserDefaults.standard.set(ngrokUrl, forKey: "backend_ngrokUrl") }
     }
 
-    /// Resolved backend URL — matches Kotlin's resolveBaseUrl()
+    /// Resolved backend URL
     var backendBaseUrl: String {
-        if useNgrok && !ngrokUrl.isEmpty {
-            return ngrokUrl
-        }
-        return "http://localhost:3070"
+        return ngrokUrl.isEmpty ? "https://drivehunt.ngrok.app" : ngrokUrl
     }
 
     private init() {
         isLoggedIn = AuthManager.shared.getAccessToken() != nil
-        useNgrok = UserDefaults.standard.object(forKey: "backend_useNgrok") != nil
-            ? UserDefaults.standard.bool(forKey: "backend_useNgrok")
-            : true  // Default to ngrok
+        
+        // Force removing old "mode local" cache so it never gets stuck again
+        UserDefaults.standard.removeObject(forKey: "backend_useNgrok")
+        
         ngrokUrl = UserDefaults.standard.string(forKey: "backend_ngrokUrl")
             ?? "https://drivehunt.ngrok.app"
     }

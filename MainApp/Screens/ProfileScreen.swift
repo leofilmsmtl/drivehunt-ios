@@ -23,6 +23,11 @@ struct ProfileScreen: View {
     @State private var showResetExploDialog = false
     @State private var showResetResourcesDialog = false
     @State private var showResetFullDialog = false
+    
+    // Account Deletion
+    @State private var showDeleteAccountDialog = false
+    @State private var showDeleteAccountConfirmDialog = false
+    @State private var isDeletingAccount = false
 
     // Snackbar
     @State private var snackbarMessage: String?
@@ -131,6 +136,24 @@ struct ProfileScreen: View {
             Button("Annuler", role: .cancel) {}
         } message: {
             Text("Attention : Ceci effacera TOUT (Exploration, Stats, Score). Irréversible.")
+        }
+        // DELETION DIALOGS
+        .confirmationDialog("Supprimer le compte ?", isPresented: $showDeleteAccountDialog, titleVisibility: .visible) {
+            Button("Supprimer", role: .destructive) {
+                // Step 2 confirmation
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showDeleteAccountConfirmDialog = true
+                }
+            }
+            Button("Annuler", role: .cancel) {}
+        } message: {
+            Text("Attention : Ceci effacera DÉFINITIVEMENT votre compte, votre progression, et vos achats.")
+        }
+        .confirmationDialog("Confirmation finale", isPresented: $showDeleteAccountConfirmDialog, titleVisibility: .visible) {
+            Button("Oui, supprimer DÉFINITIVEMENT", role: .destructive) { deleteAccount() }
+            Button("Annuler", role: .cancel) {}
+        } message: {
+            Text("Êtes-vous absolument sûr ? Cette action est immédiate et irréversible.")
         }
         .overlay(alignment: .bottom) {
             if let msg = snackbarMessage {
@@ -275,6 +298,13 @@ struct ProfileScreen: View {
             }
             DangerButton(title: "Réinitialiser TOUT le Compte", color: errorColor) {
                 showResetFullDialog = true
+            }
+            
+            Spacer().frame(height: 16)
+            
+            // Delete Account (App Store Mandatory)
+            DangerButton(title: "Supprimer le Compte (Irréversible)", color: errorColor) {
+                showDeleteAccountDialog = true
             }
         }
     }
@@ -438,6 +468,23 @@ struct ProfileScreen: View {
                 }
             }
         }.resume()
+    }
+
+    private func deleteAccount() {
+        isDeletingAccount = true
+        let baseUrl = AppState.shared.backendBaseUrl
+        Task {
+            let success = await AuthManager.shared.deleteAccount(baseUrl: baseUrl)
+            DispatchQueue.main.async {
+                isDeletingAccount = false
+                if success {
+                    // AuthManager already called logout(), just dismiss
+                    onBack()
+                } else {
+                    withAnimation { snackbarMessage = "Erreur de suppression du compte" }
+                }
+            }
+        }
     }
 }
 
