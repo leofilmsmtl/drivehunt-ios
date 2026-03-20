@@ -18,6 +18,8 @@ struct LoginScreen: View {
     @State private var isRegisterMode = false
     @State private var passwordVisible = false
     @State private var showVerification = false
+    @State private var showRestoreDialog = false
+    @State private var restoreDaysRemaining = 0
 
     @EnvironmentObject var appState: AppState
 
@@ -250,6 +252,14 @@ struct LoginScreen: View {
                 onBack: { showVerification = false }
             )
         }
+        .alert("Compte en cours de suppression", isPresented: $showRestoreDialog) {
+            Button("Restaurer le compte", role: .cancel) {
+                restoreAccount()
+            }
+            Button("Laisser supprimé", role: .destructive) {}
+        } message: {
+            Text("Votre compte est programmé pour être définitivement supprimé dans \(restoreDaysRemaining) jours. Voulez-vous annuler l'opération et récupérer votre compte ?")
+        }
         .onAppear {
             // Pre-fill debug credentials (matches Kotlin's BuildConfig.DEBUG)
             #if DEBUG
@@ -340,6 +350,12 @@ struct LoginScreen: View {
                     isLoading = false
                     errorMessage = "Email non vérifié. Entrez le code."
                     showVerification = true
+                }
+            } catch AuthError.pendingDeletion(let days) {
+                await MainActor.run {
+                    isLoading = false
+                    restoreDaysRemaining = days
+                    showRestoreDialog = true
                 }
             } catch let error as AuthError {
                 await MainActor.run { isLoading = false; errorMessage = error.message }
@@ -520,17 +536,20 @@ struct LoginScreen: View {
     enum AuthError: LocalizedError {
         case message(String)
         case emailNotVerified
+        case pendingDeletion(days: Int)
         
         var errorDescription: String? {
             switch self { 
             case .message(let msg): return msg 
             case .emailNotVerified: return "Email non vérifié"
+            case .pendingDeletion(let days): return "Ce compte sera supprimé dans \(days) jour(s)."
             }
         }
         var message: String {
             switch self { 
             case .message(let msg): return msg 
             case .emailNotVerified: return "Email non vérifié"
+            case .pendingDeletion(let days): return "Suppression en cours (\(days) j restants)"
             }
         }
     }
@@ -555,6 +574,11 @@ struct LoginScreen: View {
         }
 
         guard httpResponse.statusCode == 200 else {
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let codeStr = json["code"] as? String, codeStr == "PENDING_DELETION" {
+                let days = json["daysRemaining"] as? Int ?? 30
+                throw AuthError.pendingDeletion(days: days)
+            }
             let msg = parseErrorResponse(data: data, code: httpResponse.statusCode)
             if httpResponse.statusCode == 403 && (msg.localizedCaseInsensitiveContains("vérifié") || msg.localizedCaseInsensitiveContains("verifi")) {
                 throw AuthError.emailNotVerified
@@ -603,6 +627,36 @@ struct LoginScreen: View {
             return "Erreur interne du serveur."
         default:
             return rawMsg.isEmpty ? "Erreur \(code)" : rawMsg
+        }
+    }
+
+    // MARK: - Restore Account
+
+    private func restoreAccount() {
+        isLoading = true
+        errorMessage = nil
+        Task {
+            do {
+                let baseUrl = appState.backendBaseUrl
+                guard let url = URL(string: "\(baseUrl)/v1/auth/restore") else { return }
+                var request = URLRequest(url: url)
+                request.httpMethod = "POST"
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                request.setValue("true", forHTTPHeaderField: "ngrok-skip-browser-warning")
+                request.httpBody = try? JSONSerialization.data(withJSONObject: ["email": email, "password": password])
+                
+                let (_, response) = try await URLSession.shared.data(for: request)
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                    await MainActor.run { login() }
+                } else {
+                    await MainActor.run {
+                        isLoading = false
+                        errorMessage = "Échec de la restauration de votre compte."
+                    }
+                }
+            } catch {
+                await MainActor.run { isLoading = false }
+            }
         }
     }
 }
