@@ -14,6 +14,7 @@ private let fortressBlue = Color(red: 0x1E/255, green: 0x88/255, blue: 0xE5/255)
 
 struct FortressScreen: View {
     @ObservedObject private var state = FortressState.shared
+    @ObservedObject private var themeManager = ThemeManager.shared
     @State private var showBuildConfirm: FortressCluster? = nil
     @State private var showDestroyConfirm = false
 
@@ -21,7 +22,7 @@ struct FortressScreen: View {
 
     var body: some View {
         ZStack {
-            fortressDark.ignoresSafeArea()
+            ThemeManager.shared.colors.backgroundGradient.ignoresSafeArea()
 
             if state.isLoading {
                 ProgressView()
@@ -250,7 +251,7 @@ struct FortressScreen: View {
                 .font(.system(size: 20))
             Text(value)
                 .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(ThemeManager.shared.colors.textPrimary)
             Text(label)
                 .font(.system(size: 10, weight: .bold))
                 .foregroundColor(fortressSteel.opacity(0.6))
@@ -325,7 +326,7 @@ struct FortressScreen: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cluster #\(index + 1)")
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary)
                     Text("\(cluster.hexes.count) hexagones • Tier \(cluster.tier)")
                         .font(.system(size: 12))
                         .foregroundColor(fortressSteel.opacity(0.6))

@@ -28,6 +28,7 @@ class CompassState: ObservableObject {
 
 struct CompassOverlay: View {
     @ObservedObject private var state = CompassState.shared
+    @ObservedObject private var themeManager = ThemeManager.shared
 
     private var isFollowMode: Bool { state.mode == 1 }
     private var modeText: String { isFollowMode ? "CAP" : "NORD" }
@@ -51,8 +52,8 @@ struct CompassOverlay: View {
                         .fill(
                             RadialGradient(
                                 colors: [
-                                    Color(red: 0x1A/255, green: 0x1A/255, blue: 0x24/255, opacity: 0.87),
-                                    Color(red: 0x10/255, green: 0x10/255, blue: 0x1A/255, opacity: 0.93)
+                                    ThemeManager.shared.colors.surface.opacity(0.87),
+                                    ThemeManager.shared.colors.surfaceVariant.opacity(0.93)
                                 ],
                                 center: .center,
                                 startRadius: 0,
@@ -62,7 +63,13 @@ struct CompassOverlay: View {
                         .frame(width: 48, height: 48)
 
                     // Compass canvas
-                    CompassNeedle(yaw: CGFloat(state.yaw))
+                    // Compass canvas — pass theme colors so Canvas redraws on toggle
+                    CompassNeedle(
+                        yaw: CGFloat(state.yaw),
+                        ringColor: ThemeManager.shared.colors.primary.opacity(0.5),
+                        southColor: ThemeManager.shared.colors.textPrimary.opacity(0.67),
+                        dotColor: ThemeManager.shared.colors.textPrimary
+                    )
                         .frame(width: 44, height: 44)
                 }
             }
@@ -86,6 +93,9 @@ struct CompassOverlay: View {
 
 private struct CompassNeedle: View {
     let yaw: CGFloat
+    let ringColor: Color
+    let southColor: Color
+    let dotColor: Color
 
     var body: some View {
         Canvas { context, size in
@@ -96,7 +106,7 @@ private struct CompassNeedle: View {
             // Outer ring
             context.stroke(
                 Path(ellipseIn: CGRect(x: cx - radius, y: cy - radius, width: radius * 2, height: radius * 2)),
-                with: .color(Color(red: 0x4D/255, green: 0x8F/255, blue: 0xCC/255).opacity(0.5)),
+                with: .color(ringColor),
                 lineWidth: 2
             )
 
@@ -118,19 +128,19 @@ private struct CompassNeedle: View {
             northPath.closeSubpath()
             context.fill(northPath.applying(transform), with: .color(Color(red: 0xFF/255, green: 0x33/255, blue: 0x33/255)))
 
-            // South (white/gray triangle)
+            // South triangle
             var southPath = Path()
             southPath.move(to: CGPoint(x: cx, y: cy + needleLen))
             southPath.addLine(to: CGPoint(x: cx - needleWidth, y: cy))
             southPath.addLine(to: CGPoint(x: cx + needleWidth, y: cy))
             southPath.closeSubpath()
-            context.fill(southPath.applying(transform), with: .color(Color(red: 0xDD/255, green: 0xDD/255, blue: 0xEE/255).opacity(0.67)))
+            context.fill(southPath.applying(transform), with: .color(southColor))
 
             // Center dot
             let dotRadius: CGFloat = 3
             context.fill(
                 Path(ellipseIn: CGRect(x: cx - dotRadius, y: cy - dotRadius, width: dotRadius * 2, height: dotRadius * 2)),
-                with: .color(.white)
+                with: .color(dotColor)
             )
         }
     }

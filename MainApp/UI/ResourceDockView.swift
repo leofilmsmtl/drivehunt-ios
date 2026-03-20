@@ -116,10 +116,11 @@ class GemInventoryState: ObservableObject {
 /// Tapping toggles the expanded detail panel.
 struct ResourceDockView: View {
     @ObservedObject var inventory = GemInventoryState.shared
+    @ObservedObject private var themeManager = ThemeManager.shared
     @State private var expanded = false
 
-    private let glassBg = Color(hex: "#0A0A0A").opacity(0.85)
-    private let accentColor = Color(hex: "#00FF88")
+    private let glassBg = Color(hex: "#0A0A0A").opacity(0.85) // Unused soon
+    private var accentColor: Color { ThemeManager.shared.colors.primary }
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 0) {
@@ -136,13 +137,19 @@ struct ResourceDockView: View {
                 .padding(.vertical, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 20)
-                        .fill(glassBg)
+                        .fill(
+                            LinearGradient(
+                                colors: [ThemeManager.shared.colors.surfaceVariant.opacity(0.85), ThemeManager.shared.colors.surface.opacity(0.7)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                         .overlay(
                             RoundedRectangle(cornerRadius: 20)
-                                .stroke(accentColor.opacity(0.3), lineWidth: 1)
+                                .stroke(ThemeManager.shared.colors.primary.opacity(0.3), lineWidth: 1)
                         )
                 )
-                .shadow(color: accentColor.opacity(0.2), radius: 8)
+                .shadow(color: ThemeManager.shared.colors.primary.opacity(0.2), radius: 8)
             }
 
             // === EXPANDED DETAIL PANEL ===
@@ -152,23 +159,23 @@ struct ResourceDockView: View {
                     Text("INVENTAIRE")
                         .font(.system(size: 10, weight: .bold))
                         .tracking(2)
-                        .foregroundColor(.white)
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary)
 
                     // Column headers
                     HStack {
                         Text("Gemme")
                             .frame(width: 80, alignment: .leading)
                             .font(.system(size: 10))
-                            .foregroundColor(.gray)
+                            .foregroundColor(ThemeManager.shared.colors.textSecondary)
                         Spacer()
                         Text("Qté")
                             .frame(width: 36)
                             .font(.system(size: 10))
-                            .foregroundColor(.gray)
+                            .foregroundColor(ThemeManager.shared.colors.textSecondary)
                         Text("Max")
                             .frame(width: 36)
                             .font(.system(size: 10))
-                            .foregroundColor(.gray)
+                            .foregroundColor(ThemeManager.shared.colors.textSecondary)
                     }
 
                     // Rows per gem tier
@@ -180,16 +187,16 @@ struct ResourceDockView: View {
                         HStack {
                             Text("\(tier.emoji) \(tier.label)")
                                 .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(.white)
+                                .foregroundColor(ThemeManager.shared.colors.textPrimary)
                                 .frame(width: 80, alignment: .leading)
                             Spacer()
                             Text("\(count)")
                                 .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(atCap ? Color(hex: "#FF6B6B") : .white)
+                                .foregroundColor(atCap ? Color(hex: "#FF6B6B") : ThemeManager.shared.colors.textPrimary)
                                 .frame(width: 36)
                             Text(capText)
                                 .font(.system(size: 12))
-                                .foregroundColor(.gray.opacity(0.6))
+                                .foregroundColor(ThemeManager.shared.colors.textSecondary.opacity(0.6))
                                 .frame(width: 36)
                         }
                         .padding(.horizontal, 8)
@@ -203,10 +210,16 @@ struct ResourceDockView: View {
                 .padding(12)
                 .background(
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(Color(hex: "#0A0A0A").opacity(0.95))
+                        .fill(
+                            LinearGradient(
+                                colors: [ThemeManager.shared.colors.surface.opacity(0.95), ThemeManager.shared.colors.surfaceVariant.opacity(0.9)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
                         .overlay(
                             RoundedRectangle(cornerRadius: 16)
-                                .stroke(accentColor.opacity(0.2), lineWidth: 1)
+                                .stroke(ThemeManager.shared.colors.primary.opacity(0.2), lineWidth: 1)
                         )
                 )
                 .shadow(color: .black.opacity(0.5), radius: 12)
@@ -234,7 +247,7 @@ struct ResourceDockView: View {
                 .frame(width: 14, height: 14)
             Text("\(count)")
                 .font(.system(size: 15, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(ThemeManager.shared.colors.textPrimary)
         }
     }
 }

@@ -1,15 +1,12 @@
 import SwiftUI
 import MapKit
 
-// MARK: - DriveHunt Brand Tokens (shared with LoginScreen)
-private let accentGreen = Color(hex: "#00FFAA")
-private let accentBlue = Color(hex: "#00CCFF")
-private let bgGradient = LinearGradient(
-    colors: [Color(hex: "#0A0A1A"), Color(hex: "#1A1A3E")],
-    startPoint: .top, endPoint: .bottom
-)
-private let glassBg = Color.white.opacity(0.08)
-private let glassStroke = Color.white.opacity(0.12)
+// MARK: - DriveHunt Brand Tokens (from ThemeManager)
+private var accentGreen: Color { ThemeManager.shared.colors.accent }
+private var accentBlue: Color { ThemeManager.shared.colors.secondary }
+private var bgGradient: LinearGradient { ThemeManager.shared.colors.backgroundGradient }
+private var glassBg: Color { ThemeManager.shared.colors.textPrimary.opacity(0.08) }
+private var glassStroke: Color { ThemeManager.shared.colors.textPrimary.opacity(0.12) }
 
 // MARK: - Admin Screen (Premium Redesign)
 
@@ -17,6 +14,7 @@ struct AdminScreen: View {
     var onBack: () -> Void
 
     @StateObject private var state = AdminState.shared
+    @ObservedObject private var themeManager = ThemeManager.shared
     @State private var selectedTab: AdminTab = .home
 
     var body: some View {
@@ -61,7 +59,7 @@ struct AdminScreen: View {
             Text("CONSOLE ADMIN")
                 .font(.system(size: 18, weight: .bold, design: .serif))
                 .tracking(1)
-                .foregroundColor(.white)
+                .foregroundColor(ThemeManager.shared.colors.textPrimary)
             Spacer()
             if state.isLoading {
                 ProgressView().tint(accentGreen).scaleEffect(0.8)
@@ -121,13 +119,13 @@ struct AdminBottomBar: View {
                         Text(tab.label)
                             .font(.system(size: 10, weight: .bold))
                     }
-                    .foregroundColor(selectedTab == tab ? accentGreen : Color.white.opacity(0.35))
+                    .foregroundColor(selectedTab == tab ? accentGreen : ThemeManager.shared.colors.textPrimary.opacity(0.35))
                     .frame(maxWidth: .infinity)
                 }
             }
         }
         .padding(.vertical, 10)
-        .background(Color(hex: "#0A0A1A").opacity(0.95))
+        .background(ThemeManager.shared.colors.surface.opacity(0.95))
     }
 }
 
@@ -147,7 +145,7 @@ struct AdminHomeTab: View {
             VStack(spacing: 16) {
                 Text("Tableau de Bord")
                     .font(.system(size: 24, weight: .bold, design: .serif))
-                    .foregroundColor(.white)
+                    .foregroundColor(ThemeManager.shared.colors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -167,7 +165,7 @@ struct AdminHomeTab: View {
                         Text("JOUEURS RÉCENTS")
                             .font(.system(size: 11, weight: .bold))
                             .tracking(0.5)
-                            .foregroundColor(Color.white.opacity(0.4))
+                            .foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.4))
 
                         ForEach(state.players.prefix(5)) { player in
                             HStack {
@@ -175,7 +173,7 @@ struct AdminHomeTab: View {
                                     .fill(Color(hex: player.hexColor ?? "#00FFAA"))
                                     .frame(width: 10, height: 10)
                                 Text(player.name)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(ThemeManager.shared.colors.textPrimary)
                                     .font(.system(size: 14))
                                 Spacer()
                                 Text("\(player.score) pts")
@@ -250,11 +248,11 @@ struct StatCard: View {
             }
             Text(value)
                 .font(.system(size: 28, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(ThemeManager.shared.colors.textPrimary)
                 .monospacedDigit()
             Text(label)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundColor(Color.white.opacity(0.5))
+                .foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.5))
         }
         .padding(16)
         .background(glassBg)
@@ -326,7 +324,7 @@ struct AdminSimulatorTab: View {
                     // Speed
                     HStack {
                         Image(systemName: "speedometer").foregroundColor(accentGreen).font(.system(size: 14))
-                        Text("Vitesse").foregroundColor(.white).font(.system(size: 13, weight: .medium))
+                        Text("Vitesse").foregroundColor(ThemeManager.shared.colors.textPrimary).font(.system(size: 13, weight: .medium))
                         Spacer()
                         Text("\(Int(speedKmh)) km/h")
                             .foregroundColor(accentGreen)
@@ -341,7 +339,7 @@ struct AdminSimulatorTab: View {
                             Text("📍")
                             Text("Ma position → Départ").font(.system(size: 13, weight: .medium))
                         }
-                        .foregroundColor(.white)
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
                         .background(Color(hex: "#4CAF50").opacity(0.3))
@@ -355,7 +353,7 @@ struct AdminSimulatorTab: View {
                     if isLoading { ProgressView().tint(accentGreen) }
                 }
                 .padding(12)
-                .background(Color(hex: "#0A0A1A").opacity(0.92))
+                .background(ThemeManager.shared.colors.background.opacity(0.92))
                 .cornerRadius(14)
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(glassStroke, lineWidth: 1))
                 .padding(12)
@@ -500,7 +498,7 @@ struct AdminLootTab: View {
                 } label: {
                     Image(systemName: "location.fill")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary)
                         .frame(width: 34, height: 34)
                         .background(Color(hex: "#1A73E8").opacity(0.9))
                         .cornerRadius(8)
@@ -543,13 +541,13 @@ struct AdminLootTab: View {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("RÉPARTITION DES RESSOURCES")
                                 .font(.system(size: 11, weight: .bold)).tracking(0.5)
-                                .foregroundColor(Color.white.opacity(0.4))
+                                .foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.4))
 
                             ForEach(lootData) { stat in
                                 HStack {
                                     Text(stat.emoji)
                                     Text(stat.gem.capitalized)
-                                        .font(.system(size: 14, weight: .medium)).foregroundColor(.white)
+                                        .font(.system(size: 14, weight: .medium)).foregroundColor(ThemeManager.shared.colors.textPrimary)
                                     Spacer()
                                     GeometryReader { geo in
                                         let pct = totalLoot > 0 ? CGFloat(stat.count) / CGFloat(totalLoot) : 0
@@ -564,7 +562,7 @@ struct AdminLootTab: View {
                                         .font(.system(size: 13, weight: .bold)).foregroundColor(stat.color)
                                         .monospacedDigit().frame(width: 40, alignment: .trailing)
                                     Text(totalLoot > 0 ? "\(Int(Double(stat.count) / Double(totalLoot) * 100))%" : "—")
-                                        .font(.system(size: 12)).foregroundColor(Color.white.opacity(0.5))
+                                        .font(.system(size: 12)).foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.5))
                                         .frame(width: 35, alignment: .trailing)
                                 }
                             }
@@ -580,7 +578,7 @@ struct AdminLootTab: View {
                             Image(systemName: "arrow.clockwise")
                             Text("🔄 Reset & Repopulate").fontWeight(.medium)
                         }
-                        .foregroundColor(.white).frame(maxWidth: .infinity)
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary).frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(Color(hex: "#FF9800").opacity(0.8)).cornerRadius(10)
                     }
@@ -593,7 +591,7 @@ struct AdminLootTab: View {
                             Image(systemName: "cube.fill")
                             Text("💎 Gérer Inventaire (Joueur actif)").fontWeight(.medium)
                         }
-                        .foregroundColor(.white).frame(maxWidth: .infinity)
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary).frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(Color(hex: "#7C4DFF").opacity(0.8)).cornerRadius(10)
                     }
@@ -760,13 +758,13 @@ struct InventoryManagerSheet: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color(hex: "#0A0A1A").ignoresSafeArea()
+                ThemeManager.shared.colors.background.ignoresSafeArea()
                 ScrollView {
                     VStack(spacing: 16) {
                         // Header
                         Text(playerName != nil ? "INVENTAIRE DE \(playerName!.uppercased())" : "INVENTAIRE DU JOUEUR")
                             .font(.system(size: 11, weight: .bold)).tracking(1)
-                            .foregroundColor(Color.white.opacity(0.4))
+                            .foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.4))
                             .padding(.top, 12)
 
                         // Gem rows
@@ -781,7 +779,7 @@ struct InventoryManagerSheet: View {
                                     Image(systemName: "trash").font(.system(size: 12))
                                     Text("Reset All").font(.system(size: 13, weight: .bold))
                                 }
-                                .foregroundColor(.white)
+                                .foregroundColor(ThemeManager.shared.colors.textPrimary)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 11)
                                 .background(Color(hex: "#FF5252").opacity(0.7))
@@ -793,7 +791,7 @@ struct InventoryManagerSheet: View {
                                     Image(systemName: "arrow.up.to.line").font(.system(size: 12))
                                     Text("Max All").font(.system(size: 13, weight: .bold))
                                 }
-                                .foregroundColor(.white)
+                                .foregroundColor(ThemeManager.shared.colors.textPrimary)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 11)
                                 .background(Color(hex: "#4CAF50").opacity(0.7))
@@ -812,7 +810,7 @@ struct InventoryManagerSheet: View {
                                 }
                                 Text("Appliquer").fontWeight(.bold)
                             }
-                            .foregroundColor(.white)
+                            .foregroundColor(ThemeManager.shared.colors.textPrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
                             .background(Color(hex: "#7C4DFF"))
@@ -851,13 +849,13 @@ struct InventoryManagerSheet: View {
             Text(gem.emoji).font(.system(size: 22))
             VStack(alignment: .leading, spacing: 2) {
                 Text(gem.name.capitalized)
-                    .font(.system(size: 15, weight: .bold)).foregroundColor(.white)
+                    .font(.system(size: 15, weight: .bold)).foregroundColor(ThemeManager.shared.colors.textPrimary)
                 if let cap = gem.cap {
                     Text("max: \(cap)")
-                        .font(.system(size: 10)).foregroundColor(Color.white.opacity(0.35))
+                        .font(.system(size: 10)).foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.35))
                 } else {
                     Text("∞ illimité")
-                        .font(.system(size: 10)).foregroundColor(Color.white.opacity(0.35))
+                        .font(.system(size: 10)).foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.35))
                 }
             }
 
@@ -870,7 +868,7 @@ struct InventoryManagerSheet: View {
                 } label: {
                     Image(systemName: "minus")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary)
                         .frame(width: 36, height: 36)
                         .background(Color.white.opacity(0.1))
                         .cornerRadius(8)
@@ -888,7 +886,7 @@ struct InventoryManagerSheet: View {
                 } label: {
                     Image(systemName: "plus")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary)
                         .frame(width: 36, height: 36)
                         .background(gem.color.opacity(0.4))
                         .cornerRadius(8)
@@ -1091,7 +1089,7 @@ struct AdminPlayersTab: View {
                     HStack {
                         Text("Joueurs")
                             .font(.system(size: 24, weight: .bold, design: .serif))
-                            .foregroundColor(.white)
+                            .foregroundColor(ThemeManager.shared.colors.textPrimary)
                         Spacer()
                         Button { showCreateSheet = true } label: {
                             Image(systemName: "plus.circle.fill")
@@ -1179,7 +1177,7 @@ struct PlayerRow: View {
                 HStack(spacing: 4) {
                     Text(player.name)
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary)
                     if player.role == "ADMIN" {
                         Text("👑").font(.system(size: 11))
                     }
@@ -1189,7 +1187,7 @@ struct PlayerRow: View {
                 }
                 Text(player.email)
                     .font(.system(size: 12))
-                    .foregroundColor(Color.white.opacity(0.4))
+                    .foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.4))
             }
 
             Spacer()
@@ -1199,26 +1197,32 @@ struct PlayerRow: View {
                 .foregroundColor(accentGreen)
                 .monospacedDigit()
 
-            // Actions
-            Button { onMap() } label: {
-                Image(systemName: "map.circle.fill")
-                    .font(.system(size: 22))
-                    .foregroundColor(Color(hex: "#4CAF50").opacity(0.7))
-            }
-            Button { onInventory() } label: {
-                Image(systemName: "cube.fill")
-                    .font(.system(size: 22))
-                    .foregroundColor(Color(hex: "#7C4DFF").opacity(0.7))
-            }
-            Button { onEdit() } label: {
-                Image(systemName: "pencil.circle.fill")
-                    .font(.system(size: 22))
-                    .foregroundColor(accentBlue.opacity(0.7))
-            }
-            Button { onDelete() } label: {
-                Image(systemName: "trash.circle.fill")
-                    .font(.system(size: 22))
-                    .foregroundColor(Color(hex: "#E53935").opacity(0.7))
+            // Actions — colored circles behind emojis (matches Android PlayerRow)
+            HStack(spacing: 4) {
+                Button { onMap() } label: {
+                    Text("🗺️").font(.system(size: 13))
+                        .frame(width: 30, height: 30)
+                        .background(Color(hex: "#4CAF50").opacity(0.2))
+                        .clipShape(Circle())
+                }
+                Button { onInventory() } label: {
+                    Text("💎").font(.system(size: 13))
+                        .frame(width: 30, height: 30)
+                        .background(Color(hex: "#AB47BC").opacity(0.2))
+                        .clipShape(Circle())
+                }
+                Button { onEdit() } label: {
+                    Text("✏️").font(.system(size: 13))
+                        .frame(width: 30, height: 30)
+                        .background(Color(hex: "#42A5F5").opacity(0.2))
+                        .clipShape(Circle())
+                }
+                Button { onDelete() } label: {
+                    Text("🗑️").font(.system(size: 13))
+                        .frame(width: 30, height: 30)
+                        .background(Color(hex: "#EF5350").opacity(0.2))
+                        .clipShape(Circle())
+                }
             }
         }
         .padding(12)
@@ -1294,7 +1298,7 @@ struct CreatePlayerSheet: View {
 
     private func glassInput(placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
-            .foregroundColor(.white)
+            .foregroundColor(ThemeManager.shared.colors.textPrimary)
             .padding()
             .background(glassBg)
             .cornerRadius(12)
@@ -1335,8 +1339,8 @@ struct EditPlayerSheet: View {
                     VStack(spacing: 20) {
                         // Player Info
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("ID: \(player.id)").font(.system(size: 11)).foregroundColor(Color.white.opacity(0.3))
-                            Text(player.email).font(.system(size: 14)).foregroundColor(Color.white.opacity(0.6))
+                            Text("ID: \(player.id)").font(.system(size: 11)).foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.3))
+                            Text(player.email).font(.system(size: 14)).foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.6))
                             Text("Score: \(player.score)").font(.system(size: 16, weight: .bold)).foregroundColor(accentGreen)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -1350,7 +1354,7 @@ struct EditPlayerSheet: View {
                                 Text("👑").font(.system(size: 20))
                                 VStack(alignment: .leading) {
                                     Text("SUPER ADMIN").font(.system(size: 13, weight: .bold)).foregroundColor(Color(hex: "#FF9800"))
-                                    Text("Ce compte ne peut pas être modifié.").font(.system(size: 11)).foregroundColor(Color.white.opacity(0.5))
+                                    Text("Ce compte ne peut pas être modifié.").font(.system(size: 11)).foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.5))
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -1362,7 +1366,7 @@ struct EditPlayerSheet: View {
                         // Name
                         section(title: "NOM D'AFFICHAGE") {
                             TextField("Nom", text: $displayName)
-                                .foregroundColor(.white)
+                                .foregroundColor(ThemeManager.shared.colors.textPrimary)
                                 .padding()
                                 .background(glassBg)
                                 .cornerRadius(10)
@@ -1395,7 +1399,7 @@ struct EditPlayerSheet: View {
                         // Password
                         section(title: "CHANGER MOT DE PASSE") {
                             TextField("Nouveau mot de passe", text: $newPassword)
-                                .foregroundColor(.white)
+                                .foregroundColor(ThemeManager.shared.colors.textPrimary)
                                 .padding()
                                 .background(glassBg)
                                 .cornerRadius(10)
@@ -1411,8 +1415,8 @@ struct EditPlayerSheet: View {
                         // Admin Controls
                         if !player.isSuperAdmin {
                             section(title: "ADMINISTRATION") {
-                                if let pc = player.postalCode { Text("📮 \(pc)").foregroundColor(Color.white.opacity(0.5)).font(.system(size: 13)) }
-                                if let city = player.homeCity { Text("🏙️ \(city)").foregroundColor(Color.white.opacity(0.5)).font(.system(size: 13)) }
+                                if let pc = player.postalCode { Text("📮 \(pc)").foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.5)).font(.system(size: 13)) }
+                                if let city = player.homeCity { Text("🏙️ \(city)").foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.5)).font(.system(size: 13)) }
 
                                 HStack(spacing: 8) {
                                     GlassButton(
@@ -1497,7 +1501,7 @@ struct EditPlayerSheet: View {
             Text(title)
                 .font(.system(size: 11, weight: .bold))
                 .tracking(0.5)
-                .foregroundColor(Color.white.opacity(0.4))
+                .foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.4))
             content()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -1519,7 +1523,7 @@ struct AdminSettingsTab: View {
             VStack(spacing: 16) {
                 Text("Options")
                     .font(.system(size: 24, weight: .bold, design: .serif))
-                    .foregroundColor(.white)
+                    .foregroundColor(ThemeManager.shared.colors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -1528,7 +1532,7 @@ struct AdminSettingsTab: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("BROUILLARD")
                         .font(.system(size: 11, weight: .bold)).tracking(0.5)
-                        .foregroundColor(Color.white.opacity(0.4))
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.4))
 
                     Button {
                         let newVal: Double = fogOpacity > 0 ? 0 : 100
@@ -1540,7 +1544,7 @@ struct AdminSettingsTab: View {
                             Text(fogOpacity > 0 ? "🌫️ Désactiver Brouillard" : "🌫️ Activer Brouillard")
                                 .fontWeight(.medium)
                         }
-                        .foregroundColor(.white)
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(fogOpacity > 0 ? Color(hex: "#4CAF50").opacity(0.8) : Color.gray.opacity(0.4))
@@ -1550,7 +1554,7 @@ struct AdminSettingsTab: View {
                     // Slider
                     HStack {
                         Image(systemName: "cloud.fog.fill").foregroundColor(accentGreen).font(.system(size: 14))
-                        Text("Opacité").foregroundColor(.white).font(.system(size: 13, weight: .medium))
+                        Text("Opacité").foregroundColor(ThemeManager.shared.colors.textPrimary).font(.system(size: 13, weight: .medium))
                         Spacer()
                         Text("\(Int(fogOpacity))%")
                             .foregroundColor(accentGreen)
@@ -1571,7 +1575,7 @@ struct AdminSettingsTab: View {
 
                 // Metrics Toggle
                 HStack {
-                    Label("Show Debug Metrics", systemImage: "chart.bar.fill").foregroundColor(.white)
+                    Label("Show Debug Metrics", systemImage: "chart.bar.fill").foregroundColor(ThemeManager.shared.colors.textPrimary)
                     Spacer()
                     Toggle("", isOn: $showMetrics).toggleStyle(SwitchToggleStyle(tint: accentGreen)).labelsHidden()
                 }
@@ -1588,7 +1592,7 @@ struct AdminSettingsTab: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("OUTILS DEBUG")
                         .font(.system(size: 11, weight: .bold)).tracking(0.5)
-                        .foregroundColor(Color.white.opacity(0.4))
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.4))
 
                     debugButton(icon: "gauge", text: benchmarkRunning ? "🔴 Benchmark en cours..." : "📊 Start Benchmark", color: benchmarkRunning ? Color(hex: "#E53935") : Color(hex: "#4CAF50")) {
                         UnityBridge.shared.send("StartBenchmark", value: "")
@@ -1620,7 +1624,7 @@ struct AdminSettingsTab: View {
                 Image(systemName: icon)
                 Text(text).fontWeight(.medium)
             }
-            .foregroundColor(.white)
+            .foregroundColor(ThemeManager.shared.colors.textPrimary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .background(color.opacity(0.6))
@@ -1755,7 +1759,7 @@ struct PlayerDiscoveryMapView: View {
                         StatPill(icon: "map.fill", value: "\(areaKm2)", label: "km²", color: accentBlue)
                     }
                     .padding(12)
-                    .background(Color(hex: "#0A0A1A").opacity(0.92))
+                    .background(ThemeManager.shared.colors.background.opacity(0.92))
                     .cornerRadius(14)
                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(glassStroke, lineWidth: 1))
                     .padding(.horizontal, 12)
@@ -1768,21 +1772,21 @@ struct PlayerDiscoveryMapView: View {
                         TogglePill(label: "Owned", icon: "flag.fill", isOn: $showOwned, color: Color(hex: player.hexColor ?? "#651FFF"))
                     }
                     .padding(10)
-                    .background(Color(hex: "#0A0A1A").opacity(0.92))
+                    .background(ThemeManager.shared.colors.background.opacity(0.92))
                     .cornerRadius(14)
                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(glassStroke, lineWidth: 1))
                     .padding(.horizontal, 12)
 
                     // Opacity slider
                     HStack(spacing: 8) {
-                        Image(systemName: "sun.max.fill").font(.system(size: 12)).foregroundColor(.white.opacity(0.5))
+                        Image(systemName: "sun.max.fill").font(.system(size: 12)).foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.5))
                         Slider(value: $mapDarkness, in: 0...0.85)
                             .tint(Color(hex: "#4CAF50"))
-                        Image(systemName: "moon.fill").font(.system(size: 12)).foregroundColor(.white.opacity(0.5))
+                        Image(systemName: "moon.fill").font(.system(size: 12)).foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.5))
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
-                    .background(Color(hex: "#0A0A1A").opacity(0.92))
+                    .background(ThemeManager.shared.colors.background.opacity(0.92))
                     .cornerRadius(14)
                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(glassStroke, lineWidth: 1))
                     .padding(.horizontal, 12)
@@ -1791,7 +1795,7 @@ struct PlayerDiscoveryMapView: View {
 
                 if isLoading {
                     ProgressView().tint(accentGreen).scaleEffect(1.5)
-                        .padding(20).background(Color(hex: "#0A0A1A").opacity(0.8)).cornerRadius(12)
+                        .padding(20).background(ThemeManager.shared.colors.background.opacity(0.8)).cornerRadius(12)
                 }
             }
             .navigationTitle("🗺️ \(player.name)")
@@ -1884,9 +1888,9 @@ struct StatPill: View {
         VStack(spacing: 2) {
             HStack(spacing: 4) {
                 Image(systemName: icon).font(.system(size: 10)).foregroundColor(color)
-                Text(value).font(.system(size: 16, weight: .bold)).foregroundColor(.white).monospacedDigit()
+                Text(value).font(.system(size: 16, weight: .bold)).foregroundColor(ThemeManager.shared.colors.textPrimary).monospacedDigit()
             }
-            Text(label).font(.system(size: 9)).foregroundColor(Color.white.opacity(0.5))
+            Text(label).font(.system(size: 9)).foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.5))
         }
     }
 }

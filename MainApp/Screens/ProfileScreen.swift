@@ -5,6 +5,7 @@ import SwiftUI
 /// edit name, change password, hex skins, logout, danger zone resets.
 struct ProfileScreen: View {
     var onBack: () -> Void
+    @ObservedObject private var themeManager = ThemeManager.shared
 
     // User data
     @State private var displayName = ""
@@ -26,12 +27,13 @@ struct ProfileScreen: View {
     // Snackbar
     @State private var snackbarMessage: String?
 
-    // Colors
-    private let accentColor = Color(hex: "#00FFAA")
-    private let bgColor = Color(hex: "#121212")
-    private let surfaceColor = Color(hex: "#1E1E1E")
-    private let errorColor = Color(hex: "#FF4444")
-    private let warningColor = Color(hex: "#FFB800")
+    // Colors — from ThemeManager tokens
+    private var theme: ThemeManager { ThemeManager.shared }
+    private var accentColor: Color { theme.colors.accent }
+    private var bgColor: Color { theme.colors.background }
+    private var surfaceColor: Color { theme.colors.surface }
+    private var errorColor: Color { theme.colors.error }
+    private var warningColor: Color { theme.colors.warning }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -40,12 +42,12 @@ struct ProfileScreen: View {
                 Button(action: onBack) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(theme.colors.textPrimary)
                 }
                 Spacer()
                 Text("MON PROFIL")
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundColor(theme.colors.textPrimary)
                 Spacer()
                 // ⚠️ IMPORTANT: Use Rectangle with FIXED height, NOT Color.clear.frame(width:).
                 // Color.clear without a height constraint expands infinitely in a VStack,
@@ -71,10 +73,10 @@ struct ProfileScreen: View {
                         // Name & Email
                         Text(displayName)
                             .font(.system(size: 22, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(theme.colors.textPrimary)
                         Text(email)
                             .font(.system(size: 14))
-                            .foregroundColor(.gray)
+                            .foregroundColor(theme.colors.textSecondary)
 
                         // Role Badge
                         roleBadge
@@ -85,7 +87,7 @@ struct ProfileScreen: View {
                                 .foregroundColor(accentColor)
                             Text("ID: \(userId)")
                                 .font(.system(size: 14, weight: .bold, design: .monospaced))
-                                .foregroundColor(.white)
+                                .foregroundColor(theme.colors.textPrimary)
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
@@ -104,6 +106,7 @@ struct ProfileScreen: View {
                 }
             }
         }
+        .background(theme.colors.backgroundGradient.ignoresSafeArea())
         .onAppear { loadProfile() }
         .alert("Modifier le nom", isPresented: $showEditNameDialog) {
             editNameDialogContent
@@ -136,7 +139,7 @@ struct ProfileScreen: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
-                    .background(Color(hex: "#333333").cornerRadius(12))
+                    .background(theme.colors.surfaceVariant.cornerRadius(12))
                     .padding(.bottom, 30)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .onAppear {
@@ -204,13 +207,14 @@ struct ProfileScreen: View {
                     .fill(Color(hex: hexColor))
                     .frame(width: 32, height: 32)
                     .overlay(Circle().stroke(Color.gray.opacity(0.3), lineWidth: 2))
+                    .foregroundColor(.white)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Hex Skins")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(theme.colors.textPrimary)
                     Text("Personnalise ton territoire")
                         .font(.system(size: 12))
-                        .foregroundColor(.gray)
+                        .foregroundColor(theme.colors.textSecondary)
                 }
                 .padding(.leading, 12)
                 Spacer()
@@ -229,7 +233,7 @@ struct ProfileScreen: View {
             }
         }
         .padding(16)
-        .background(surfaceColor)
+        .background(theme.colors.surfaceVariant)
         .cornerRadius(20)
     }
 
@@ -458,7 +462,7 @@ struct ProfileMenuItem: View {
                 }
                 Text(text)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(ThemeManager.shared.colors.textPrimary)
                     .padding(.leading, 8)
                 Spacer()
             }

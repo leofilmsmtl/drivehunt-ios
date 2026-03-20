@@ -6,7 +6,8 @@ struct WelcomeScreen: View {
     var onContinue: () -> Void
     @StateObject private var viewModel = WelcomeViewModel()
 
-    // DriveHunt brand colors
+    // DriveHunt brand colors — from ThemeManager tokens
+    private var theme: ThemeManager { ThemeManager.shared }
     private let accentGreen = Color(hex: "#00FFAA")
     private let accentBlue = Color(hex: "#00CCFF")
     private let gradientColors = [Color(hex: "#00FFAA"), Color(hex: "#00CCFF")]
@@ -29,15 +30,7 @@ struct WelcomeScreen: View {
     var body: some View {
         ZStack {
             // Background gradient
-            LinearGradient(
-                colors: [
-                    Color(hex: "#0A0A1A"),
-                    Color(hex: "#0D1B2A"),
-                    Color(hex: "#1A1A3E")
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            theme.colors.backgroundGradient
             .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -74,7 +67,7 @@ struct WelcomeScreen: View {
                 Text("P. HEXAGON")
                     .font(.system(size: 32, weight: .bold)) // Material's headlineLarge roughly correlates to 32pt
                     .tracking(2)
-                    .foregroundColor(.white)
+                    .foregroundColor(theme.colors.textPrimary)
 
                 Text("GPS Territory Capture Game")
                     .font(.system(size: 12)) // Material's bodySmall roughly correlates to 12pt
@@ -93,7 +86,7 @@ struct WelcomeScreen: View {
                     }
                     Text(viewModel.statusText)
                         .font(.system(size: 12))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(theme.colors.textPrimary.opacity(0.5))
                         .tracking(0.5)
                 }
 
@@ -103,7 +96,7 @@ struct WelcomeScreen: View {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 1)
-                            .fill(Color.white.opacity(0.06))
+                            .fill(theme.colors.textPrimary.opacity(0.06))
 
                         RoundedRectangle(cornerRadius: 1)
                             .fill(
@@ -124,7 +117,7 @@ struct WelcomeScreen: View {
                 // Percentage
                 Text("\(Int(viewModel.progress * 100))%")
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.2))
+                    .foregroundColor(theme.colors.textPrimary.opacity(0.2))
 
                 Spacer().frame(height: 24)
 
@@ -165,7 +158,7 @@ struct WelcomeScreen: View {
                 Text(tips[tipIndex])
                     .font(.system(size: 12))
                     .italic()
-                    .foregroundColor(.white.opacity(0.25 * (tipVisible ? 1 : 0)))
+                    .foregroundColor(theme.colors.textPrimary.opacity(0.25 * (tipVisible ? 1 : 0)))
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
                     .frame(height: 40)
@@ -177,7 +170,7 @@ struct WelcomeScreen: View {
                 // ── Safety Notice ──
                 Text("⚠ Ne pas utiliser en conduisant · Respectez le code de la route")
                     .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.15))
+                    .foregroundColor(theme.colors.textPrimary.opacity(0.15))
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)
 

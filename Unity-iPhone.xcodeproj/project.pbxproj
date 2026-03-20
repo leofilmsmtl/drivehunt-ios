@@ -20,6 +20,7 @@
 		0ACC55335A90F74CE8AA86BF /* IUnityMemoryManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 89176DBD5A32B089962139F9 /* IUnityMemoryManager.h */; };
 		0DDA5E5806ABF18CBC3A77FD /* AVCapture.h in Headers */ = {isa = PBXBuildFile; fileRef = DFEBD93BE926F63F590DEA8D /* AVCapture.h */; };
 		0F658075C6CFAE57AB43314A /* AppDelegateListener.mm in Sources */ = {isa = PBXBuildFile; fileRef = A6A621C31C626C4EE6EE15B0 /* AppDelegateListener.mm */; };
+		1103E6F132D6068BDFE4B001 /* CaptureOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1103E6F132D6068BDFE439FD /* CaptureOverlayView.swift */; };
 		12B7ABD9AF672E45A754B962 /* CVTextureCache.mm in Sources */ = {isa = PBXBuildFile; fileRef = BCB779148B23335D42C41D6C /* CVTextureCache.mm */; };
 		12EAAAD3A3BD66C659509354 /* iPhone_Sensors.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4236EC67EED4A1C54CC291EC /* iPhone_Sensors.mm */; };
 		1626D07BECA3991E80E052AC /* UnityForwardDecls.h in Headers */ = {isa = PBXBuildFile; fileRef = 338C4897DA1522073BC5D19C /* UnityForwardDecls.h */; };
@@ -30,6 +31,8 @@
 		1A22BC0AFE01EADB5B878017 /* UnityInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 864A7F8602F7096CE5937644 /* UnityInterface.h */; };
 		1CD4234A1829B6171985E914 /* FullScreenVideoPlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7E591B394E3B9E70466B37B7 /* FullScreenVideoPlayer.mm */; };
 		1E314D255969D760A250045A /* UnityViewControllerBase+visionOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 7B4D6FD336AA1273230E3CAF /* UnityViewControllerBase+visionOS.h */; };
+		219DB0220693A86ED346B001 /* FortressScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 219DB0220693A86ED3461CB5 /* FortressScreen.swift */; };
+		22084A548682EF2E6EE3B001 /* AdminViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22084A548682EF2E6EE3B6B5 /* AdminViewModel.swift */; };
 		2373E9E02BAA678F79EC8814 /* IUnityEventQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = FEA0BE273F1825F1BE7B7B69 /* IUnityEventQueue.h */; };
 		264C6113911720783FB14D5D /* UnityReplayKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 26396104375BD009639E2AF3 /* UnityReplayKit.h */; };
 		28B29A7A4558348F881E93FF /* UnityReplayKit.mm in Sources */ = {isa = PBXBuildFile; fileRef = 79F823AACD7D09D86C08281F /* UnityReplayKit.mm */; };
@@ -42,6 +45,7 @@
 		3584B4CAFE79C954A66D17F7 /* UnityAppController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6FDDB04096EB4901EABB264F /* UnityAppController.mm */; };
 		3A18055747C7C86221D72D07 /* UnityViewControllerBase+tvOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = E95F69E8266F65D505F8448E /* UnityViewControllerBase+tvOS.mm */; };
 		3D0925765C1334DF082445DA /* UnityRendering.h in Headers */ = {isa = PBXBuildFile; fileRef = FB086F6145558D70FC612B3B /* UnityRendering.h */; };
+		3DCEE393B9899C47E901B001 /* SeasonQuestScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DCEE393B9899C47E9017C16 /* SeasonQuestScreen.swift */; };
 		415674EFD2EC187355BC05B1 /* LaunchScreen-iPhoneLandscape.png in Resources */ = {isa = PBXBuildFile; fileRef = 1E24B93E9D27D99850693BAF /* LaunchScreen-iPhoneLandscape.png */; };
 		4206105962EED44BFA4F9BD3 /* OrientationSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4BCDE89198A4FD69E85C6A52 /* OrientationSupport.mm */; };
 		443730AA2B4ED688E8818488 /* OrientationSupport.h in Headers */ = {isa = PBXBuildFile; fileRef = 5D0E35CAADD8155085A01C93 /* OrientationSupport.h */; };
@@ -83,6 +87,7 @@
 		7C058CAE70F713F7AE4E6167 /* UnityScene.h in Headers */ = {isa = PBXBuildFile; fileRef = DD6123A9B450B0AB9F525AD2 /* UnityScene.h */; };
 		7F4E05AB2717219200A2CBE4 /* libGameAssembly.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7F4E05A02717216D00A2CBE4 /* libGameAssembly.a */; };
 		81044980025CF0C90896BB52 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5358B0594857BFF1F3D62D92 /* Security.framework */; };
+		81141BD6E90977CD7856B001 /* FortressModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81141BD6E90977CD7856B686 /* FortressModels.swift */; };
 		826E40C67FAA509B29A0EFA3 /* IUnityGraphics.h in Headers */ = {isa = PBXBuildFile; fileRef = 30347B5D7991A325732A4F10 /* IUnityGraphics.h */; };
 		8321354FA060C9ECB1DC1DE3 /* CrashReporter.mm in Sources */ = {isa = PBXBuildFile; fileRef = 763179B1AACCF540DEDCD1F1 /* CrashReporter.mm */; };
 		8651D6D6B3EF75C02B972092 /* CMVideoSampling.h in Headers */ = {isa = PBXBuildFile; fileRef = 76276A0F773EC6BD59486097 /* CMVideoSampling.h */; };
@@ -105,6 +110,7 @@
 		A5C000FC7C551667F37C1347 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5201A6004A8A0023F5541676 /* CoreText.framework */; };
 		A7DB3A6F75E10B1E35E6ED05 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
 		AA11BB22CC33DD44EE550002 /* NativeCallStubs.mm in Sources */ = {isa = PBXBuildFile; fileRef = AA11BB22CC33DD44EE550001 /* NativeCallStubs.mm */; };
+		ABB06AE38334792F4D16B001 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABB06AE38334792F4D16896E /* ThemeManager.swift */; };
 		ABDDC050A0AE51C5BEEC1AD4 /* Vector3.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AF8AA0F87DF629F3B65CCB8 /* Vector3.h */; };
 		AC59092CA77C69D6ED97B183 /* AppDelegateListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 5201A0F3E84F5492ABC002BC /* AppDelegateListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AC6B94F04710CA18194BE4B6 /* OnDemandResources.mm in Sources */ = {isa = PBXBuildFile; fileRef = DCB9B0D9A6CEA2857C0AA9FA /* OnDemandResources.mm */; };
@@ -114,6 +120,7 @@
 		B6C20D8652B32A943B56F398 /* CameraCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 237330A852A65798BE3F7B6E /* CameraCapture.mm */; };
 		BD503F317DEBDC547A7CDC20 /* UnityAppController+Rendering.h in Headers */ = {isa = PBXBuildFile; fileRef = FE25FE39E021CF2F05F90E16 /* UnityAppController+Rendering.h */; };
 		BEE3E21D322649C83B0DD4DC /* LaunchScreen-iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5A3A1B4C3FB1FC90023B942E /* LaunchScreen-iPhone.storyboard */; };
+		BF4C1611CC9EA4AA2961B001 /* SeasonModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4C1611CC9EA4AA29612585 /* SeasonModels.swift */; };
 		C0671771499E231DA39A83DC /* ActivityIndicator.h in Headers */ = {isa = PBXBuildFile; fileRef = C6E41A615C77AED3B12229C7 /* ActivityIndicator.h */; };
 		C4F9412800536E5FC7E60A8B /* UnityViewControllerBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A5160A8AB3A713614C790CC /* UnityViewControllerBase.h */; };
 		C506727DF0DCE0E36990992E /* IUnityProfiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 2103592E40FE1855C4231BB9 /* IUnityProfiler.h */; };
@@ -138,14 +145,6 @@
 		DD00EE00FF00AA00BB000110 /* GameHud.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000010 /* GameHud.swift */; };
 		DD00EE00FF00AA00BB000111 /* HudOverlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */; };
 		DD00EE00FF00AA00BB000112 /* ResourceDockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */; };
-		F5ED8872FB9B397773E1B001 /* CompassOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5ED8872FB9B397773E19ABD /* CompassOverlay.swift */; };
-		1103E6F132D6068BDFE4B001 /* CaptureOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1103E6F132D6068BDFE439FD /* CaptureOverlayView.swift */; };
-		BF4C1611CC9EA4AA2961B001 /* SeasonModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4C1611CC9EA4AA29612585 /* SeasonModels.swift */; };
-		81141BD6E90977CD7856B001 /* FortressModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81141BD6E90977CD7856B686 /* FortressModels.swift */; };
-		E1178BCB24780A84362BB001 /* WelcomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1178BCB24780A84362B16E1 /* WelcomeViewModel.swift */; };
-		EB8AB6D1CE6B2E66D01AB001 /* WelcomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB8AB6D1CE6B2E66D01A90F9 /* WelcomeScreen.swift */; };
-		3DCEE393B9899C47E901B001 /* SeasonQuestScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DCEE393B9899C47E9017C16 /* SeasonQuestScreen.swift */; };
-		219DB0220693A86ED346B001 /* FortressScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 219DB0220693A86ED3461CB5 /* FortressScreen.swift */; };
 		DD00EE00FF00AA00BB000113 /* NativeCallProxyDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */; };
 		DD00EE00FF00AA00BB000114 /* UnityBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000014 /* UnityBridge.swift */; };
 		DD00EE00FF00AA00BB000115 /* UnityEmbedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000015 /* UnityEmbedView.swift */; };
@@ -153,12 +152,14 @@
 		DD00EE00FF00AA00BB000117 /* NativeCallProxy.mm in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000017 /* NativeCallProxy.mm */; };
 		DD00EE00FF00AA00BB000118 /* NativeCallProxy.h in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000018 /* NativeCallProxy.h */; };
 		DD00EE00FF00AA00BB000119 /* DriveHunt-iOS-Bridging-Header.h in Sources */ = {isa = PBXBuildFile; fileRef = DD00EE00FF00AA00BB000019 /* DriveHunt-iOS-Bridging-Header.h */; };
+		E1178BCB24780A84362BB001 /* WelcomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1178BCB24780A84362B16E1 /* WelcomeViewModel.swift */; };
 		E1553120720B6BD941D137C1 /* UnityView+iOS.h in Headers */ = {isa = PBXBuildFile; fileRef = F2C7D0D55589551423C252C7 /* UnityView+iOS.h */; };
 		E16448E3D816EB05FB4703B1 /* UnityViewControllerBase+iOS.h in Headers */ = {isa = PBXBuildFile; fileRef = C2CA2D324D9CC969EAD21B65 /* UnityViewControllerBase+iOS.h */; };
 		E29298863AA8FBDD3A9886BB /* CVTextureCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 588503C58FDD1F1B5533177A /* CVTextureCache.h */; };
 		E323D4E09882F87C8650F910 /* RenderPluginDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 41DC848127AFE95D6FAAA0F5 /* RenderPluginDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E6670895D4D17DD17BB65276 /* Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = B656B188EE082EE9ACD22391 /* Prefix.pch */; };
 		E6B63C87BE2A11C0B01BF2F4 /* UnityAppController+UnityInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4FE85250381D5D798978A432 /* UnityAppController+UnityInterface.mm */; };
+		EB8AB6D1CE6B2E66D01AB001 /* WelcomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB8AB6D1CE6B2E66D01A90F9 /* WelcomeScreen.swift */; };
 		EC126DF7C39F6613C61E74B6 /* UnityAppController+Rendering+visionOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = AB184D34864F2C68E5DA9426 /* UnityAppController+Rendering+visionOS.mm */; };
 		ED21F7F5459C8920985F4FAB /* UnityViewControllerListener.mm in Sources */ = {isa = PBXBuildFile; fileRef = 462F8C73EF09CDB8A6C09206 /* UnityViewControllerListener.mm */; };
 		ED9A27155CA2F48D450B6800 /* DisplayManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 05862F66315AF48E21A389CD /* DisplayManager.h */; };
@@ -168,6 +169,7 @@
 		F26BA4D3F0494ADD864CA647 /* RedefinePlatforms.h in Headers */ = {isa = PBXBuildFile; fileRef = 2CDDACF862CBDBB19C78C383 /* RedefinePlatforms.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F59664096BFBA1197DABE754 /* UnityViewControllerBase+visionOS.mm in Sources */ = {isa = PBXBuildFile; fileRef = C630E281FE91663440031491 /* UnityViewControllerBase+visionOS.mm */; };
 		F5C03E9DD3BF40D8EC0F4404 /* LaunchScreen-iPhonePortrait.png in Resources */ = {isa = PBXBuildFile; fileRef = 681AA63C19788ACA381FB8C1 /* LaunchScreen-iPhonePortrait.png */; };
+		F5ED8872FB9B397773E1B001 /* CompassOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5ED8872FB9B397773E19ABD /* CompassOverlay.swift */; };
 		FC9704D69DE282DECE7B3BE2 /* UnityView+tvOS.h in Headers */ = {isa = PBXBuildFile; fileRef = 7DBCE3A2DDA6DA90B04BF8ED /* UnityView+tvOS.h */; };
 /* End PBXBuildFile section */
 
@@ -272,6 +274,7 @@
 		0FF38D860993A4461BE3D1D6 /* UnityEngine.ImageConversionModule.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UnityEngine.ImageConversionModule.cpp; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.ImageConversionModule.cpp; sourceTree = SOURCE_ROOT; };
 		103D886E07E927CE6460F9B4 /* CrashReporter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CrashReporter.h; path = Classes/CrashReporter.h; sourceTree = SOURCE_ROOT; };
 		107ED7BB920065C4558EECC2 /* UnityAppController+UnityInterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "UnityAppController+UnityInterface.h"; path = "Classes/UnityAppController+UnityInterface.h"; sourceTree = SOURCE_ROOT; };
+		1103E6F132D6068BDFE439FD /* CaptureOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CaptureOverlayView.swift; path = MainApp/UI/CaptureOverlayView.swift; sourceTree = SOURCE_ROOT; };
 		1128E095D2864E4B88CBF20F /* Generics__58.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__58.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__58.cpp; sourceTree = SOURCE_ROOT; };
 		11856605578FD8270FB7624A /* Generics__10.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__10.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__10.cpp; sourceTree = SOURCE_ROOT; };
 		1211E4E67EF350C7DF4C32E7 /* Generics__116.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__116.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__116.cpp; sourceTree = SOURCE_ROOT; };
@@ -317,7 +320,9 @@
 		211F060733D8F95086408787 /* UnityEngine.CoreModule__6.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UnityEngine.CoreModule__6.cpp; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.CoreModule__6.cpp; sourceTree = SOURCE_ROOT; };
 		212E41FE4D4EBAD53A5E0F6F /* UnityEngine.InputModule.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UnityEngine.InputModule.cpp; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.InputModule.cpp; sourceTree = SOURCE_ROOT; };
 		218A5F5892B6E72316C9FFDA /* UnityEngine.PropertiesModule.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UnityEngine.PropertiesModule.cpp; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.PropertiesModule.cpp; sourceTree = SOURCE_ROOT; };
+		219DB0220693A86ED3461CB5 /* FortressScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FortressScreen.swift; path = MainApp/Screens/FortressScreen.swift; sourceTree = SOURCE_ROOT; };
 		21ECD27EDF8EB21168769097 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
+		22084A548682EF2E6EE3B6B5 /* AdminViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AdminViewModel.swift; path = MainApp/State/AdminViewModel.swift; sourceTree = SOURCE_ROOT; };
 		2262E7A75098C5BC7A54BE96 /* Generics__54.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__54.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__54.cpp; sourceTree = SOURCE_ROOT; };
 		2274C9C05B1B4B06D30C0211 /* System.Data__3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = System.Data__3.cpp; path = Il2CppOutputProject/Source/il2cppOutput/System.Data__3.cpp; sourceTree = SOURCE_ROOT; };
 		230A99F19203C8EE40A9F40A /* Generics__103.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__103.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__103.cpp; sourceTree = SOURCE_ROOT; };
@@ -389,6 +394,7 @@
 		3C87C6331583863CBF6F57C3 /* Generics__115.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__115.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__115.cpp; sourceTree = SOURCE_ROOT; };
 		3CC546E182B89988089AC598 /* UnityEngine.UIElementsModule__3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UnityEngine.UIElementsModule__3.cpp; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__3.cpp; sourceTree = SOURCE_ROOT; };
 		3D9F1F89CEEE2E70C5201B0B /* GenericMethods__29.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = GenericMethods__29.cpp; path = Il2CppOutputProject/Source/il2cppOutput/GenericMethods__29.cpp; sourceTree = SOURCE_ROOT; };
+		3DCEE393B9899C47E9017C16 /* SeasonQuestScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SeasonQuestScreen.swift; path = MainApp/Screens/SeasonQuestScreen.swift; sourceTree = SOURCE_ROOT; };
 		3E2067B7FF4DEA685E5DDD1A /* UnityEngine.VRModule_CodeGen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = UnityEngine.VRModule_CodeGen.c; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.VRModule_CodeGen.c; sourceTree = SOURCE_ROOT; };
 		3E4DFC157F82427ADA6235E0 /* Unity.RenderPipelines.Universal.Runtime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Unity.RenderPipelines.Universal.Runtime.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Universal.Runtime.cpp; sourceTree = SOURCE_ROOT; };
 		3E6AB690991E5D5C419B99F5 /* Newtonsoft.Json__2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Newtonsoft.Json__2.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Newtonsoft.Json__2.cpp; sourceTree = SOURCE_ROOT; };
@@ -428,6 +434,7 @@
 		4C470D063EADDD839A825A69 /* UnityEngine.UnityConsentModule_CodeGen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = UnityEngine.UnityConsentModule_CodeGen.c; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UnityConsentModule_CodeGen.c; sourceTree = SOURCE_ROOT; };
 		4CF8EE25016BB90ABFD83417 /* System.Core__3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = System.Core__3.cpp; path = Il2CppOutputProject/Source/il2cppOutput/System.Core__3.cpp; sourceTree = SOURCE_ROOT; };
 		4DABF4D78B57BEEA6ABD061A /* Generics__74.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__74.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__74.cpp; sourceTree = SOURCE_ROOT; };
+		4DEE4BD61861F0695EE3CB3A /* Generics__162.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__162.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__162.cpp; sourceTree = SOURCE_ROOT; };
 		4E33F765E8E51E7DFF5D52A6 /* UnityEngine.TextCoreFontEngineModule.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UnityEngine.TextCoreFontEngineModule.cpp; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.TextCoreFontEngineModule.cpp; sourceTree = SOURCE_ROOT; };
 		4ED0B579112CB1E12AEF01F5 /* mscorlib.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mscorlib.cpp; path = Il2CppOutputProject/Source/il2cppOutput/mscorlib.cpp; sourceTree = SOURCE_ROOT; };
 		4EE44935FF73886EFE7E8F50 /* Generics__151.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__151.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__151.cpp; sourceTree = SOURCE_ROOT; };
@@ -572,6 +579,7 @@
 		7EFD5749FC2A896EFE2FDC92 /* GenericMethods__47.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = GenericMethods__47.cpp; path = Il2CppOutputProject/Source/il2cppOutput/GenericMethods__47.cpp; sourceTree = SOURCE_ROOT; };
 		7F4E05A02717216D00A2CBE4 /* libGameAssembly.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libGameAssembly.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		7F83B23D496299923A2010A3 /* UnityAppController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = UnityAppController.h; path = Classes/UnityAppController.h; sourceTree = SOURCE_ROOT; };
+		81141BD6E90977CD7856B686 /* FortressModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FortressModels.swift; path = MainApp/State/FortressModels.swift; sourceTree = SOURCE_ROOT; };
 		816D9611DD1815A55B01E4AF /* Generics__122.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__122.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__122.cpp; sourceTree = SOURCE_ROOT; };
 		816FDCA20CB4A3E8F33CC76A /* Generics__60.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__60.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__60.cpp; sourceTree = SOURCE_ROOT; };
 		817B6BBCBF9F078D00727259 /* System.Data_CodeGen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = System.Data_CodeGen.c; path = Il2CppOutputProject/Source/il2cppOutput/System.Data_CodeGen.c; sourceTree = SOURCE_ROOT; };
@@ -686,6 +694,7 @@
 		AB184D34864F2C68E5DA9426 /* UnityAppController+Rendering+visionOS.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = "UnityAppController+Rendering+visionOS.mm"; path = "Classes/UnityAppController+Rendering+visionOS.mm"; sourceTree = SOURCE_ROOT; };
 		AB21F1BDDFE6422F7FDC2A2C /* Generics__97.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__97.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__97.cpp; sourceTree = SOURCE_ROOT; };
 		AB2BF8F7BAFBE6886580905D /* mscorlib__22.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mscorlib__22.cpp; path = Il2CppOutputProject/Source/il2cppOutput/mscorlib__22.cpp; sourceTree = SOURCE_ROOT; };
+		ABB06AE38334792F4D16896E /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ThemeManager.swift; path = MainApp/State/ThemeManager.swift; sourceTree = SOURCE_ROOT; };
 		ABF66CEE0A3ACFFBDA78140E /* UnityEngine.UIElementsModule__12.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UnityEngine.UIElementsModule__12.cpp; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__12.cpp; sourceTree = SOURCE_ROOT; };
 		ACE173F91BF3866BEA121D66 /* UnityEngine.SharedInternalsModule_CodeGen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = UnityEngine.SharedInternalsModule_CodeGen.c; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.SharedInternalsModule_CodeGen.c; sourceTree = SOURCE_ROOT; };
 		AE0802ABF09429FB760EF535 /* Generics__136.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__136.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__136.cpp; sourceTree = SOURCE_ROOT; };
@@ -727,6 +736,7 @@
 		BE33F4A8ED55CC34EB5BDF80 /* System.Xml__14.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = System.Xml__14.cpp; path = Il2CppOutputProject/Source/il2cppOutput/System.Xml__14.cpp; sourceTree = SOURCE_ROOT; };
 		BE63CAD95D7EC6423E9F9C57 /* Unity.RenderPipelines.Core.Runtime__6.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Unity.RenderPipelines.Core.Runtime__6.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Core.Runtime__6.cpp; sourceTree = SOURCE_ROOT; };
 		BF026C43C97DF354A316F9F4 /* Generics__12.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__12.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__12.cpp; sourceTree = SOURCE_ROOT; };
+		BF4C1611CC9EA4AA29612585 /* SeasonModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SeasonModels.swift; path = MainApp/State/SeasonModels.swift; sourceTree = SOURCE_ROOT; };
 		BF662D6C576398F66BA53858 /* Unity.RenderPipelines.Universal.Runtime__2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Unity.RenderPipelines.Universal.Runtime__2.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Universal.Runtime__2.cpp; sourceTree = SOURCE_ROOT; };
 		BFE0D439028C50172FDE9B2B /* Generics__91.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__91.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__91.cpp; sourceTree = SOURCE_ROOT; };
 		C09E925D11FE59943D8A14CC /* Generics__121.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__121.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__121.cpp; sourceTree = SOURCE_ROOT; };
@@ -828,14 +838,6 @@
 		DD00EE00FF00AA00BB000010 /* GameHud.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GameHud.swift; path = MainApp/UI/GameHud.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = HudOverlayManager.swift; path = MainApp/UI/HudOverlayManager.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ResourceDockView.swift; path = MainApp/UI/ResourceDockView.swift; sourceTree = SOURCE_ROOT; };
-		F5ED8872FB9B397773E19ABD /* CompassOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CompassOverlay.swift; path = MainApp/UI/CompassOverlay.swift; sourceTree = SOURCE_ROOT; };
-		1103E6F132D6068BDFE439FD /* CaptureOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CaptureOverlayView.swift; path = MainApp/UI/CaptureOverlayView.swift; sourceTree = SOURCE_ROOT; };
-		BF4C1611CC9EA4AA29612585 /* SeasonModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SeasonModels.swift; path = MainApp/State/SeasonModels.swift; sourceTree = SOURCE_ROOT; };
-		81141BD6E90977CD7856B686 /* FortressModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FortressModels.swift; path = MainApp/State/FortressModels.swift; sourceTree = SOURCE_ROOT; };
-		E1178BCB24780A84362B16E1 /* WelcomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WelcomeViewModel.swift; path = MainApp/Screens/WelcomeViewModel.swift; sourceTree = SOURCE_ROOT; };
-		EB8AB6D1CE6B2E66D01A90F9 /* WelcomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WelcomeScreen.swift; path = MainApp/Screens/WelcomeScreen.swift; sourceTree = SOURCE_ROOT; };
-		3DCEE393B9899C47E9017C16 /* SeasonQuestScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SeasonQuestScreen.swift; path = MainApp/Screens/SeasonQuestScreen.swift; sourceTree = SOURCE_ROOT; };
-		219DB0220693A86ED3461CB5 /* FortressScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FortressScreen.swift; path = MainApp/Screens/FortressScreen.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NativeCallProxyDelegate.swift; path = MainApp/Unity/NativeCallProxyDelegate.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000014 /* UnityBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UnityBridge.swift; path = MainApp/Unity/UnityBridge.swift; sourceTree = SOURCE_ROOT; };
 		DD00EE00FF00AA00BB000015 /* UnityEmbedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = UnityEmbedView.swift; path = MainApp/Unity/UnityEmbedView.swift; sourceTree = SOURCE_ROOT; };
@@ -854,6 +856,7 @@
 		DFB8BE714AAC2051BAA694F9 /* Generics__99.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__99.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__99.cpp; sourceTree = SOURCE_ROOT; };
 		DFEBD93BE926F63F590DEA8D /* AVCapture.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AVCapture.h; path = Classes/Unity/AVCapture.h; sourceTree = SOURCE_ROOT; };
 		E0263673B7642BE0F04DE813 /* UnityEngine.UI.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UnityEngine.UI.cpp; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UI.cpp; sourceTree = SOURCE_ROOT; };
+		E1178BCB24780A84362B16E1 /* WelcomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WelcomeViewModel.swift; path = MainApp/Screens/WelcomeViewModel.swift; sourceTree = SOURCE_ROOT; };
 		E1B99CA0960FB5E8B256A97E /* Generics__145.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__145.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__145.cpp; sourceTree = SOURCE_ROOT; };
 		E210C8485269E264ACD26249 /* DeviceSettings.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = DeviceSettings.mm; path = Classes/Unity/DeviceSettings.mm; sourceTree = SOURCE_ROOT; };
 		E251E2B73408157FA1BDF64D /* Unity.RenderPipelines.Core.Runtime__5.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Unity.RenderPipelines.Core.Runtime__5.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Unity.RenderPipelines.Core.Runtime__5.cpp; sourceTree = SOURCE_ROOT; };
@@ -881,6 +884,7 @@
 		EAFCEA713D2A37FF5D81C6CB /* mscorlib__9.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mscorlib__9.cpp; path = Il2CppOutputProject/Source/il2cppOutput/mscorlib__9.cpp; sourceTree = SOURCE_ROOT; };
 		EB1CC5E9B4170C22555C2D0F /* VideoPlayer.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = VideoPlayer.mm; path = Classes/Unity/VideoPlayer.mm; sourceTree = SOURCE_ROOT; };
 		EB3408953E5F4E8B5F088360 /* Generics__62.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__62.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__62.cpp; sourceTree = SOURCE_ROOT; };
+		EB8AB6D1CE6B2E66D01A90F9 /* WelcomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WelcomeScreen.swift; path = MainApp/Screens/WelcomeScreen.swift; sourceTree = SOURCE_ROOT; };
 		EC279EBE6B3C74063A630430 /* Generics__139.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__139.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__139.cpp; sourceTree = SOURCE_ROOT; };
 		ECAF71504226E32235BC8E2F /* UnityEngine.CoreModule__3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UnityEngine.CoreModule__3.cpp; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.CoreModule__3.cpp; sourceTree = SOURCE_ROOT; };
 		ECC976B319C3C569FF99B79B /* DisplayManager.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = DisplayManager.mm; path = Classes/Unity/DisplayManager.mm; sourceTree = SOURCE_ROOT; };
@@ -905,6 +909,7 @@
 		F55249155698357E094F40BE /* UnityEngine.UIElementsModule__8.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = UnityEngine.UIElementsModule__8.cpp; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.UIElementsModule__8.cpp; sourceTree = SOURCE_ROOT; };
 		F5B58EA838E650B8EF348294 /* Filesystem.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = Filesystem.mm; path = Classes/Unity/Filesystem.mm; sourceTree = SOURCE_ROOT; };
 		F5C0D9C036EFC8EF66FE06C4 /* mscorlib__15.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mscorlib__15.cpp; path = Il2CppOutputProject/Source/il2cppOutput/mscorlib__15.cpp; sourceTree = SOURCE_ROOT; };
+		F5ED8872FB9B397773E19ABD /* CompassOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CompassOverlay.swift; path = MainApp/UI/CompassOverlay.swift; sourceTree = SOURCE_ROOT; };
 		F65A67A3FBB30063208A869F /* UnityEngine.HierarchyCoreModule_CodeGen.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = UnityEngine.HierarchyCoreModule_CodeGen.c; path = Il2CppOutputProject/Source/il2cppOutput/UnityEngine.HierarchyCoreModule_CodeGen.c; sourceTree = SOURCE_ROOT; };
 		F66924A3BD7C7FE01DAA0852 /* Generics__118.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__118.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__118.cpp; sourceTree = SOURCE_ROOT; };
 		F6CDB022FB8DC8CFB499BE10 /* Generics__3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = Generics__3.cpp; path = Il2CppOutputProject/Source/il2cppOutput/Generics__3.cpp; sourceTree = SOURCE_ROOT; };
@@ -1272,6 +1277,7 @@
 				0FD8E595BA80129EA8DD43F4 /* Generics__16.cpp */,
 				A9ADBF8F3137F19B8C29EDAA /* Generics__160.cpp */,
 				DF490494498280CB2C5AA8CC /* Generics__161.cpp */,
+				4DEE4BD61861F0695EE3CB3A /* Generics__162.cpp */,
 				715BA45FFD028756DA8BD144 /* Generics__17.cpp */,
 				37EEDE6C9967DEE1D5EF5912 /* Generics__18.cpp */,
 				6943C5DACCA99586C14B905B /* Generics__19.cpp */,
@@ -1797,12 +1803,17 @@
 			isa = PBXGroup;
 			children = (
 				DD00EE00FF00AA00BB000004 /* AdminScreen.swift */,
+				22084A548682EF2E6EE3B6B5 /* AdminViewModel.swift */,
 				DD00EE00FF00AA00BB000001 /* AuthManager.swift */,
+				1103E6F132D6068BDFE439FD /* CaptureOverlayView.swift */,
 				DD00EE00FF00AA00BB000009 /* CaptureState.swift */,
 				77631AE6DA50E25003FACD02 /* CasinoRollOverlay.swift */,
+				F5ED8872FB9B397773E19ABD /* CompassOverlay.swift */,
 				DD00EE00FF00AA00BB000019 /* DriveHunt-iOS-Bridging-Header.h */,
 				DD00EE00FF00AA00BB000019 /* DriveHunt-iOS-Bridging-Header.h */,
 				DD00EE00FF00AA00BB000000 /* DriveHuntApp.swift */,
+				81141BD6E90977CD7856B686 /* FortressModels.swift */,
+				219DB0220693A86ED3461CB5 /* FortressScreen.swift */,
 				DD00EE00FF00AA00BB000010 /* GameHud.swift */,
 				DD00EE00FF00AA00BB000011 /* HudOverlayManager.swift */,
 				DD00EE00FF00AA00BB000002 /* LocationService.swift */,
@@ -1813,18 +1824,15 @@
 				DD00EE00FF00AA00BB000013 /* NativeCallProxyDelegate.swift */,
 				DD00EE00FF00AA00BB000007 /* ProfileScreen.swift */,
 				DD00EE00FF00AA00BB000012 /* ResourceDockView.swift */,
-				F5ED8872FB9B397773E19ABD /* CompassOverlay.swift */,
-				1103E6F132D6068BDFE439FD /* CaptureOverlayView.swift */,
 				BF4C1611CC9EA4AA29612585 /* SeasonModels.swift */,
-				81141BD6E90977CD7856B686 /* FortressModels.swift */,
-				E1178BCB24780A84362B16E1 /* WelcomeViewModel.swift */,
-				EB8AB6D1CE6B2E66D01A90F9 /* WelcomeScreen.swift */,
 				3DCEE393B9899C47E9017C16 /* SeasonQuestScreen.swift */,
-				219DB0220693A86ED3461CB5 /* FortressScreen.swift */,
 				DD00EE00FF00AA00BB000008 /* SkinPickerScreen.swift */,
+				ABB06AE38334792F4D16896E /* ThemeManager.swift */,
 				DD00EE00FF00AA00BB000014 /* UnityBridge.swift */,
 				DD00EE00FF00AA00BB000015 /* UnityEmbedView.swift */,
 				DD00EE00FF00AA00BB000016 /* UnityHolder.swift */,
+				EB8AB6D1CE6B2E66D01A90F9 /* WelcomeScreen.swift */,
+				E1178BCB24780A84362B16E1 /* WelcomeViewModel.swift */,
 				4B50E73877FB889638FD57FF /* main.mm */,
 			);
 			path = MainApp;
@@ -2123,8 +2131,10 @@
 				DD00EE00FF00AA00BB000112 /* ResourceDockView.swift in Sources */,
 				F5ED8872FB9B397773E1B001 /* CompassOverlay.swift in Sources */,
 				1103E6F132D6068BDFE4B001 /* CaptureOverlayView.swift in Sources */,
+				ABB06AE38334792F4D16B001 /* ThemeManager.swift in Sources */,
 				BF4C1611CC9EA4AA2961B001 /* SeasonModels.swift in Sources */,
 				81141BD6E90977CD7856B001 /* FortressModels.swift in Sources */,
+				22084A548682EF2E6EE3B001 /* AdminViewModel.swift in Sources */,
 				E1178BCB24780A84362BB001 /* WelcomeViewModel.swift in Sources */,
 				EB8AB6D1CE6B2E66D01AB001 /* WelcomeScreen.swift in Sources */,
 				3DCEE393B9899C47E901B001 /* SeasonQuestScreen.swift in Sources */,

@@ -510,10 +510,145 @@ final class HudOverlayManager {
         topHostingController?.view.removeFromSuperview()
         menuHostingController?.view.removeFromSuperview()
         simHostingController?.view.removeFromSuperview()
+        companionHostingController?.view.removeFromSuperview()
         bottomHostingController = nil
         topHostingController = nil
         menuHostingController = nil
         simHostingController = nil
+        companionHostingController = nil
+    }
+
+    // MARK: - Companion Viewer
+
+    private var companionHostingController: UIHostingController<AnyView>?
+    var fadeOverlay: UIView?
+
+    /// Creates a branded AAA transition overlay with pulsing dragon icon
+    func createBrandedTransition(on parentView: UIView) -> UIView {
+        let overlay = UIView(frame: parentView.bounds)
+        overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        overlay.backgroundColor = UIColor(red: 0.06, green: 0.06, blue: 0.14, alpha: 1.0)
+
+        // Dragon emoji label — centered
+        let dragon = UILabel()
+        dragon.text = "\u{1F409}"
+        dragon.font = UIFont.systemFont(ofSize: 64)
+        dragon.textAlignment = .center
+        dragon.translatesAutoresizingMaskIntoConstraints = false
+        overlay.addSubview(dragon)
+
+        // Loading text
+        let label = UILabel()
+        label.text = "Chargement..."
+        label.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        label.textColor = UIColor(white: 1.0, alpha: 0.5)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        overlay.addSubview(label)
+
+        NSLayoutConstraint.activate([
+            dragon.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
+            dragon.centerYAnchor.constraint(equalTo: overlay.centerYAnchor, constant: -16),
+            label.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
+            label.topAnchor.constraint(equalTo: dragon.bottomAnchor, constant: 12)
+        ])
+
+        // Pulsing animation on the dragon
+        let pulse = CABasicAnimation(keyPath: "transform.scale")
+        pulse.fromValue = 0.9
+        pulse.toValue = 1.1
+        pulse.duration = 0.8
+        pulse.autoreverses = true
+        pulse.repeatCount = .infinity
+        pulse.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        dragon.layer.add(pulse, forKey: "pulse")
+
+        return overlay
+    }
+
+    func showCompanion(on unityView: UIView) {
+        // Remove existing
+        unityView.subviews.filter { $0.tag == 993 }.forEach { $0.removeFromSuperview() }
+
+        // Hide all HUD overlays for clean showcase view
+        bottomHostingController?.view.isHidden = true
+        topHostingController?.view.isHidden = true
+        simHostingController?.view.isHidden = true
+        // Hide compass
+        unityView.subviews.first(where: { $0.tag == 994 })?.isHidden = true
+
+        let companionView = AnyView(
+            CompanionOverlayView(onDismiss: {
+                // Don't send ExitCompanionView here — hideCompanion handles timing
+                self.hideCompanion(from: unityView)
+            })
+        )
+        let host = UIHostingController(rootView: companionView)
+        host.view.backgroundColor = .clear
+        host.view.isOpaque = false
+        host.view.tag = 993
+        host.view.translatesAutoresizingMaskIntoConstraints = false
+        unityView.addSubview(host.view)
+
+        NSLayoutConstraint.activate([
+            host.view.leadingAnchor.constraint(equalTo: unityView.leadingAnchor),
+            host.view.trailingAnchor.constraint(equalTo: unityView.trailingAnchor),
+            host.view.topAnchor.constraint(equalTo: unityView.topAnchor),
+            host.view.bottomAnchor.constraint(equalTo: unityView.bottomAnchor)
+        ])
+        self.companionHostingController = host
+
+        // Fade out the black transition overlay after scene is loaded
+        if let fade = fadeOverlay {
+            UIView.animate(withDuration: 0.3, delay: 0.15, options: .curveEaseOut) {
+                fade.alpha = 0
+            } completion: { _ in
+                fade.removeFromSuperview()
+                self.fadeOverlay = nil
+            }
+        }
+    }
+
+    func hideCompanion(from unityView: UIView) {
+        guard let window = unityView.window else { return }
+
+        // 1. Show branded transition over everything
+        let fade = createBrandedTransition(on: window)
+        fade.alpha = 0
+        window.addSubview(fade)
+        self.fadeOverlay = fade
+
+        UIView.animate(withDuration: 0.2) {
+            fade.alpha = 1
+        } completion: { _ in
+            // 2. Screen is covered — safe to clean up companion overlay
+            unityView.subviews.filter { $0.tag == 993 }.forEach { $0.removeFromSuperview() }
+            self.companionHostingController = nil
+            self.bottomHostingController?.view.isHidden = false
+            self.topHostingController?.view.isHidden = false
+            self.simHostingController?.view.isHidden = false
+            unityView.subviews.first(where: { $0.tag == 994 })?.isHidden = false
+
+            // 3. NOW send exit to Unity (screen is fully covered)
+            UnityBridge.shared.send("ExitCompanionView", value: "")
+
+            // 4. Fade out handled by onShowcaseExited callback
+            //    Fallback timer in case callback doesn't fire
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                self.fadeOutTransition()
+            }
+        }
+    }
+
+    /// Called by onShowcaseExited callback or fallback timer
+    func fadeOutTransition() {
+        guard let fade = fadeOverlay else { return }
+        UIView.animate(withDuration: 0.4, delay: 0, options: .curveEaseOut) {
+            fade.alpha = 0
+        } completion: { _ in
+            fade.removeFromSuperview()
+            self.fadeOverlay = nil
+        }
     }
 }
 // ResourceDockView is now in its own file: ResourceDockView.swift
@@ -522,6 +657,7 @@ final class HudOverlayManager {
 
 struct GameHudPill: View {
     @ObservedObject private var captureState = CaptureState.shared
+    @ObservedObject private var themeManager = ThemeManager.shared
     @State private var holdProgress: CGFloat = 0
     @State private var isHolding = false
     @State private var holdTimer: Timer? = nil
@@ -542,7 +678,7 @@ struct GameHudPill: View {
                     .padding(.vertical, 8)
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(hex: "#0A0A0A").opacity(0.95))
+                            .fill(ThemeManager.shared.colors.surface.opacity(0.95))
                     )
                     .padding(.bottom, 8)
                     .transition(.opacity)
@@ -562,7 +698,7 @@ struct GameHudPill: View {
                     Text("MENU")
                         .font(.system(size: 20, weight: .heavy))
                         .tracking(3)
-                        .foregroundColor(.white)
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                 }
@@ -571,7 +707,7 @@ struct GameHudPill: View {
                 if captureState.claimInfo.canClaim {
                     // Divider
                     Rectangle()
-                        .fill(Color.white.opacity(0.12))
+                        .fill(ThemeManager.shared.colors.textPrimary.opacity(0.12))
                         .frame(width: 1, height: 28)
                         .padding(.horizontal, 4)
 
@@ -582,19 +718,30 @@ struct GameHudPill: View {
             .padding(.horizontal, 12)
             .background(
                 RoundedRectangle(cornerRadius: 28)
-                    .fill(Color(red: 0.04, green: 0.04, blue: 0.04).opacity(0.9))
+                    .fill(ThemeManager.shared.colors.glassBackground)
                     .overlay(
                         RoundedRectangle(cornerRadius: 28)
                             .strokeBorder(
-                                LinearGradient(
-                                    colors: [Color(hex: "#00FFAA").opacity(0.5), Color(hex: "#00BBFF").opacity(0.3)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                ),
+                                themeManager.currentTheme == .light
+                                    ? LinearGradient(
+                                        colors: [ThemeManager.shared.colors.textPrimary.opacity(0.1), ThemeManager.shared.colors.textPrimary.opacity(0.06)],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                      )
+                                    : LinearGradient(
+                                        colors: [ThemeManager.shared.colors.primary.opacity(0.5), ThemeManager.shared.colors.secondary.opacity(0.3)],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                      ),
                                 lineWidth: 1
                             )
                     )
-                    .shadow(color: .black.opacity(0.5), radius: 10, y: 4)
+                    .shadow(
+                        color: themeManager.currentTheme == .light
+                            ? Color.black.opacity(0.1) : Color.black.opacity(0.5),
+                        radius: themeManager.currentTheme == .light ? 16 : 10,
+                        y: 4
+                    )
             )
             .padding(.horizontal, 32)
             .padding(.bottom, 40)
@@ -725,12 +872,15 @@ struct GameMenuOverlay: View {
     @State private var appeared = false
     @State private var dragOffset: CGFloat = 0
 
-    private let accentColor = Color(hex: "#00FFAA")
+    private var theme: ThemeManager { ThemeManager.shared }
+    @ObservedObject private var themeManager = ThemeManager.shared
+
+    private var accentColor: Color { theme.colors.accent }
     private let mintAccent = Color(hex: "#4DB6AC")
     private let peachAccent = Color(hex: "#FFB74D")
     private let blueAccent = Color(hex: "#64B5F6")
-    private let errorColor = Color(hex: "#FF4444")
-    private let surfaceColor = Color(hex: "#1A1A2E")
+    private var errorColor: Color { theme.colors.error }
+    private var surfaceColor: Color { theme.colors.surface }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -741,9 +891,9 @@ struct GameMenuOverlay: View {
 
             // Sheet
             VStack(spacing: 10) {
-                // Drag handle
+                // Drag handledis mo
                 Capsule()
-                    .fill(Color.white.opacity(0.3))
+                    .fill(theme.colors.textPrimary.opacity(0.3))
                     .frame(width: 36, height: 5)
                     .padding(.top, 12)
 
@@ -796,8 +946,25 @@ struct GameMenuOverlay: View {
 
                 // Row 2.5: Compagnon — mirrors Android ModernUI.kt L675-681
                 HStack(spacing: 10) {
-                    MenuCard(label: "🐉 Compagnon", icon: "pawprint.fill", accentColor: Color(red: 0x66/255, green: 0xBB/255, blue: 0x6A/255)) {
-                        UnityBridge.shared.send("RandomizeDragon", value: "")
+                    MenuCard(label: "\u{1F409} Compagnon", icon: "pawprint.fill", accentColor: Color(red: 0x66/255, green: 0xBB/255, blue: 0x6A/255)) {
+                        guard let unityView = UnityHolder.shared.unityFramework?.appController()?.rootView else { return }
+                        guard let window = unityView.window else { return }
+
+                        // 1. Branded transition overlay on KEY WINDOW (above ALL SwiftUI)
+                        let fade = HudOverlayManager.shared.createBrandedTransition(on: window)
+                        fade.alpha = 0
+                        window.addSubview(fade)
+                        HudOverlayManager.shared.fadeOverlay = fade
+
+                        UIView.animate(withDuration: 0.2) {
+                            fade.alpha = 1
+                        } completion: { _ in
+                            // 2. Screen is 100% black now — close menu + send to Unity
+                            UnityBridge.shared.send("EnterCompanionView", value: "")
+                            onDismiss()
+                            // 3. showCompanion() is called by Unity callback (onShowcaseReady)
+                            //    — no hardcoded timer needed
+                        }
                     }
                 }
                 .padding(.horizontal, 16)
@@ -805,7 +972,24 @@ struct GameMenuOverlay: View {
                 .opacity(appeared ? 1 : 0)
 
                 // Divider
-                Divider().background(Color.gray.opacity(0.15)).padding(.horizontal, 16).padding(.vertical, 4)
+                Divider().background(theme.colors.textSecondary.opacity(0.15)).padding(.horizontal, 16).padding(.vertical, 4)
+
+                // Mode Sombre toggle — mirrors Android ModernUI.kt toggle cards
+                HStack(spacing: 10) {
+                    ThemeToggleCard(
+                        label: "Mode Sombre",
+                        icon: themeManager.currentTheme == .dark ? "moon.fill" : "sun.max.fill",
+                        isOn: themeManager.currentTheme == .dark,
+                        accentColor: accentColor
+                    ) {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            themeManager.toggleTheme()
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .offset(y: appeared ? 0 : 80)
+                .opacity(appeared ? 1 : 0)
 
                 // Logout
                 Button {
@@ -892,15 +1076,15 @@ struct GameMenuOverlay: View {
                 .opacity(appeared ? 1 : 0)
 
                 // Version
-                Text("DriveHunt v1.0")
+                Text("P. Hexagon V 1.0")
                     .font(.system(size: 11))
-                    .foregroundColor(Color.gray.opacity(0.3))
+                    .foregroundColor(theme.colors.textSecondary.opacity(0.3))
                     .padding(.top, 8)
                     .padding(.bottom, 48)
             }
             .background(
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(surfaceColor.opacity(0.97))
+                    .fill(theme.colors.background.opacity(0.97))
             )
             .offset(y: dragOffset + (appeared ? 0 : 400))
             .gesture(
@@ -949,33 +1133,42 @@ struct MenuCard: View {
     let icon: String
     let accentColor: Color
     let action: () -> Void
+    @ObservedObject private var themeManager = ThemeManager.shared
+
+    private var isLight: Bool { themeManager.currentTheme == .light }
 
     var body: some View {
         Button(action: action) {
             HStack {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(accentColor.opacity(0.2))
+                        .fill(accentColor.opacity(isLight ? 0.18 : 0.2))
                         .frame(width: 32, height: 32)
                     Image(systemName: icon)
-                        .font(.system(size: 14))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(accentColor)
                 }
                 Text(label)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.9))
+                    .foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.9))
                 Spacer()
                 Text("›")
-                    .font(.system(size: 18))
-                    .foregroundColor(.gray.opacity(0.3))
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(ThemeManager.shared.colors.textSecondary.opacity(0.4))
             }
             .padding(14)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.white.opacity(0.05))
+                    .fill(isLight ? ThemeManager.shared.colors.surface : ThemeManager.shared.colors.textPrimary.opacity(0.05))
+                    .shadow(color: isLight ? Color.black.opacity(0.06) : .clear, radius: 8, y: 2)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color(hex: "#00C8FF").opacity(0.15), lineWidth: 1)
+                            .stroke(
+                                isLight
+                                    ? ThemeManager.shared.colors.textPrimary.opacity(0.08)
+                                    : Color(hex: "#00C8FF").opacity(0.15),
+                                lineWidth: 1
+                            )
                     )
             )
         }
@@ -988,6 +1181,7 @@ struct HeroStat: View {
     let value: String
     let label: String
     let color: Color
+    @ObservedObject private var themeManager = ThemeManager.shared
 
     var body: some View {
         VStack(spacing: 2) {
@@ -997,8 +1191,212 @@ struct HeroStat: View {
             Text(label)
                 .font(.system(size: 9, weight: .semibold))
                 .tracking(1)
-                .foregroundColor(.gray.opacity(0.5))
+                .foregroundColor(ThemeManager.shared.colors.textSecondary.opacity(0.5))
         }
         .frame(maxWidth: .infinity)
     }
 }
+
+// MARK: - Theme Toggle Card (mirrors Android ModernUI.kt toggle cards)
+
+struct ThemeToggleCard: View {
+    let label: String
+    let icon: String
+    let isOn: Bool
+    let accentColor: Color
+    let action: () -> Void
+    @ObservedObject private var themeManager = ThemeManager.shared
+
+    private var isLight: Bool { themeManager.currentTheme == .light }
+
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(accentColor.opacity(isLight ? 0.18 : 0.2))
+                        .frame(width: 32, height: 32)
+                    Image(systemName: icon)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(accentColor)
+                }
+                Text(label)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.9))
+                Spacer()
+
+                // Toggle dot
+                ZStack {
+                    Capsule()
+                        .fill(isOn ? accentColor.opacity(0.3) : Color.gray.opacity(0.2))
+                        .frame(width: 44, height: 24)
+                    Circle()
+                        .fill(isOn ? accentColor : Color.gray.opacity(0.5))
+                        .frame(width: 18, height: 18)
+                        .offset(x: isOn ? 10 : -10)
+                        .animation(.spring(response: 0.3), value: isOn)
+                }
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(isLight ? ThemeManager.shared.colors.surface : ThemeManager.shared.colors.textPrimary.opacity(0.05))
+                    .shadow(color: isLight ? Color.black.opacity(0.06) : .clear, radius: 8, y: 2)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(
+                                isLight
+                                    ? ThemeManager.shared.colors.textPrimary.opacity(0.08)
+                                    : Color(hex: "#00C8FF").opacity(0.15),
+                                lineWidth: 1
+                            )
+                    )
+            )
+        }
+    }
+}
+
+// MARK: - Companion Overlay View (close-up dragon viewer)
+
+struct CompanionOverlayView: View {
+    let onDismiss: () -> Void
+    @ObservedObject private var themeManager = ThemeManager.shared
+    @State private var appeared = false
+
+    // All 19 dragon animations as (emoji, label, animName)
+    private let animations: [(String, String, String)] = [
+        ("🔥", "Roar", "roar"),
+        ("🦅", "Vol", "fly"),
+        ("🍪", "Manger", "eat"),
+        ("💤", "Dormir", "rest"),
+        ("⬆️", "Saut", "jump"),
+        ("🚶", "Marche", "walk"),
+        ("🏃", "Course", "run"),
+        ("💥", "Dégâts", "damage"),
+        ("✅", "Oui", "yes"),
+        ("❌", "Non", "no"),
+        ("💀", "Mort", "die"),
+        ("🤢", "Malade", "sick"),
+        ("🔥", "Feu", "fire"),
+        ("🧍", "Idle", "idle"),
+        ("↙️", "Vol G", "fly_l"),
+        ("↗️", "Vol D", "fly_r"),
+        ("⬆️", "Vol H", "fly_up"),
+        ("⬇️", "Vol B", "fly_down"),
+        ("🐉", "Vol Feu", "fly_fire"),
+    ]
+
+    var body: some View {
+        ZStack {
+            Color.clear
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+
+            VStack {
+                // Top bar
+                HStack {
+                    Text("🐉 Compagnon")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.white)
+                        .shadow(color: .black.opacity(0.5), radius: 4)
+
+                    Spacer()
+
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.2)) { appeared = false }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                            onDismiss()
+                        }
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(.white.opacity(0.7))
+                            .shadow(color: .black.opacity(0.3), radius: 4)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 60)
+                .padding(.bottom, 12)
+
+                Spacer()
+
+                // Bottom action area
+                VStack(spacing: 12) {
+                    // Scrollable animation strip — all 19 animations
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(0..<animations.count, id: \.self) { i in
+                                let anim = animations[i]
+                                CompanionActionButton(emoji: anim.0, label: anim.1) {
+                                    UnityBridge.shared.send("CompanionPlayAnimation", value: anim.2)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                    }
+
+                    // Randomize button
+                    Button(action: {
+                        UnityBridge.shared.send("RandomizeDragon", value: "")
+                    }) {
+                        HStack(spacing: 8) {
+                            Text("🎲")
+                                .font(.system(size: 20))
+                            Text("Randomiser")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 14)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color(hex: "#22C55E"), Color(hex: "#16A34A")],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .shadow(color: Color(hex: "#22C55E").opacity(0.4), radius: 12, y: 4)
+                        )
+                    }
+                }
+                .padding(.bottom, 50)
+            }
+        }
+        .opacity(appeared ? 1 : 0)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.4)) { appeared = true }
+        }
+    }
+}
+
+// MARK: - Companion Action Button
+
+struct CompanionActionButton: View {
+    let emoji: String
+    let label: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 3) {
+                Text(emoji)
+                    .font(.system(size: 22))
+                Text(label)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.8))
+            }
+            .frame(width: 56, height: 50)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.white.opacity(0.1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                    )
+            )
+        }
+    }
+}
+

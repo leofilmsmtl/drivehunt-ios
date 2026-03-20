@@ -204,7 +204,18 @@ else:
     print("   ✅ All Swift files already in project")
 PYEOF
 
-# ─── 4. Clean DerivedData ──────────────────────────────────────
+# ─── 4b. Remove dead file references Unity re-adds on Append ───
+echo ""
+echo "🗑️  Removing dead file references from pbxproj..."
+DEAD_FILES=("AppNavigation.swift" "MapScreen.swift")
+for dead in "${DEAD_FILES[@]}"; do
+    if grep -q "$dead" Unity-iPhone.xcodeproj/project.pbxproj 2>/dev/null; then
+        sed -i '' "/${dead}/d" Unity-iPhone.xcodeproj/project.pbxproj
+        echo "   ✅ Removed dead ref: $dead"
+    fi
+done
+
+# ─── 5. Clean DerivedData ──────────────────────────────────────
 echo ""
 echo "🧹 [5/5] Cleaning DerivedData..."
 DERIVED=$(find ~/Library/Developer/Xcode/DerivedData -maxdepth 1 -name "Unity-iPhone*" -type d 2>/dev/null | head -1)

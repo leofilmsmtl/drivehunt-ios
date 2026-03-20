@@ -10,6 +10,7 @@ struct GameHud: View {
     var onAdminTap: () -> Void
 
     @ObservedObject private var bridge = UnityBridge.shared
+    @ObservedObject private var themeManager = ThemeManager.shared
 
     var body: some View {
         ZStack {
@@ -25,7 +26,7 @@ struct GameHud: View {
                     Button(action: onProfileTap) {
                         Image(systemName: "person.circle.fill")
                             .font(.system(size: 22))
-                            .foregroundColor(.white)
+                            .foregroundColor(ThemeManager.shared.colors.textPrimary)
                     }
 
                     Spacer()
@@ -34,10 +35,10 @@ struct GameHud: View {
                     VStack(spacing: 2) {
                         Text("Zone")
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.gray)
+                            .foregroundColor(ThemeManager.shared.colors.textSecondary)
                         Text("—")
                             .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(ThemeManager.shared.colors.textPrimary)
                     }
 
                     Spacer()
@@ -46,14 +47,25 @@ struct GameHud: View {
                     Button(action: onAdminTap) {
                         Image(systemName: "gearshape.fill")
                             .font(.system(size: 22))
-                            .foregroundColor(.white)
+                            .foregroundColor(ThemeManager.shared.colors.textPrimary)
                     }
                 }
                 .padding(.horizontal, 24)
                 .padding(.vertical, 14)
                 .background(
                     RoundedRectangle(cornerRadius: 24)
-                        .fill(.ultraThinMaterial)
+                        .fill(ThemeManager.shared.colors.glassBackground)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [ThemeManager.shared.colors.primary.opacity(0.5), ThemeManager.shared.colors.secondary.opacity(0.5)],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    ),
+                                    lineWidth: 1
+                                )
+                        )
                         .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
                 )
                 .padding(.horizontal, 20)
@@ -80,7 +92,7 @@ struct SimulationHud: View {
                     Text("SIMULATION EN COURS")
                         .font(.system(size: 11, weight: .bold))
                         .tracking(2)
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(ThemeManager.shared.colors.textPrimary.opacity(0.6))
 
                     // Controls row
                     HStack(spacing: 16) {
@@ -104,7 +116,7 @@ struct SimulationHud: View {
                         VStack(spacing: 4) {
                             Text("\(Int(locationService.simSpeedKmh)) km/h")
                                 .font(.system(size: 14, weight: .bold, design: .monospaced))
-                                .foregroundColor(.white)
+                                .foregroundColor(ThemeManager.shared.colors.textPrimary)
 
                             Slider(
                                 value: Binding(
@@ -134,7 +146,7 @@ struct SimulationHud: View {
                 .padding(16)
                 .background(
                     RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(white: 0.1).opacity(0.95))
+                        .fill(ThemeManager.shared.colors.surface.opacity(0.95))
                         .shadow(color: .black.opacity(0.4), radius: 12)
                 )
                 .padding(.horizontal, 12)

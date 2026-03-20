@@ -19,17 +19,14 @@ struct LoginScreen: View {
 
     @EnvironmentObject var appState: AppState
 
-    // DriveHunt brand colors
-    private let accentGreen = Color(hex: "#00FFAA")
-    private let accentBlue = Color(hex: "#00CCFF")
+    // DriveHunt brand colors — from ThemeManager tokens
+    private var theme: ThemeManager { ThemeManager.shared }
+    private var accentGreen: Color { theme.colors.accent }
+    private var accentBlue: Color { theme.colors.secondary }
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Color(hex: "#0A0A1A"), Color(hex: "#1A1A3E")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            theme.colors.backgroundGradient
             .ignoresSafeArea()
 
             ScrollView {
@@ -51,11 +48,11 @@ struct LoginScreen: View {
                         Text("P. HEXAGON")
                             .font(.system(size: 28, weight: .bold))
                             .tracking(1)
-                            .foregroundColor(.white)
+                            .foregroundColor(theme.colors.textPrimary)
 
                         Text("GPS Territory Capture Game")
                             .font(.caption)
-                            .foregroundColor(Color(hex: "#888888"))
+                            .foregroundColor(theme.colors.textMuted)
                     }
 
                     Spacer().frame(height: 8)
@@ -84,18 +81,18 @@ struct LoginScreen: View {
                                 SecureField("Mot de passe", text: $password)
                             }
                         }
-                        .foregroundColor(.white)
+                        .foregroundColor(theme.colors.textPrimary)
                         .autocapitalization(.none)
                         .autocorrectionDisabled()
 
                         Button(action: { passwordVisible.toggle() }) {
                             Image(systemName: passwordVisible ? "eye" : "eye.slash")
-                                .foregroundColor(Color(hex: "#666666"))
+                                .foregroundColor(theme.colors.textMuted)
                                 .frame(width: 20, height: 20)
                         }
                     }
                     .padding()
-                    .background(Color.white.opacity(0.08))
+                    .background(theme.colors.textPrimary.opacity(0.08))
                     .cornerRadius(12)
                     .padding(.horizontal, 32)
 
@@ -123,7 +120,7 @@ struct LoginScreen: View {
                                     .foregroundColor(accentGreen)
                             }
                             Text("Se souvenir de moi")
-                                .foregroundColor(.white.opacity(0.8))
+                                .foregroundColor(theme.colors.textPrimary.opacity(0.8))
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 32)
@@ -168,9 +165,9 @@ struct LoginScreen: View {
 
                     // Divider
                     HStack {
-                        Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                        Text("Ou").font(.caption).foregroundColor(Color(hex: "#666666"))
-                        Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
+                        Rectangle().fill(theme.colors.textPrimary.opacity(0.1)).frame(height: 1)
+                        Text("Ou").font(.caption).foregroundColor(theme.colors.textMuted)
+                        Rectangle().fill(theme.colors.textPrimary.opacity(0.1)).frame(height: 1)
                     }
                     .padding(.horizontal, 48)
                     .padding(.vertical, 4)
@@ -187,8 +184,8 @@ struct LoginScreen: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.white.opacity(0.1))
-                        .foregroundColor(.white)
+                        .background(theme.colors.textPrimary.opacity(0.1))
+                        .foregroundColor(theme.colors.textPrimary)
                         .cornerRadius(12)
                     }
                     .padding(.horizontal, 32)
@@ -219,20 +216,20 @@ struct LoginScreen: View {
             Text("CONFIGURATION RÉSEAU")
                 .font(.system(size: 10, weight: .regular))
                 .tracking(0.5)
-                .foregroundColor(Color(hex: "#888888"))
+                .foregroundColor(theme.colors.textMuted)
 
             HStack {
-                Text("Local").foregroundColor(Color(hex: "#CCCCCC")).font(.caption)
+                Text("Local").foregroundColor(theme.colors.textSecondary).font(.caption)
                 Spacer()
                 Toggle("", isOn: $appState.useNgrok)
                     .toggleStyle(SwitchToggleStyle(tint: accentGreen))
                     .labelsHidden()
                 Spacer()
-                Text("Distant").foregroundColor(Color(hex: "#CCCCCC")).font(.caption)
+                Text("Distant").foregroundColor(theme.colors.textSecondary).font(.caption)
             }
         }
         .padding(12)
-        .background(Color.white.opacity(0.05))
+        .background(theme.colors.textPrimary.opacity(0.05))
         .cornerRadius(12)
         .padding(.horizontal, 32)
     }
@@ -241,9 +238,9 @@ struct LoginScreen: View {
 
     private func glassField(placeholder: String, text: Binding<String>) -> some View {
         TextField(placeholder, text: text)
-            .foregroundColor(.white)
+            .foregroundColor(theme.colors.textPrimary)
             .padding()
-            .background(Color.white.opacity(0.08))
+            .background(theme.colors.textPrimary.opacity(0.08))
             .cornerRadius(12)
             .padding(.horizontal, 32)
     }

@@ -38,6 +38,14 @@ final class UnityBridge: ObservableObject {
         case "onInventoryUpdate":   onInventoryUpdate(arg)
         case "onGemTapped":         onGemTapped(arg)
         case "updateCompass":       CompassState.shared.update(arg)
+        case "onShowcaseReady":
+            // Scene is loaded and rendering — show companion overlay + fade out
+            if let unityView = UnityHolder.shared.unityFramework?.appController()?.rootView {
+                HudOverlayManager.shared.showCompanion(on: unityView)
+            }
+        case "onShowcaseExited":
+            // Game camera restored — fade out transition overlay
+            HudOverlayManager.shared.fadeOutTransition()
         case "setClaimable":
             let hexId = info["hexId"] as? String ?? ""
             let isSteal = info["isSteal"] as? Bool ?? false
