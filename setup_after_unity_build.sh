@@ -51,9 +51,10 @@ if $REPLACE_MODE; then
 else
     echo "📁 [1/4] Restoring files Unity always overwrites..."
 
-    # Unity overwrites LaunchScreen even in Append mode
+    # Unity overwrites these even in Append mode
     ALWAYS_OVERWRITTEN=(
         "LaunchScreen-iPhone.storyboard"
+        "Info.plist"
     )
 
     for item in "${ALWAYS_OVERWRITTEN[@]}"; do
@@ -104,6 +105,24 @@ if [ -f "$PBXPROJ" ]; then
 
     sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 15.0/IPHONEOS_DEPLOYMENT_TARGET = 16.0/g' "$PBXPROJ"
     echo "   ✅ IPHONEOS_DEPLOYMENT_TARGET = 16.0"
+
+    # Unity Append resets Bundle ID to Unity's default template — restore DriveHunt's
+    CORRECT_BUNDLE_ID="ca.leofilms.projethexagon"
+    if grep -q "com.Unity-Technologies" "$PBXPROJ"; then
+        sed -i '' "s/com.Unity-Technologies.com.unity.template.urp-blank/$CORRECT_BUNDLE_ID/g" "$PBXPROJ"
+        echo "   ✅ PRODUCT_BUNDLE_IDENTIFIER = $CORRECT_BUNDLE_ID"
+    else
+        echo "   ✅ Bundle ID already correct"
+    fi
+
+    # Unity Append strips CODE_SIGN_ENTITLEMENTS — restore it for Sign in with Apple
+    if ! grep -q 'CODE_SIGN_ENTITLEMENTS' "$PBXPROJ"; then
+        sed -i '' 's/CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;/CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;\
+				CODE_SIGN_ENTITLEMENTS = "Unity-iPhone.entitlements";/' "$PBXPROJ"
+        echo "   ✅ CODE_SIGN_ENTITLEMENTS restored (Sign in with Apple)"
+    else
+        echo "   ✅ CODE_SIGN_ENTITLEMENTS already present"
+    fi
 else
     echo "   ❌ project.pbxproj not found!"
 fi
