@@ -309,7 +309,7 @@ final class HudOverlayManager {
     /// Hits any authenticated endpoint — the auth middleware checks token_version on every request.
     @MainActor
     private static func sessionHeartbeat(token: String, baseUrl: String) async {
-        guard let url = URL(string: "\(baseUrl)/v1/player/profile") else { return }
+        guard let url = URL(string: "\(baseUrl)/v1/players/me") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = 5
