@@ -31,7 +31,9 @@ class AppState: ObservableObject {
 
     private init() {
         isLoggedIn = AuthManager.shared.getAccessToken() != nil
-        useNgrok = UserDefaults.standard.bool(forKey: "backend_useNgrok")
+        useNgrok = UserDefaults.standard.object(forKey: "backend_useNgrok") != nil
+            ? UserDefaults.standard.bool(forKey: "backend_useNgrok")
+            : true  // Default to ngrok
         ngrokUrl = UserDefaults.standard.string(forKey: "backend_ngrokUrl")
             ?? "https://drivehunt.ngrok.app"
     }

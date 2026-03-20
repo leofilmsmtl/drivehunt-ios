@@ -80,5 +80,18 @@
     <true />
     <key>Unity_LoadingActivityIndicatorStyle</key>
     <integer>-1</integer>
+    <key>GOOGLE_CLIENT_ID</key>
+    <string>621077472993-4m2ks90gkf7ivn04i3931d0ki2lag044.apps.googleusercontent.com</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>com.googleusercontent.apps.621077472993-4m2ks90gkf7ivn04i3931d0ki2lag044</string>
+        </array>
+      </dict>
+    </array>
   </dict>
 </plist>

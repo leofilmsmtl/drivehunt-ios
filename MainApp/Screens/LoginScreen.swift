@@ -1,4 +1,5 @@
 import SwiftUI
+import AuthenticationServices
 
 /// Login screen — 1:1 port of Android's LoginScreen.kt
 /// Connects to /v1/auth/login, /v1/auth/register, /v1/auth/guest
@@ -16,6 +17,7 @@ struct LoginScreen: View {
     @State private var errorMessage: String?
     @State private var isRegisterMode = false
     @State private var passwordVisible = false
+    @State private var showVerification = false
 
     @EnvironmentObject var appState: AppState
 
@@ -96,10 +98,6 @@ struct LoginScreen: View {
                     .cornerRadius(12)
                     .padding(.horizontal, 32)
 
-                    // ── Backend URL Configuration Card (login mode only) ──
-                    if !isRegisterMode {
-                        backendConfigCard
-                    }
 
                     // ── Register-only fields ──
                     if isRegisterMode {
@@ -117,7 +115,7 @@ struct LoginScreen: View {
                         HStack {
                             Button(action: { rememberMe.toggle() }) {
                                 Image(systemName: rememberMe ? "checkmark.square.fill" : "square")
-                                    .foregroundColor(accentGreen)
+                                    .foregroundColor(theme.colors.textPrimary.opacity(0.9))
                             }
                             Text("Se souvenir de moi")
                                 .foregroundColor(theme.colors.textPrimary.opacity(0.8))
@@ -133,16 +131,17 @@ struct LoginScreen: View {
                                 ProgressView().tint(.black)
                                 if autoLogin { Text("Connexion...").foregroundColor(.black).fontWeight(.semibold) }
                             } else {
-                                Text(isRegisterMode ? "S'inscrire" : "Se connecter")
-                                    .fontWeight(.semibold)
-                                    .font(.system(size: 16))
+                                Text(isRegisterMode ? "S'INSCRIRE" : "SE CONNECTER")
+                                    .fontWeight(.bold)
+                                    .font(.system(size: 15))
+                                    .tracking(1)
                             }
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(
                             LinearGradient(
-                                colors: [accentGreen, accentBlue],
+                                colors: [Color(hex: "#00FFAA"), Color(hex: "#00CCFF")],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -160,10 +159,10 @@ struct LoginScreen: View {
                             errorMessage = nil
                         }
                     }
-                    .foregroundColor(accentGreen)
+                    .foregroundColor(theme.colors.textPrimary.opacity(0.7))
                     .font(.subheadline)
 
-                    // Divider
+                    // ── Separator ──
                     HStack {
                         Rectangle().fill(theme.colors.textPrimary.opacity(0.1)).frame(height: 1)
                         Text("Ou").font(.caption).foregroundColor(theme.colors.textMuted)
@@ -172,28 +171,84 @@ struct LoginScreen: View {
                     .padding(.horizontal, 48)
                     .padding(.vertical, 4)
 
-                    // ── Guest Login ──
+                    // ══════════════════════════════════════════════
+                    // SOCIAL SIGN-IN (Apple + Google)
+                    // ══════════════════════════════════════════════
+
+                    // Sign in with Apple (native button)
+                    SignInWithAppleButton(.signIn) { request in
+                        request.requestedScopes = [.fullName, .email]
+                    } onCompletion: { result in
+                        handleAppleSignIn(result: result)
+                    }
+                    .signInWithAppleButtonStyle(.white)
+                    .frame(height: 50)
+                    .cornerRadius(12)
+                    .padding(.horizontal, 32)
+
+                    // Sign in with Google (styled button — SDK pending)
+                    Button(action: signInWithGoogle) {
+                        HStack(spacing: 10) {
+                            // Google "G" logo
+                            ZStack {
+                                Circle().fill(Color.white).frame(width: 22, height: 22)
+                                Text("G")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.red, .yellow, .green, .blue],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                            }
+                            Text("Se connecter avec Google")
+                                .fontWeight(.medium)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.white)
+                        .foregroundColor(.black)
+                        .cornerRadius(12)
+                    }
+                    .padding(.horizontal, 32)
+
+                    // ── Guest Login (DEBUG only) ──
+                    #if DEBUG
                     Button(action: guestLogin) {
                         HStack {
                             if isLoading {
                                 ProgressView().tint(.white)
                             } else {
-                                Text("Mode Invité")
+                                Image(systemName: "person.fill.questionmark")
+                                Text("Mode Invité (Dev)")
                                     .fontWeight(.medium)
                             }
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(theme.colors.textPrimary.opacity(0.1))
-                        .foregroundColor(theme.colors.textPrimary)
+                        .foregroundColor(theme.colors.textMuted)
                         .cornerRadius(12)
                     }
                     .padding(.horizontal, 32)
                     .disabled(isLoading)
+                    #endif
 
                     Spacer().frame(height: 40)
                 }
             }
+        }
+        // Email verification overlay
+        .fullScreenCover(isPresented: $showVerification) {
+            EmailVerificationScreen(
+                email: email,
+                onVerified: { token, refresh, name, role in
+                    showVerification = false
+                    onLoginSuccess(token, refresh, name, role)
+                },
+                onBack: { showVerification = false }
+            )
         }
         .onAppear {
             // Pre-fill debug credentials (matches Kotlin's BuildConfig.DEBUG)
@@ -222,7 +277,7 @@ struct LoginScreen: View {
                 Text("Local").foregroundColor(theme.colors.textSecondary).font(.caption)
                 Spacer()
                 Toggle("", isOn: $appState.useNgrok)
-                    .toggleStyle(SwitchToggleStyle(tint: accentGreen))
+                    .toggleStyle(SwitchToggleStyle(tint: theme.colors.textPrimary))
                     .labelsHidden()
                 Spacer()
                 Text("Distant").foregroundColor(theme.colors.textSecondary).font(.caption)
@@ -353,8 +408,8 @@ struct LoginScreen: View {
                 if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 201 {
                     await MainActor.run {
                         isLoading = false
-                        isRegisterMode = false
-                        errorMessage = "Compte créé! Vérifiez vos courriels (simulé)."
+                        // Navigate to email verification screen
+                        showVerification = true
                     }
                 } else {
                     guard let httpResponse = response as? HTTPURLResponse else {
@@ -392,6 +447,80 @@ struct LoginScreen: View {
                     isLoading = false
                     errorMessage = error.localizedDescription
                 }
+            }
+        }
+    }
+
+    // MARK: - Sign in with Apple
+
+    private func handleAppleSignIn(result: Result<ASAuthorization, Error>) {
+        switch result {
+        case .success(let authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                  let tokenData = credential.identityToken,
+                  let identityToken = String(data: tokenData, encoding: .utf8) else {
+                errorMessage = "Impossible de récupérer le token Apple"
+                return
+            }
+
+            var fullName: String?
+            if let nameComponents = credential.fullName {
+                let parts = [nameComponents.givenName, nameComponents.familyName].compactMap { $0 }
+                if !parts.isEmpty { fullName = parts.joined(separator: " ") }
+            }
+
+            isLoading = true
+            errorMessage = nil
+
+            Task {
+                do {
+                    var body: [String: Any] = [
+                        "identityToken": identityToken,
+                        "appleUserId": credential.user
+                    ]
+                    if let name = fullName { body["displayName"] = name }
+                    if let email = credential.email { body["email"] = email }
+
+                    let result = try await performAuthRequest(
+                        endpoint: "/v1/auth/apple",
+                        body: body
+                    )
+                    await MainActor.run {
+                        isLoading = false
+                        onLoginSuccess(result.token, result.refresh, result.displayName ?? "Joueur", result.role)
+                    }
+                } catch {
+                    await MainActor.run {
+                        isLoading = false
+                        errorMessage = error.localizedDescription
+                    }
+                }
+            }
+
+        case .failure(let error):
+            if (error as NSError).code != ASAuthorizationError.canceled.rawValue {
+                errorMessage = "Connexion Apple échouée"
+            }
+        }
+    }
+
+    // MARK: - Sign in with Google
+
+    private func signInWithGoogle() {
+        let baseUrl = appState.backendBaseUrl
+        guard let window = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .flatMap({ $0.windows })
+                .first(where: { $0.isKeyWindow }) else { return }
+        
+        let manager = GoogleSignInManager.shared
+        manager.signIn(baseUrl: baseUrl, from: window) { token, refresh, name, role in
+            onLoginSuccess(token, refresh, name, role)
+        }
+        // Observe errors from GoogleSignInManager
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            if let err = manager.errorMessage {
+                self.errorMessage = err
             }
         }
     }
