@@ -333,7 +333,9 @@ final class HudOverlayManager {
         beforeStateChange?()
 
         // 6. Remove HUD overlays + present login
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        // UIKit modal dismissal animation takes exactly 0.4s. 
+        // A minimum delay of 0.5s is required to avoid the new presentation failing silently.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.removeOverlays()
 
             let loginView = LoginScreen(onLoginSuccess: { token, refresh, displayName, role in
