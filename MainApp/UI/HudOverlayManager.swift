@@ -290,7 +290,7 @@ final class HudOverlayManager {
                         }
                     case .sessionRevoked(let reason):
                         print("🔒 HudOverlayManager: SESSION_REVOKED — forcing logout (\(reason))")
-                        HudOverlayManager.shared.performLogout()
+                        HudOverlayManager.shared.performLogout(reason: reason)
                     case .failed:
                         print("❌ HudOverlayManager: Token refresh failed")
                     }
@@ -327,7 +327,7 @@ final class HudOverlayManager {
                     let msg = json["message"] as? String ?? "Session invalidée."
                     print("🔒 HudOverlayManager: Heartbeat detected SESSION_REVOKED — \(msg)")
                     AuthManager.shared.logout()
-                    HudOverlayManager.shared.performLogout()
+                    HudOverlayManager.shared.performLogout(reason: msg)
                 }
             }
         } catch {
@@ -345,7 +345,11 @@ final class HudOverlayManager {
     /// Full application logout sequence. 
     /// Clears tokens, UserDefaults, notifies Unity, resets singletons, and forces navigation to the Login screen.
     @MainActor
-    func performLogout() {
+    func performLogout(reason: String? = nil) {
+        // 0. Show alert if there's a reason (force logout, session revoked, etc.)
+        if let reason = reason {
+            showForceLogoutAlert(reason: reason)
+        }
         // 1. Server-side refresh token invalidation (fire-and-forget)
         AuthManager.shared.serverLogout(baseUrl: AppState.shared.backendBaseUrl)
 
@@ -430,6 +434,23 @@ final class HudOverlayManager {
         }
     }
 
+    /// Show a UIKit alert explaining why the user was disconnected
+    private func showForceLogoutAlert(reason: String) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            guard let rootVC = UnityHolder.shared.unityFramework?.appController()?.rootViewController else { return }
+            var topVC: UIViewController = rootVC
+            while let presented = topVC.presentedViewController {
+                topVC = presented
+            }
+            let alert = UIAlertController(
+                title: "Session terminée",
+                message: reason,
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            topVC.present(alert, animated: true)
+        }
+    }
 
     private var modalHostingController: UIHostingController<AnyView>?
     private var loadingHostingController: UIHostingController<AnyView>?

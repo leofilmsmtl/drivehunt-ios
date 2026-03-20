@@ -342,8 +342,22 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
                 return
             }
             guard let data = data,
-                  let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 200 else { return }
+                  let httpResponse = response as? HTTPURLResponse else { return }
+
+            // AAA Force Logout: detect SESSION_REVOKED on game API calls
+            if httpResponse.statusCode == 401 {
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let code = json["code"] as? String, code == "SESSION_REVOKED" {
+                    let msg = json["message"] as? String ?? "Déconnexion forcée par l'administrateur."
+                    print("🔒 LocationService: SESSION_REVOKED — forcing logout")
+                    DispatchQueue.main.async {
+                        HudOverlayManager.shared.performLogout(reason: msg)
+                    }
+                }
+                return
+            }
+
+            guard httpResponse.statusCode == 200 else { return }
 
             DispatchQueue.main.async {
                 if !self.firstExploreCompleted {
