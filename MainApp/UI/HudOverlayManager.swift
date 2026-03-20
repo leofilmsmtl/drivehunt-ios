@@ -271,7 +271,7 @@ final class HudOverlayManager {
     // With 1h token: ~20 retry attempts in the 10min window before real expiry
     private func startTokenRefreshTimer() {
         tokenRefreshTimer?.invalidate()
-        tokenRefreshTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] _ in
+        tokenRefreshTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
             guard let _ = self else { return }
             Task { @MainActor in
                 guard let token = AuthManager.shared.getAccessToken() else { return }
