@@ -264,7 +264,7 @@ struct ProfileScreen: View {
 
     private var logoutButton: some View {
         Button {
-            HudOverlayManager.shared.performLogout { onBack() }
+            HudOverlayManager.shared.performLogout()
         } label: {
             HStack {
                 Image(systemName: "rectangle.portrait.and.arrow.right")
@@ -476,7 +476,7 @@ struct ProfileScreen: View {
             DispatchQueue.main.async {
                 isDeletingAccount = false
                 if success {
-                    HudOverlayManager.shared.performLogout { onBack() }
+                    HudOverlayManager.shared.performLogout()
                 } else {
                     withAnimation { snackbarMessage = "Erreur de suppression du compte" }
                 }

@@ -305,7 +305,7 @@ final class HudOverlayManager {
     /// Full application logout sequence. 
     /// Clears tokens, UserDefaults, notifies Unity, resets singletons, and forces navigation to the Login screen.
     @MainActor
-    func performLogout(_ beforeStateChange: (() -> Void)? = nil) {
+    func performLogout() {
         // 1. Server-side refresh token invalidation (fire-and-forget)
         AuthManager.shared.serverLogout(baseUrl: AppState.shared.backendBaseUrl)
 
@@ -329,13 +329,12 @@ final class HudOverlayManager {
         UnityBridge.shared.reset()
         stopTokenRefreshTimer()
 
-        // Hook for UI teardown (e.g. dismissing modals)
-        beforeStateChange?()
-
-        // 6. Remove HUD overlays + present login
-        // UIKit modal dismissal animation takes exactly 0.4s. 
-        // A minimum delay of 0.5s is required to avoid the new presentation failing silently.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        // 6. Dismiss any existing modal (ProfileScreen, MenuOverlay...) using UIKit's
+        //    completion handler, then present the LoginScreen. This avoids the race
+        //    condition where a timer-based delay could fire while the dismissal
+        //    animation is still in progress, causing presentModal to silently fail.
+        let showLogin = { [weak self] in
+            guard let self = self else { return }
             self.removeOverlays()
 
             let loginView = LoginScreen(onLoginSuccess: { token, refresh, displayName, role in
@@ -375,6 +374,19 @@ final class HudOverlayManager {
                 print("✅ Re-login: Auth sent and WelcomeScreen deployed.")
             }).environmentObject(AppState.shared)
             self.presentModal(loginView)
+        }
+
+        if let existingModal = modalHostingController {
+            // Dismiss the current modal (ProfileScreen, etc.) and use the UIKit
+            // completion handler to guarantee it's fully gone before we present.
+            existingModal.dismiss(animated: true) {
+                DispatchQueue.main.async { showLogin() }
+            }
+            modalHostingController = nil
+            print("🔄 performLogout: Dismissing existing modal before showing login")
+        } else {
+            // No modal open — present login immediately
+            DispatchQueue.main.async { showLogin() }
         }
     }
 
@@ -1069,7 +1081,7 @@ struct GameMenuOverlay: View {
 
                 // Logout
                 Button {
-                    HudOverlayManager.shared.performLogout { onDismiss() }
+                    HudOverlayManager.shared.performLogout()
                 } label: {
                     Text("Déconnexion")
                         .font(.system(size: 15, weight: .semibold))
