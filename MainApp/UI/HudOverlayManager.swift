@@ -362,8 +362,14 @@ final class HudOverlayManager {
         }
 
         // 4. Tell Unity to clear ALL game state + reload scene FIRST
-        UnityBridge.shared.send("ResetSession", value: "")
-        UnityBridge.shared.send("OnLogout", value: "")
+        // CRITICAL FIX: Delaying this by 1.5s because Unity `SceneManager.LoadScene`
+        // aggressively blocks the iOS Main Thread for 2-4 seconds during tear-down
+        // (destroying 1000s of hexes). Delaying it allows the iOS LoginScreen
+        // to animate in perfectly *before* Unity freezes the background engine.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            UnityBridge.shared.send("ResetSession", value: "")
+            UnityBridge.shared.send("OnLogout", value: "")
+        }
 
         // 5. Reset ALL Swift singletons (matches Kotlin SessionManager.endSession)
         CaptureState.shared.reset()
