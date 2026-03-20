@@ -63,11 +63,21 @@ final class WelcomeViewModel: ObservableObject {
         await setStatus("Authentification...")
         guard let token = AuthManager.shared.getAccessToken() else {
             // Try refresh
-            let refreshed = await AuthManager.shared.refreshAccessToken(
+            let result = await AuthManager.shared.refreshAccessToken(
                 baseUrl: AppState.shared.backendBaseUrl
             )
-            if !refreshed || AuthManager.shared.getAccessToken() == nil {
+            switch result {
+            case .success:
+                break
+            case .sessionRevoked(let reason):
+                fatal(dev: "SESSION_REVOKED: \(reason)", user: "Session invalidée. Veuillez vous reconnecter.")
+                return
+            case .failed:
                 fatal(dev: "No token + refresh failed", user: "Session expirée. Veuillez vous reconnecter.")
+                return
+            }
+            guard AuthManager.shared.getAccessToken() != nil else {
+                fatal(dev: "No token after refresh", user: "Session expirée. Veuillez vous reconnecter.")
                 return
             }
             accWeight += Self.W_AUTH
@@ -81,10 +91,16 @@ final class WelcomeViewModel: ObservableObject {
         // Check  expiry
         if AuthManager.shared.isTokenExpired(token) {
             await setStatus("Token expiré — renouvellement...")
-            let refreshed = await AuthManager.shared.refreshAccessToken(
+            let result = await AuthManager.shared.refreshAccessToken(
                 baseUrl: AppState.shared.backendBaseUrl
             )
-            if !refreshed {
+            switch result {
+            case .success:
+                break
+            case .sessionRevoked(let reason):
+                fatal(dev: "SESSION_REVOKED: \(reason)", user: "Session invalidée. Veuillez vous reconnecter.")
+                return
+            case .failed:
                 fatal(dev: "Refresh failed", user: "Session expirée. Veuillez vous reconnecter.")
                 return
             }

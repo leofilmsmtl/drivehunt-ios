@@ -300,8 +300,8 @@ struct LoginScreen: View {
 
         // Check expiry and refresh if needed
         if AuthManager.shared.isTokenExpired(token) {
-            let refreshed = await AuthManager.shared.refreshAccessToken(baseUrl: appState.backendBaseUrl)
-            guard refreshed, let newToken = AuthManager.shared.getAccessToken() else {
+            let result = await AuthManager.shared.refreshAccessToken(baseUrl: appState.backendBaseUrl)
+            guard case .success = result, let newToken = AuthManager.shared.getAccessToken() else {
                 await MainActor.run {
                     isLoading = false
                     errorMessage = "Session expirée, veuillez vous reconnecter"

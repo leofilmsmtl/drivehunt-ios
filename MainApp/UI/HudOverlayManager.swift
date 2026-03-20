@@ -275,24 +275,64 @@ final class HudOverlayManager {
             guard let _ = self else { return }
             Task { @MainActor in
                 guard let token = AuthManager.shared.getAccessToken() else { return }
+                let baseUrl = AppState.shared.backendBaseUrl
 
                 if AuthManager.shared.isTokenExpired(token) {
+                    // Token near-expiry — attempt refresh
                     print("🔄 HudOverlayManager: Token near-expiry — refreshing...")
-                    let baseUrl = AppState.shared.backendBaseUrl
-                    let refreshed = await AuthManager.shared.refreshAccessToken(baseUrl: baseUrl)
-                    if refreshed {
+                    let result = await AuthManager.shared.refreshAccessToken(baseUrl: baseUrl)
+                    switch result {
+                    case .success:
                         if let newToken = AuthManager.shared.getAccessToken() {
                             UnityBridge.shared.send("SetAuthToken", value: newToken)
                             UnityHolder.shared.lastSentToken = newToken
                             print("✅ HudOverlayManager: Token refreshed & sent to Unity")
                         }
-                    } else {
+                    case .sessionRevoked(let reason):
+                        print("🔒 HudOverlayManager: SESSION_REVOKED — forcing logout (\(reason))")
+                        HudOverlayManager.shared.performLogout()
+                    case .failed:
                         print("❌ HudOverlayManager: Token refresh failed")
                     }
+                } else {
+                    // Token still valid — lightweight heartbeat to detect SESSION_REVOKED.
+                    // The /refresh endpoint does NOT go through authenticateToken middleware,
+                    // so we must hit an authenticated endpoint to trigger the token_version check.
+                    await Self.sessionHeartbeat(token: token, baseUrl: baseUrl)
                 }
             }
         }
         print("🔄 HudOverlayManager: Token refresh timer started (every 30s)")
+    }
+
+    /// Lightweight authenticated request to detect SESSION_REVOKED.
+    /// Hits any authenticated endpoint — the auth middleware checks token_version on every request.
+    @MainActor
+    private static func sessionHeartbeat(token: String, baseUrl: String) async {
+        guard let url = URL(string: "\(baseUrl)/v1/player/profile") else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 5
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("true", forHTTPHeaderField: "ngrok-skip-browser-warning")
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else { return }
+
+            if http.statusCode == 401 {
+                // Check if it's a SESSION_REVOKED
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let code = json["code"] as? String, code == "SESSION_REVOKED" {
+                    let msg = json["message"] as? String ?? "Session invalidée."
+                    print("🔒 HudOverlayManager: Heartbeat detected SESSION_REVOKED — \(msg)")
+                    AuthManager.shared.logout()
+                    HudOverlayManager.shared.performLogout()
+                }
+            }
+        } catch {
+            // Network error — ignore, we'll retry in 30s
+        }
     }
 
     /// Stop token refresh timer — called on logout

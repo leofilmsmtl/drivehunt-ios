@@ -130,15 +130,23 @@ final class AuthManager {
         return email.split(separator: "@").first.map(String.init) ?? "Joueur"
     }
 
+    // MARK: - Token Refresh
+
+    enum RefreshResult {
+        case success
+        case failed
+        case sessionRevoked(String)  // reason message from backend
+    }
+
     /// Refresh the access token using the stored refresh token
-    func refreshAccessToken(baseUrl: String) async -> Bool {
+    func refreshAccessToken(baseUrl: String) async -> RefreshResult {
         guard let refreshToken = getRefreshToken() else {
             print("❌ AuthManager: No refresh token available")
-            return false
+            return .failed
         }
 
         let urlString = "\(baseUrl)/v1/auth/refresh"
-        guard let url = URL(string: urlString) else { return false }
+        guard let url = URL(string: urlString) else { return .failed }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -151,26 +159,38 @@ final class AuthManager {
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 200 else {
-                print("❌ AuthManager: Refresh failed — HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
-                return false
+            guard let httpResponse = response as? HTTPURLResponse else { return .failed }
+
+            if httpResponse.statusCode == 200 {
+                guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let newAccess = json["accessToken"] as? String, !newAccess.isEmpty else {
+                    return .failed
+                }
+
+                let newRefresh = json["refreshToken"] as? String ?? refreshToken
+                let role = json["role"] as? String ?? "USER"
+
+                saveTokens(access: newAccess, refresh: newRefresh, role: role)
+                print("✅ AuthManager: Token refreshed successfully")
+                return .success
             }
 
-            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let newAccess = json["accessToken"] as? String, !newAccess.isEmpty else {
-                return false
+            // AAA Force Logout: detect SESSION_REVOKED from backend (401)
+            if httpResponse.statusCode == 401 {
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let code = json["code"] as? String, code == "SESSION_REVOKED" {
+                    let message = json["message"] as? String ?? "Session invalidée."
+                    print("🔒 AuthManager: SESSION_REVOKED detected — \(message)")
+                    logout() // Clear tokens immediately so we don't retry
+                    return .sessionRevoked(message)
+                }
             }
 
-            let newRefresh = json["refreshToken"] as? String ?? refreshToken
-            let role = json["role"] as? String ?? "USER"
-
-            saveTokens(access: newAccess, refresh: newRefresh, role: role)
-            print("✅ AuthManager: Token refreshed successfully")
-            return true
+            print("❌ AuthManager: Refresh failed — HTTP \(httpResponse.statusCode)")
+            return .failed
         } catch {
             print("❌ AuthManager: Refresh exception — \(error.localizedDescription)")
-            return false
+            return .failed
         }
     }
 
