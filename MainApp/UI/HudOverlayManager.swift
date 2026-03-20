@@ -302,7 +302,7 @@ final class HudOverlayManager {
                 }
             }
         }
-        print("🔄 HudOverlayManager: Token refresh timer started (every 30s)")
+        print("🔄 HudOverlayManager: Token refresh timer started (every 5s)")
     }
 
     /// Lightweight authenticated request to detect SESSION_REVOKED.
